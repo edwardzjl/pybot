@@ -1,0 +1,27 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: jlzhou
+
+labels:
+  - pairs:
+      app: pybot
+    includeSelectors: false
+
+resources:
+  - ../third-party/redis
+  - deployment.yaml
+  - service.yaml
+
+configMapGenerator:
+  - name: pybot
+    envs:
+      - params.env
+
+# currently knative does not recognize configmaps with suffix hash
+generatorOptions:
+  disableNameSuffixHash: true
+
+images:
+  - name: edwardlol/pybot
+    newTag: v0.1.10

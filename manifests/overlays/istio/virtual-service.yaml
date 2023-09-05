@@ -1,0 +1,19 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: pybot
+spec:
+  hosts:
+    - "*"
+  gateways:
+    - istio-system/istio-ingressgateway
+  http:
+    - name: pybot-route
+      match:
+        - uri:
+            prefix: /
+      route:
+        - destination:
+            host: pybot.jlzhou.svc.cluster.local
+            port:
+              number: 8000
