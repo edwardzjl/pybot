@@ -3,8 +3,7 @@ from typing import Any, Optional
 from uuid import UUID, uuid4
 
 from aredis_om import JsonModel, Field
-from langchain.schema import BaseMessage
-from pydantic import BaseModel, root_validator, validator
+from pydantic import BaseModel, root_validator
 
 from pybot.utils import utcnow
 
@@ -21,20 +20,6 @@ class ChatMessage(BaseModel):
     # sent_at is not an important information for the user, as far as I can tell.
     # But it introduces some complexity in the code, so I'm removing it for now.
     # sent_at: datetime = Field(default_factory=datetime.now)
-
-    @validator("type")
-    def validate_message_type(cls, v):
-        valid_types = {"start", "stream", "text", "end", "error", "info"}
-        if v not in valid_types:
-            raise ValueError(f"invalid type {v}, must be one of {valid_types}")
-        return v
-
-    @staticmethod
-    def from_lc(lc_message: BaseMessage) -> "ChatMessage":
-        return ChatMessage(
-            from_=lc_message.type,
-            content=lc_message.content,
-        )
 
     _encoders_by_type = {
         datetime: lambda dt: dt.isoformat(timespec="seconds"),
@@ -74,8 +59,11 @@ class Conversation(JsonModel):
 class ConversationDetail(Conversation):
     """Conversation with messages."""
 
-    messages: list[dict[str, str]] = []
+    messages: list[ChatMessage] = []
 
 
 class UpdateConversation(BaseModel):
     title: str
+
+    class Config:
+        extra = "ignore"

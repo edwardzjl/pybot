@@ -14,7 +14,7 @@ from loguru import logger
 from redis import Redis
 
 from pybot.routers import router
-from pybot.settings import settings
+from pybot.config import settings
 
 
 # TODO: should separate redis cache and om instance

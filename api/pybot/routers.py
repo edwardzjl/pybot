@@ -24,8 +24,7 @@ from pybot.schemas import (
     Conversation,
     UpdateConversation,
 )
-from pybot.settings import settings
-from pybot.utils import utcnow
+from pybot.config import settings
 
 
 router = APIRouter(
