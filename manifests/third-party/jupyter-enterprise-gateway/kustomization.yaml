@@ -6,3 +6,4 @@ resources:
 
 patches:
   - path: patches/patch-service.yaml
+  - path: patches/patch-kip-container-runtime.yaml
