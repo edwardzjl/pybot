@@ -8,5 +8,5 @@ redis[hiredis]==4.6.0
 redis-om==0.2.1
 requests==2.31.0
 text-generation==0.6.1
-uvicorn[standard]==0.23.2
+uvicorn[standard]==0.24.0.post1
 websockets==12.0
