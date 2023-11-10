@@ -66,6 +66,8 @@ function App() {
               message: { from: payload.from, content: payload.content },
             });
             break;
+          default:
+            console.warn("unknown message type", payload);
         }
       } catch (error) {
         console.debug("not a json message", msg);
@@ -151,7 +153,7 @@ function App() {
 
     initialization();
 
-    return () => {};
+    return () => { };
   }, []);
 
   const sendMessage = async (convId, message) => {
