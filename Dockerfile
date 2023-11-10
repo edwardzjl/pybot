@@ -10,18 +10,25 @@ COPY web/ ./
 RUN yarn build
 
 
+FROM python:3.11-slim as backend-builder
+RUN pip install pipenv
+
+COPY api/Pipfile api/Pipfile.lock ./
+RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
+
+
 FROM python:3.11-slim as app
 
 WORKDIR /app
-COPY api/requirements.txt .
-RUN python -m pip install --no-cache-dir -U pip \
-  && python -m pip install --no-cache-dir -r requirements.txt
+
+COPY --from=backend-builder /.venv ./.venv
+ENV PATH="/app/.venv/bin:$PATH"
 COPY api/ .
 COPY --from=frontend-builder /build/build ./static
 
-RUN adduser --system --no-create-home --group pybot \
-  && chown -R pybot:pybot /app
-USER pybot:pybot
+RUN adduser --system --no-create-home --group chatbot \
+  && chown -R chatbot:chatbot /app
+USER chatbot:chatbot
 
-ENTRYPOINT [ "uvicorn", "pybot.main:app" ]
+ENTRYPOINT [ "python", "-m", "uvicorn", "chatbot.main:app" ]
 CMD [ "--host", "0.0.0.0", "--port", "8000" ]
