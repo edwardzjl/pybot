@@ -2,20 +2,19 @@
 from contextlib import asynccontextmanager
 from typing import Annotated
 
+import langchain
 from aredis_om import Migrator, NotFoundError
 from fastapi import FastAPI, Header, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
-import langchain
 from langchain.cache import RedisCache
 from loguru import logger
 from redis import Redis
 
-from pybot.routers import router
 from pybot.config import settings
-
+from pybot.routers import router
 
 # TODO: should separate redis cache and om instance
 langchain.llm_cache = RedisCache(redis_=Redis.from_url(settings.redis_om_url))

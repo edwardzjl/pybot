@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import Any, Optional
 from uuid import UUID, uuid4
 
-from aredis_om import JsonModel, Field
+from aredis_om import Field, JsonModel
 from pydantic import BaseModel, root_validator
 
 from pybot.utils import utcnow
