@@ -12,6 +12,7 @@ from pybot.callbacks import (
 )
 from pybot.config import settings
 from pybot.history import AppendSuffixHistory
+from pybot.models import Conversation as ORMConversation
 from pybot.prompts.vicuna import (
     ai_prefix,
     ai_suffix,
@@ -34,7 +35,7 @@ router = APIRouter(
 
 def get_message_history() -> RedisChatMessageHistory:
     return AppendSuffixHistory(
-        url=settings.redis_om_url,
+        url=str(settings.redis_om_url),
         user_suffix=human_suffix,
         ai_suffix=ai_suffix,
         session_id="sid",  # a fake session id as it is required
@@ -43,7 +44,7 @@ def get_message_history() -> RedisChatMessageHistory:
 
 def get_llm() -> BaseLLM:
     return HuggingFaceTextGenInference(
-        inference_server_url=settings.inference_server_url,
+        inference_server_url=str(settings.inference_server_url),
         max_new_tokens=1024,
         temperature=0.8,
         top_p=0.9,
@@ -55,9 +56,9 @@ def get_llm() -> BaseLLM:
 
 @router.get("/conversations", response_model=list[Conversation])
 async def get_conversations(kubeflow_userid: Annotated[str | None, Header()] = None):
-    convs = await Conversation.find(Conversation.owner == kubeflow_userid).all()
+    convs = await ORMConversation.find(ORMConversation.owner == kubeflow_userid).all()
     convs.sort(key=lambda x: x.updated_at, reverse=True)
-    return convs
+    return [Conversation(**conv.dict()) for conv in convs]
 
 
 @router.get("/conversations/{conversation_id}", response_model=ConversationDetail)
@@ -66,23 +67,15 @@ async def get_conversation(
     history: Annotated[RedisChatMessageHistory, Depends(get_message_history)],
     kubeflow_userid: Annotated[str | None, Header()] = None,
 ):
-    conv = await Conversation.get(conversation_id)
+    conv = await ORMConversation.get(conversation_id)
     history.session_id = f"{kubeflow_userid}:{conversation_id}"
     return ConversationDetail(
         messages=[
-            ChatMessage(
-                conversation=conversation_id,
-                from_="ai",
-                content=message.content,
-                type="text",
-            ).dict()
+            ChatMessage.from_lc(lc_message=message, conv_id=conversation_id, from_="ai")
             if message.type == "ai"
-            else ChatMessage(
-                conversation=conversation_id,
-                from_=kubeflow_userid,
-                content=message.content,
-                type="text",
-            ).dict()
+            else ChatMessage.from_lc(
+                lc_message=message, conv_id=conversation_id, from_=kubeflow_userid
+            )
             for message in history.messages
         ],
         **conv.dict(),
@@ -91,9 +84,9 @@ async def get_conversation(
 
 @router.post("/conversations", status_code=201, response_model=ConversationDetail)
 async def create_conversation(kubeflow_userid: Annotated[str | None, Header()] = None):
-    conv = Conversation(title=f"New chat", owner=kubeflow_userid)
+    conv = ORMConversation(title=f"New chat", owner=kubeflow_userid)
     await conv.save()
-    return conv
+    return ConversationDetail(**conv.dict())
 
 
 @router.put("/conversations/{conversation_id}")
@@ -102,7 +95,7 @@ async def update_conversation(
     payload: UpdateConversation,
     kubeflow_userid: Annotated[str | None, Header()] = None,
 ):
-    conv = await Conversation.get(conversation_id)
+    conv = await ORMConversation.get(conversation_id)
     conv.title = payload.title
     await conv.save()
 
@@ -111,7 +104,7 @@ async def update_conversation(
 async def delete_conversation(
     conversation_id: str, kubeflow_userid: Annotated[str | None, Header()] = None
 ):
-    await Conversation.delete(conversation_id)
+    await ORMConversation.delete(conversation_id)
 
 
 @router.websocket("/chat")
