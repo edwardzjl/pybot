@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Header, WebSocket, WebSocketDisconnect
 from langchain.chains import ConversationChain
 from langchain.llms import BaseLLM, HuggingFaceTextGenInference
-from langchain.memory import ConversationBufferWindowMemory, RedisChatMessageHistory
+from langchain.memory import RedisChatMessageHistory
 from loguru import logger
 
 from pybot.callbacks import (
@@ -11,7 +11,8 @@ from pybot.callbacks import (
     UpdateConversationCallbackHandler,
 )
 from pybot.config import settings
-from pybot.history import AppendSuffixHistory
+from pybot.history import CustomRedisChatMessageHistory
+from pybot.memory import FlexConversationBufferWindowMemory
 from pybot.models import Conversation as ORMConversation
 from pybot.prompts.vicuna import (
     ai_prefix,
@@ -34,10 +35,8 @@ router = APIRouter(
 
 
 def get_message_history() -> RedisChatMessageHistory:
-    return AppendSuffixHistory(
+    return CustomRedisChatMessageHistory(
         url=str(settings.redis_om_url),
-        user_suffix=human_suffix,
-        ai_suffix=ai_suffix,
         session_id="sid",  # a fake session id as it is required
     )
 
@@ -115,9 +114,11 @@ async def generate(
     kubeflow_userid: Annotated[str | None, Header()] = None,
 ):
     await websocket.accept()
-    memory = ConversationBufferWindowMemory(
+    memory = FlexConversationBufferWindowMemory(
         human_prefix=human_prefix,
         ai_prefix=ai_prefix,
+        human_suffix=human_suffix,
+        ai_suffix=ai_suffix,
         memory_key="history",
         chat_memory=history,
     )
