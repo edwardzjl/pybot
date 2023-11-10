@@ -1,6 +1,3 @@
-"""Callback handlers used in the app.
-A modified version of langchain.callbacks.AsyncIteratorCallbackHandler.
-"""
 from typing import Any, Dict, List, Optional, Union
 from uuid import UUID
 
@@ -8,7 +5,8 @@ from fastapi import WebSocket
 from langchain.callbacks.base import AsyncCallbackHandler
 from langchain.schema import LLMResult
 
-from pybot.schemas import ChatMessage, Conversation
+from pybot.models import Conversation
+from pybot.schemas import ChatMessage
 from pybot.utils import utcnow
 
 
@@ -37,7 +35,7 @@ class StreamingLLMCallbackHandler(AsyncCallbackHandler):
             content=None,
             type="start",
         )
-        await self.websocket.send_json(message.dict())
+        await self.websocket.send_text(message.model_dump_json())
 
     async def on_llm_new_token(
         self,
@@ -55,7 +53,7 @@ class StreamingLLMCallbackHandler(AsyncCallbackHandler):
             content=token,
             type="stream",
         )
-        await self.websocket.send_json(message.dict())
+        await self.websocket.send_text(message.model_dump_json())
 
     async def on_llm_end(
         self,
@@ -73,7 +71,7 @@ class StreamingLLMCallbackHandler(AsyncCallbackHandler):
             content=None,
             type="end",
         )
-        await self.websocket.send_json(message.dict())
+        await self.websocket.send_text(message.model_dump_json())
 
     async def on_llm_error(
         self,
@@ -92,7 +90,7 @@ class StreamingLLMCallbackHandler(AsyncCallbackHandler):
             content=f"llm error: {str(error)}",
             type="error",
         )
-        await self.websocket.send_json(message.dict())
+        await self.websocket.send_text(message.model_dump_json())
 
 
 class UpdateConversationCallbackHandler(AsyncCallbackHandler):
