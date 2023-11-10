@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Header, Depends, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, Header, WebSocket, WebSocketDisconnect
 from langchain.chains import ConversationChain
 from langchain.llms import BaseLLM, HuggingFaceTextGenInference
 from langchain.memory import ConversationBufferWindowMemory, RedisChatMessageHistory
@@ -10,22 +10,21 @@ from pybot.callbacks import (
     StreamingLLMCallbackHandler,
     UpdateConversationCallbackHandler,
 )
+from pybot.config import settings
 from pybot.history import AppendSuffixHistory
 from pybot.prompts.vicuna import (
-    prompt,
-    human_prefix,
     ai_prefix,
-    human_suffix,
     ai_suffix,
+    human_prefix,
+    human_suffix,
+    prompt,
 )
 from pybot.schemas import (
     ChatMessage,
-    ConversationDetail,
     Conversation,
+    ConversationDetail,
     UpdateConversation,
 )
-from pybot.config import settings
-
 
 router = APIRouter(
     prefix="/api",
