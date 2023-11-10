@@ -35,21 +35,17 @@ export const conversationsReducer = (conversations, action) => {
         }
         case "updated": {
             return conversations.map((c) => {
-                if (c.id === action.conversation.id) {
-                    return { ...c, ...action.conversation };
-                } else {
+                if (c.id !== action.conversation.id) {
                     return c;
                 }
+                return { ...c, ...action.conversation };
             });
         }
         case "selected": {
-            if (conversations[0].id === action.id && conversations[0].active) {
-                return conversations;
-            }
             return conversations.map((c) => {
-                if (c.id === action.id) {
+                if (c.id === action.data.id) {
                     return {
-                        ...c,
+                        ...action.data,
                         active: true,
                     };
                 } else {
@@ -73,24 +69,22 @@ export const conversationsReducer = (conversations, action) => {
         }
         case "messageAdded": {
             return conversations.map((c) => {
-                if (c.id === action.id) {
-                    return { ...c, messages: [...c.messages, action.message] };
-                } else {
+                if (c.id !== action.id) {
                     return c;
                 }
+                return { ...c, messages: [...c.messages, action.message] };
             });
         }
         case "messageAppended": {
             return conversations.map((c) => {
-                if (c.id === action.id) {
-                    const lastMsg = c.messages[c.messages.length - 1];
-                    return {
-                        ...c,
-                        messages: [...c.messages.slice(0, -1), { ...lastMsg, content: lastMsg.content + action.message.content }]
-                    };
-                } else {
+                if (c.id !== action.id) {
                     return c;
                 }
+                const lastMsg = c.messages[c.messages.length - 1];
+                return {
+                    ...c,
+                    messages: [...c.messages.slice(0, -1), { ...lastMsg, content: lastMsg.content + action.message.content }]
+                };
             });
         }
         default: {
