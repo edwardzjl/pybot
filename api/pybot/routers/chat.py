@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
@@ -11,7 +12,8 @@ from pybot.callbacks import (
     UpdateConversationCallbackHandler,
 )
 from pybot.memory import FlexConversationBufferWindowMemory
-from pybot.prompts.vicuna import (
+from pybot.prompt import (
+    SYSTEM,
     ai_prefix,
     ai_suffix,
     human_prefix,
@@ -29,7 +31,7 @@ router = APIRouter(
 
 
 @router.websocket()
-async def generate(
+async def chat(
     websocket: WebSocket,
     llm: Annotated[BaseLLM, Depends(get_llm)],
     history: Annotated[RedisChatMessageHistory, Depends(get_message_history)],
@@ -38,9 +40,10 @@ async def generate(
     await websocket.accept()
     memory = FlexConversationBufferWindowMemory(
         human_prefix=human_prefix,
-        ai_prefix=ai_prefix,
         human_suffix=human_suffix,
+        ai_prefix=ai_prefix,
         ai_suffix=ai_suffix,
+        prefix_delimiter="\n",
         memory_key="history",
         chat_memory=history,
     )
@@ -50,11 +53,11 @@ async def generate(
         verbose=False,
         memory=memory,
     )
-
     while True:
         try:
             payload: str = await websocket.receive_text()
             message = ChatMessage.model_validate_json(payload)
+            system_message = SYSTEM.format(date=date.today())
             history.session_id = f"{userid}:{message.conversation}"
             streaming_callback = StreamingLLMCallbackHandler(
                 websocket, message.conversation
@@ -63,7 +66,8 @@ async def generate(
                 message.conversation
             )
             await conversation_chain.arun(
-                message.content,
+                system_message=system_message,
+                input=message.content,
                 callbacks=[streaming_callback, update_conversation_callback],
             )
         except WebSocketDisconnect:
