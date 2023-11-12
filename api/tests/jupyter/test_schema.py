@@ -28,6 +28,12 @@ class TestEGRequestSchema(unittest.TestCase):
         }
         self.assertDictEqual(req.model_dump(), expected)
 
+    def test_default_header(self):
+        ExecutionRequest(
+            content=ExecutionContent(code="a = 1"),
+        )
+        ExecutionRequest.of_code("a = 1")
+
 
 class TestEGResponseSchema(unittest.TestCase):
     def test_validate_status_response(self):
