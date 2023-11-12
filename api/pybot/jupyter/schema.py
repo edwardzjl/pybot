@@ -49,7 +49,7 @@ class ExecutionContent(BaseModel):
 
 
 class ExecutionRequest(BaseModel):
-    header: ExecutionHeader
+    header: ExecutionHeader = ExecutionHeader()
     parent_header: dict = {}
     """IDK what this is for but if I don't include it, the kernel will disconnect."""
     metadata: dict = {}
@@ -65,6 +65,10 @@ class ExecutionRequest(BaseModel):
 
     def model_dump_json(self):
         return super().model_dump_json(by_alias=True, exclude_none=True)
+
+    @staticmethod
+    def of_code(code: str) -> "ExecutionRequest":
+        return ExecutionRequest(content=ExecutionContent(code=code))
 
 
 class ExecutionStatusContent(BaseModel):
