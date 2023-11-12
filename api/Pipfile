@@ -4,12 +4,14 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+aiofiles = "~=23.2.1"
 fastapi = ">=0.100.0"
 langchain = ">=0.0.300"
 loguru = "~=0.7"
 # redis-om 0.2.1 requires pydantic<2.1.0
 pydantic = "~=2.0.0"
 pydantic-settings = "~=2.0"
+python-multipart = ">=0.0.6"
 # redis-om 0.2.1 requires redis<5.0.0
 redis = {extras = ["hiredis"], version = "<5.0.0"}
 redis-om = "~=0.2.1"
