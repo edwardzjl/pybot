@@ -7,20 +7,20 @@ from pydantic import BaseModel, HttpUrl
 from pybot.jupyter.schema import CreateKernelRequest, CreateKernelResponse
 
 
-class Client(BaseModel):
+class GatewayClient(BaseModel):
     host: HttpUrl
 
-    def create_kernel(self, payload: CreateKernelRequest) -> None:
+    def create_kernel(self, payload: CreateKernelRequest) -> CreateKernelResponse:
         response = requests.post(
             urljoin(str(self.host), "/api/kernels"), json=payload.model_dump()
         )
-        if response.ok:
-            res = CreateKernelResponse.model_validate_json(response.text)
-            logger.info(f"Started kernel with id {res.id}")
-        else:
+        if not response.ok:
             raise RuntimeError(
                 f"Error starting kernel: {response.status_code}\n{response.content}"
             )
+        res = CreateKernelResponse.model_validate_json(response.text)
+        logger.info(f"Started kernel with id {res.id}")
+        return res
 
     def get_kernel(self, kernel_id: str) -> CreateKernelRequest:
         response = requests.get(urljoin(str(self.host), f"/api/kernels/{kernel_id}"))
@@ -36,9 +36,8 @@ class Client(BaseModel):
 
     def delete_kernel(self, kernel_id: str) -> None:
         response = requests.delete(urljoin(str(self.host), f"/api/kernels/{kernel_id}"))
-        if response.ok:
-            logger.info(f"Kernel {kernel_id} deleted")
-        else:
+        if not response.ok:
             raise RuntimeError(
                 f"Error deleting kernel {kernel_id}: {response.status_code}\n{response.content}"
             )
+        logger.info(f"Kernel {kernel_id} deleted")
