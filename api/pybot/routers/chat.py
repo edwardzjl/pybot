@@ -1,5 +1,6 @@
 from datetime import date
 from typing import Annotated
+from urllib.parse import urljoin, urlparse, urlunparse
 
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from langchain.llms import BaseLLM
@@ -11,7 +12,9 @@ from pybot.callbacks import (
     StreamingLLMCallbackHandler,
     UpdateConversationCallbackHandler,
 )
+from pybot.config import settings
 from pybot.memory import FlexConversationBufferWindowMemory
+from pybot.models import Conversation
 from pybot.prompts import AI_PREFIX, AI_SUFFIX, HUMAN_PREFIX, HUMAN_SUFFIX
 from pybot.routers.dependencies import get_llm, get_message_history
 from pybot.schemas import ChatMessage
@@ -40,20 +43,32 @@ async def chat(
         prefix_delimiter="\n",
         memory_key="history",
         input_key="input",
+        output_key="output",
         chat_memory=history,
         return_messages=True,
-    )
-    agent_executor = create_agent(
-        llm=llm,
-        agent_executor_kwargs={
-            "memory": memory,
-            "return_intermediate_steps": True,
-        },
     )
     while True:
         try:
             payload: str = await websocket.receive_text()
             message = ChatMessage.model_validate_json(payload)
+            conv = await Conversation.get(message.conversation)
+            # TODO: replace with ws? or simply add a ws field to the settings?
+            ws_base = urlunparse(
+                urlparse(str(settings.jupyter_enterprise_gateway_url))._replace(
+                    scheme="ws"
+                )
+            )
+            channel_endpoint = urljoin(
+                ws_base, f"/api/kernels/{conv.kernel_id}/channels"
+            )
+            agent_executor = create_agent(
+                llm=llm,
+                channel_endpoint=channel_endpoint,
+                agent_executor_kwargs={
+                    "memory": memory,
+                    "return_intermediate_steps": True,
+                },
+            )
             history.session_id = f"{userid}:{message.conversation}"
             streaming_callback = StreamingLLMCallbackHandler(
                 websocket, message.conversation
@@ -66,8 +81,6 @@ async def chat(
                     "date": date.today(),
                     "input": message.content,
                 },
-                # date=
-                # input=message.content,
                 callbacks=[streaming_callback, update_conversation_callback],
             )
         except WebSocketDisconnect:

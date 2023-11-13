@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, UploadFile
 from langchain.memory import RedisChatMessageHistory
 
 from pybot.config import settings
+from pybot.jupyter import CreateKernelRequest, GatewayClient
 from pybot.models import Conversation as ORMConversation
 from pybot.routers.dependencies import get_message_history
 from pybot.schemas import (
@@ -21,6 +22,7 @@ router = APIRouter(
     prefix="/api/conversations",
     tags=["conversation"],
 )
+gateway_client = GatewayClient(host=settings.jupyter_enterprise_gateway_url)
 
 
 @router.get("", response_model=list[Conversation])
@@ -53,7 +55,16 @@ async def get_conversation(
 
 @router.post("", status_code=201, response_model=ConversationDetail)
 async def create_conversation(userid: Annotated[str | None, UserIdHeader()] = None):
-    conv = ORMConversation(title=f"New chat", owner=userid)
+    # specifying namespace requires allocating namespace before creating kernel
+    # also unable to create pod under specific namespace, so disabling this for now
+    request = CreateKernelRequest(
+        env={
+            "KERNEL_USERNAME": userid,
+            # "KERNEL_NAMESPACE": f"pybot-{userid}",
+        }
+    )
+    response = gateway_client.create_kernel(request)
+    conv = ORMConversation(title=f"New chat", owner=userid, kernel_id=response.id)
     await conv.save()
     return ConversationDetail(**conv.dict())
 
