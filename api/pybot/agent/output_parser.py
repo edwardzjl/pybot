@@ -3,7 +3,7 @@ import re
 from typing import Union
 
 from langchain.agents import AgentOutputParser
-from langchain.schema import AgentAction, AgentFinish, OutputParserException
+from langchain.schema import AgentAction, AgentFinish
 from loguru import logger
 
 
@@ -18,34 +18,37 @@ class JsonOutputParser(AgentOutputParser):
 
     def parse(self, text: str) -> Union[AgentAction, AgentFinish]:
         try:
-            action_match = self.pattern.search(text)
-            if action_match is None:
-                # No action match, treat as final answer
-                prefix_found = text.find("Final Answer:")  # TODO: final answer key
-                if prefix_found != -1:
-                    return AgentFinish(
-                        {"output": text[prefix_found + 13 :].strip()}, text
-                    )
-                raise ValueError(
-                    f"Could not find action or final answer in LLM output: {text}"
+            md_snippet_match = self.pattern.search(text)
+            if md_snippet_match is None:
+                # no markdown snippet, try to parse as raw json string
+                action_str: str = text.strip()
+                # sometimes LLM will generate action with thoughts or halucinations, we will extract the action part
+                action_str = action_str[
+                    action_str.index("{") : action_str.rindex("}") + 1
+                ]
+                action: dict = json.loads(action_str, strict=False)
+                return AgentAction(
+                    action.get(self.tool_name_key),
+                    action.get(self.tool_input_key),
+                    text,
                 )
-
-            response: dict = json.loads(action_match.group(1).strip(), strict=False)
-            if isinstance(response, list):
+            action: dict = json.loads(md_snippet_match.group(1).strip(), strict=False)
+            if isinstance(action, list):
                 logger.warning(
-                    f"Got multiple action responses: {response}, using only the first one."
+                    f"Got multiple action responses: {action}, using only the first one."
                 )
-                response = response[0]
-            if self.tool_name_key in response and self.tool_input_key in response:
-                tool_name = response.get(self.tool_name_key)
-                tool_input = response.get(self.tool_input_key)
+                action = action[0]
+            if self.tool_name_key in action and self.tool_input_key in action:
+                tool_name = action.get(self.tool_name_key)
+                tool_input = action.get(self.tool_input_key)
                 if tool_name == "Final Answer":  # TODO: final answer key
                     return AgentFinish({"output": tool_input}, text)
                 return AgentAction(tool_name, tool_input, text)
             else:
                 raise ValueError("Not a valid tool response")
         except Exception as e:
-            raise OutputParserException(f"Could not parse LLM output: {text}") from e
+            logger.error(f"Could not parse LLM output: {text}, error: {str(e)}")
+            return AgentFinish({"output": text}, text)
 
     @property
     def _type(self) -> str:
