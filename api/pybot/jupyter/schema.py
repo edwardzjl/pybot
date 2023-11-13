@@ -49,7 +49,7 @@ class ExecutionContent(BaseModel):
 
 
 class ExecutionRequest(BaseModel):
-    header: ExecutionHeader = ExecutionHeader()
+    header: ExecutionHeader = Field(default_factory=ExecutionHeader)
     parent_header: dict = {}
     """IDK what this is for but if I don't include it, the kernel will disconnect."""
     metadata: dict = {}
