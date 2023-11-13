@@ -2,6 +2,7 @@ from langchain.llms import BaseLLM
 from langchain.llms.huggingface_text_gen_inference import HuggingFaceTextGenInference
 from langchain.memory import RedisChatMessageHistory
 
+from pybot.callbacks import TracingLLMCallbackHandler
 from pybot.config import settings
 from pybot.history import CustomRedisChatMessageHistory
 
@@ -22,4 +23,5 @@ def get_llm() -> BaseLLM:
         repetition_penalty=1.01,
         stop_sequences=["</s>"],
         streaming=True,
+        callbacks=[TracingLLMCallbackHandler()],
     )
