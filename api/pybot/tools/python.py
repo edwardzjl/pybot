@@ -73,20 +73,30 @@ Internet access for this session is disabled. Do not make external web requests 
                     message = await asyncio.wait_for(
                         websocket.recv(), timeout=self.timeout
                     )
-                    logger.trace(f"kernel execution message: [{message}]")
+                    logger.debug(f"kernel execution message: [{message}]")
                     response = ExecutionResponse.model_validate_json(message)
+                    if response.parent_header.msg_id != payload.header.msg_id:
+                        # ignore messages not related to this request
+                        # should rarely happen, but in case there's some unprocessed messages from previous run
+                        logger.debug(
+                            f"Ignoring message of parent id {response.parent_header.msg_id} in request {payload.header.msg_id}"
+                        )
+                        continue
                     match response.msg_type:
                         case "error":
                             result = (
                                 f"{response.content.ename}: {response.content.evalue}"
                             )
-                            break
                         case "execute_result":
                             result = response.content.data.text_plain
-                            break
                         case "stream":
                             result = response.content.text
-                            break
+                        case "status":
+                            if response.content.execution_state == "idle":
+                                # idle means the kernel has finished executing
+                                # TODO: there will be rare situations that the idle message is received before the execute_result message
+                                # See <https://github.com/jupyter-server/enterprise_gateway/blob/54c8e31d9b17418f35454b49db691d2ce5643c22/enterprise_gateway/client/gateway_client.py#L235C9-L235C9>
+                                break
                         case _:
                             # debug because we don't handle many message types like status
                             logger.debug(f"Unhandled message type: {response.msg_type}")
