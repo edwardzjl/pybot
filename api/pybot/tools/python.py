@@ -15,10 +15,14 @@ from pybot.jupyter.schema import ExecutionRequest, ExecutionResponse
 
 class CodeSandbox(BaseTool):
     name = "code_sandbox"
-    description = "useful for when you need to execute code."
-    channel_endpoint: str
     timeout: int = 60
     """The timeout for the tool in seconds."""
+    shared_volume: str = "/mnt/data"
+    description = f"""When you send a message containing Python code to {name}, it will be executed in a stateful Jupyter notebook environment.
+{name} will respond with the output of the execution or time out after {timeout} seconds.
+The drive at '{shared_volume}' can be used to save and persist user files.
+Internet access for this session is disabled. Do not make external web requests or API calls as they will fail."""
+    channel_endpoint: str
 
     def _run(
         self, code: str, run_manager: Optional[CallbackManagerForToolRun] = None

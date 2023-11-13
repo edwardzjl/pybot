@@ -4,6 +4,13 @@ from langchain.prompts import ChatPromptTemplate
 from langchain.prompts.chat import ChatPromptValue, PromptValue
 from langchain.schema import AIMessage, ChatMessage, HumanMessage, SystemMessage
 
+SYSTEM_PREFIX = "<|im_start|>system"
+SYSTEM_SUFFIX = "<|im_end|>"
+HUMAN_PREFIX = "<|im_start|>user"
+HUMAN_SUFFIX = "<|im_end|>"
+AI_PREFIX = "<|im_start|>assistant"
+AI_SUFFIX = "<|im_end|>"
+
 
 class ChatMLPromptTemplate(ChatPromptTemplate):
     """A prompt template for Chat Markup Language models.
@@ -21,12 +28,12 @@ class ChatMLPromptValue(ChatPromptValue):
     A type of a prompt value that is built from messages.
     """
 
-    system_prefix: str = "<|im_start|>system"
-    system_suffix: str = "<|im_end|>"
-    human_prefix: str = "<|im_start|>user"
-    human_suffix: str = "<|im_end|>"
-    ai_prefix: str = "<|im_start|>assistant"
-    ai_suffix: str = "<|im_end|>"
+    system_prefix: str = SYSTEM_PREFIX
+    system_suffix: str = SYSTEM_SUFFIX
+    human_prefix: str = HUMAN_PREFIX
+    human_suffix: str = HUMAN_SUFFIX
+    ai_prefix: str = AI_PREFIX
+    ai_suffix: str = AI_SUFFIX
     prefix_separator: str = "\n"
     """separator between prefix and content"""
     message_separator: str = "\n"

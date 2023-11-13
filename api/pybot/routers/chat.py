@@ -2,35 +2,29 @@ from datetime import date
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
-from langchain.chains import ConversationChain
 from langchain.llms import BaseLLM
 from langchain.memory import RedisChatMessageHistory
 from loguru import logger
 
+from pybot.agent.base import create_agent
 from pybot.callbacks import (
     StreamingLLMCallbackHandler,
     UpdateConversationCallbackHandler,
 )
 from pybot.memory import FlexConversationBufferWindowMemory
-from pybot.prompt import (
-    SYSTEM,
-    ai_prefix,
-    ai_suffix,
-    human_prefix,
-    human_suffix,
-    prompt,
-)
+from pybot.prompts import AI_PREFIX, AI_SUFFIX, HUMAN_PREFIX, HUMAN_SUFFIX
 from pybot.routers.dependencies import get_llm, get_message_history
 from pybot.schemas import ChatMessage
 from pybot.utils import UserIdHeader
 
 router = APIRouter(
     prefix="/api/chat",
-    tags=["conversation"],
+    tags=["chat"],
 )
 
 
-@router.websocket()
+@router.websocket("")
+@router.websocket("/")
 async def chat(
     websocket: WebSocket,
     llm: Annotated[BaseLLM, Depends(get_llm)],
@@ -39,25 +33,27 @@ async def chat(
 ):
     await websocket.accept()
     memory = FlexConversationBufferWindowMemory(
-        human_prefix=human_prefix,
-        human_suffix=human_suffix,
-        ai_prefix=ai_prefix,
-        ai_suffix=ai_suffix,
+        human_prefix=HUMAN_PREFIX,
+        human_suffix=HUMAN_SUFFIX,
+        ai_prefix=AI_PREFIX,
+        ai_suffix=AI_SUFFIX,
         prefix_delimiter="\n",
         memory_key="history",
+        input_key="input",
         chat_memory=history,
+        return_messages=True,
     )
-    conversation_chain: ConversationChain = ConversationChain(
+    agent_executor = create_agent(
         llm=llm,
-        prompt=prompt,
-        verbose=False,
-        memory=memory,
+        agent_executor_kwargs={
+            "memory": memory,
+            "return_intermediate_steps": True,
+        },
     )
     while True:
         try:
             payload: str = await websocket.receive_text()
             message = ChatMessage.model_validate_json(payload)
-            system_message = SYSTEM.format(date=date.today())
             history.session_id = f"{userid}:{message.conversation}"
             streaming_callback = StreamingLLMCallbackHandler(
                 websocket, message.conversation
@@ -65,13 +61,17 @@ async def chat(
             update_conversation_callback = UpdateConversationCallbackHandler(
                 message.conversation
             )
-            await conversation_chain.arun(
-                system_message=system_message,
-                input=message.content,
+            await agent_executor.acall(
+                inputs={
+                    "date": date.today(),
+                    "input": message.content,
+                },
+                # date=
+                # input=message.content,
                 callbacks=[streaming_callback, update_conversation_callback],
             )
         except WebSocketDisconnect:
             logger.info("websocket disconnected")
             return
         except Exception as e:
-            logger.error(f"Something goes wrong, err: {e}")
+            logger.error(f"Something goes wrong, err: {str(e)}")
