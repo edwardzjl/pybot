@@ -23,14 +23,14 @@ router = APIRouter(
 )
 
 
-@router.get("/conversations", response_model=list[Conversation])
+@router.get("", response_model=list[Conversation])
 async def get_conversations(userid: Annotated[str | None, UserIdHeader()] = None):
     convs = await ORMConversation.find(ORMConversation.owner == userid).all()
     convs.sort(key=lambda x: x.updated_at, reverse=True)
     return [Conversation(**conv.dict()) for conv in convs]
 
 
-@router.get("/conversations/{conversation_id}", response_model=ConversationDetail)
+@router.get("/{conversation_id}", response_model=ConversationDetail)
 async def get_conversation(
     conversation_id: str,
     history: Annotated[RedisChatMessageHistory, Depends(get_message_history)],
@@ -51,14 +51,14 @@ async def get_conversation(
     )
 
 
-@router.post("/conversations", status_code=201, response_model=ConversationDetail)
+@router.post("", status_code=201, response_model=ConversationDetail)
 async def create_conversation(userid: Annotated[str | None, UserIdHeader()] = None):
     conv = ORMConversation(title=f"New chat", owner=userid)
     await conv.save()
     return ConversationDetail(**conv.dict())
 
 
-@router.put("/conversations/{conversation_id}")
+@router.put("/{conversation_id}")
 async def update_conversation(
     conversation_id: str,
     payload: UpdateConversation,
@@ -69,7 +69,7 @@ async def update_conversation(
     await conv.save()
 
 
-@router.delete("/conversations/{conversation_id}", status_code=204)
+@router.delete("/{conversation_id}", status_code=204)
 async def delete_conversation(
     conversation_id: str,
     userid: Annotated[str | None, UserIdHeader()] = None,
@@ -77,7 +77,7 @@ async def delete_conversation(
     await ORMConversation.delete(conversation_id)
 
 
-@router.post("/conversations/{conversation_id}/files")
+@router.post("/{conversation_id}/files")
 async def upload_files(
     conversation_id: str,
     files: list[UploadFile],
