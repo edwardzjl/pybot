@@ -120,6 +120,7 @@ class CustomAgentExecutor(AgentExecutor):
 
 def create_agent(
     llm: BaseLanguageModel,
+    channel_endpoint: str,
     max_iterations: Optional[int] = 15,
     max_execution_time: Optional[float] = None,
     early_stopping_method: str = "force",
@@ -128,7 +129,7 @@ def create_agent(
     **kwargs: dict[str, Any],
 ) -> AgentExecutor:
     """Construct an SQL agent from an LLM and tools."""
-    tools = [CodeSandbox(channel_endpoint="TODO:")]
+    tools = [CodeSandbox(channel_endpoint=channel_endpoint)]
     agent = PybotAgent.from_llm_and_tools(
         llm=llm,
         tools=tools,

@@ -18,7 +18,7 @@ def get_llm() -> BaseLLM:
     return HuggingFaceTextGenInference(
         inference_server_url=str(settings.inference_server_url),
         max_new_tokens=1024,
-        temperature=0.8,
+        temperature=0.1,
         top_p=0.9,
         repetition_penalty=1.01,
         stop_sequences=["</s>"],
