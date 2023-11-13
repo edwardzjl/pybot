@@ -1,3 +1,4 @@
+import json
 from typing import Any, Optional, Sequence
 
 from langchain.agents.agent import Agent, AgentExecutor, AgentOutputParser
@@ -20,7 +21,7 @@ from langchain.tools import BaseTool
 from pydantic.v1 import Field
 
 from pybot.agent.output_parser import JsonOutputParser
-from pybot.agent.prompt import SYSTEM
+from pybot.agent.prompt import SYSTEM, TOOL_FORMAT_INSTRUCT
 from pybot.prompts import ChatMLPromptTemplate
 from pybot.tools import CodeSandbox
 
@@ -32,8 +33,12 @@ class PybotAgent(Agent):
 
     @classmethod
     def create_prompt(cls, tools: Sequence[BaseTool]) -> BasePromptTemplate:
-        tool_strings = "## Tools\n\n" + "\n".join(
+        tool_names = [tool.name for tool in tools]
+        tool_descs = "\n".join(
             [f"### {tool.name}\n\n{tool.description}" for tool in tools]
+        )
+        tool_strings = TOOL_FORMAT_INSTRUCT.format(
+            tools=tool_descs, tool_names=", ".join(tool_names)
         )
         system_prompt = PromptTemplate(
             template=SYSTEM,
@@ -55,16 +60,12 @@ class PybotAgent(Agent):
     ) -> list[BaseMessage]:
         steps = []
         for action, observation in intermediate_steps:
-            steps.append(AIMessage(content=action.log))
+            # action.log contains too much noise
+            # maybe I should construct a pydantic model for `action_taken`
+            action_taken = {"tool_name": action.tool, "tool_input": action.tool_input}
+            steps.append(AIMessage(content=json.dumps(action_taken)))
             steps.append(SystemMessage(content=observation))
         return steps
-        # if not intermediate_steps:
-        #     # the first round of the conversation
-        #     return self.llm_prefix
-        # agent_scratchpad = ""
-        # for action, observation in intermediate_steps:
-        #     agent_scratchpad += f"{self.llm_prefix}{action.log}<|im_end|>\n{self.observation_prefix}{observation}<|im_end|>\n"
-        # return f"{agent_scratchpad}{self.llm_prefix}"
 
     @classmethod
     def _get_default_output_parser(cls, **kwargs: Any) -> AgentOutputParser:
