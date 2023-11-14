@@ -12,7 +12,9 @@ class JsonOutputParser(AgentOutputParser):
     The AgentOutputParser is a langchain.load.serializable.Serializable which is a pydantic v1 model in the time of writing.
     """
 
-    pattern = re.compile(r"```(?:json)?\n(.*?)```", re.DOTALL)
+    pattern = re.compile(
+        r"(?:```)?(?:json)?\n(\{\s*\"tool_name\":.*?})\n(?:```)?", re.DOTALL
+    )
     tool_name_key: str = "tool_name"
     tool_input_key: str = "tool_input"
 
