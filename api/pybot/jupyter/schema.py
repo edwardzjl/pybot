@@ -1,15 +1,21 @@
+import json
 from datetime import datetime
-from typing import Optional
+from typing import Any, Optional
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_serializer
 
 
 class CreateKernelRequest(BaseModel):
     name: Optional[str] = None
     """Kernel spec name (defaults to default kernel spec for server)."""
-    env: Optional[dict[str, str]] = None
+    env: Optional[dict[str, Any]] = None
     """A dictionary of environment variables and values to include in the kernel process - subject to filtering."""
+
+    @field_serializer("env")
+    def serialize_env(self, env: dict[str, Any], _info):
+        _env = {key: json.dumps(value) for key, value in env.items()}
+        return _env
 
 
 class CreateKernelResponse(BaseModel):
