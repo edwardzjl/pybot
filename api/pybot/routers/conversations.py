@@ -61,6 +61,13 @@ async def create_conversation(userid: Annotated[str | None, UserIdHeader()] = No
         env={
             "KERNEL_USERNAME": userid,
             # "KERNEL_NAMESPACE": f"pybot-{userid}",
+            "KERNEL_VOLUME_MOUNTS": [{"name": "nfs-volume", "mountPath": "/mnt/data"}],
+            "KERNEL_VOLUMES": [
+                {
+                    "name": "nfs-volume",
+                    "nfs": {"server": settings.nfs_server, "path": settings.nfs_path},
+                }
+            ],
         }
     )
     response = gateway_client.create_kernel(request)
