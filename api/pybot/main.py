@@ -12,6 +12,7 @@ from loguru import logger
 
 from pybot.routers.chat import router as chat_router
 from pybot.routers.conversations import router as conversation_router
+from pybot.routers.files import router as files_router
 from pybot.utils import UserIdHeader
 
 
@@ -25,6 +26,7 @@ app = FastAPI(lifespan=lifespan)
 
 app.include_router(chat_router)
 app.include_router(conversation_router)
+app.include_router(files_router)
 
 
 @app.get("/api/healthz")

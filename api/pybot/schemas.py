@@ -77,3 +77,18 @@ class UpdateConversation(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     title: str
+
+class File(BaseModel):
+    id: Optional[str] = None
+    filename: str
+    path: str
+    owner: str
+    created_at: datetime = Field(default_factory=utcnow)
+    updated_at: datetime = created_at
+
+    @model_validator(mode="before")
+    @classmethod
+    def set_id(cls, values):
+        if "pk" in values and "id" not in values:
+            values["id"] = values["pk"]
+        return values

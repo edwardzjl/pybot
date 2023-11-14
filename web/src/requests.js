@@ -57,3 +57,29 @@ export const updateConversation = async (conversationId, title) => {
         }),
     })
 };
+
+/**
+ * Get files of conversation
+ * @param {string} conversationId 
+ */
+export const getFiles = async (conversationId) => {
+    return fetch(`/api/conversations/${conversationId}/files`, {
+    }).then((res) => res.json());
+};
+
+
+/**
+ * Upload files to conversation
+ * @param {string} conversationId 
+ * @param {string} files
+ */
+export const uploadFiles = async (conversationId, files) => {
+    const formData = new FormData();
+    files.forEach(file => {
+        formData.append("files", file);
+    });
+    return fetch(`/api/conversations/${conversationId}/files`, {
+        method: "POST",
+        body: formData,
+    });
+};

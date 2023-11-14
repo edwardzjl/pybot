@@ -8,6 +8,7 @@ import SideMenu from "components/SideMenu";
 import ChatLog from "components/ChatLog";
 import ChatMessage from "components/ChatLog/ChatMessage";
 import ChatInput from "components/ChatLog/ChatInput";
+import FileView from "components/FileViewer";
 import generateName from "names";
 import {
   createConversation,
@@ -210,6 +211,7 @@ function App() {
               </ChatLog>
               <ChatInput chatId={currentConv?.id} onSend={sendMessage} />
             </section>
+            <FileView chatId={currentConv?.id} />
           </ConversationContext.Provider>
         </UserContext.Provider>
       </SnackbarContext.Provider>

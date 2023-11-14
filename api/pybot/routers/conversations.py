@@ -1,9 +1,6 @@
-import os
-from pathlib import Path
 from typing import Annotated
 
-import aiofiles
-from fastapi import APIRouter, Depends, UploadFile
+from fastapi import APIRouter, Depends
 from langchain.memory import RedisChatMessageHistory
 
 from pybot.config import settings
@@ -93,21 +90,3 @@ async def delete_conversation(
     userid: Annotated[str | None, UserIdHeader()] = None,
 ):
     await ORMConversation.delete(conversation_id)
-
-
-@router.post("/{conversation_id}/files")
-async def upload_files(
-    conversation_id: str,
-    files: list[UploadFile],
-    userid: Annotated[str | None, UserIdHeader()] = None,
-):
-    parent_dir = Path(
-        os.path.join(str(settings.shared_volume), userid, conversation_id)
-    )
-    parent_dir.mkdir(exist_ok=True, parents=True)
-    for file in files:
-        file_path = os.path.join(parent_dir, file.filename)
-        async with aiofiles.open(file_path, "wb") as out_file:
-            while content := await file.read(1024):
-                await out_file.write(content)
-    return {"filenames": [file.filename for file in files]}
