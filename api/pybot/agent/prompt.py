@@ -11,15 +11,6 @@ Think carefully about how the information you find relates to the user's request
 
 TOOL_FORMAT_INSTRUCT = """## Tools
 
-Use a markdown fenced json code block (including the backticks) containing the tool name and the tool arguments when employing a tool:
-
-```json
-{{
-    "tool_name": string, \\ Specify the action to take; choose from {tool_names}
-    "tool_input": string \\ Provide the input for the action
-}}
-```
-
 The following tools are only provided for you, not for the user. Use these tools to help answer the user's question:
 
 {tools}"""
