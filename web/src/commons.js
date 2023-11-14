@@ -41,3 +41,11 @@ export const getCookie = (name) => {
     const parts = value.split(`; ${name}=`);
     if (parts.length === 2) return parts.pop().split(';').shift();
 }
+
+/**
+ * Get file extension from filename.
+ * <https://stackoverflow.com/a/190878/6564721>
+ */
+export const getExtension = (filename) => {
+    return filename.split('.').pop();
+}

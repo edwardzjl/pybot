@@ -1,0 +1,14 @@
+.file-view {
+    max-width: 17%;
+}
+
+.files {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.icon {
+    width: 48px;
+    margin: 16px;
+    margin-bottom: 4px;
+}
