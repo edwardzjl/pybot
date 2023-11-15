@@ -5,6 +5,7 @@ from urllib.parse import urljoin, urlparse, urlunparse
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from langchain.llms import BaseLLM
 from langchain.memory import RedisChatMessageHistory
+from langchain.schema import HumanMessage
 from loguru import logger
 
 from pybot.agent.base import create_agent
@@ -51,6 +52,17 @@ async def chat(
         try:
             payload: str = await websocket.receive_text()
             message = ChatMessage.model_validate_json(payload)
+            history.session_id = f"{userid}:{message.conversation}"
+            # file messages are only added to history, not passing to llm
+            if message.type == "file":
+                lc_msg = HumanMessage(
+                    content=message.content.model_dump_json(),
+                    additional_kwargs={
+                        "type": "file",
+                    },
+                )
+                history.add_message(lc_msg)
+                continue
             conv = await Conversation.get(message.conversation)
             # TODO: replace with ws? or simply add a ws field to the settings?
             ws_base = urlunparse(
@@ -69,7 +81,6 @@ async def chat(
                     "return_intermediate_steps": True,
                 },
             )
-            history.session_id = f"{userid}:{message.conversation}"
             streaming_callback = StreamingLLMCallbackHandler(
                 websocket, message.conversation
             )

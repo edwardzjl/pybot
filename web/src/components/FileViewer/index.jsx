@@ -46,6 +46,8 @@ const FileView = (props) => {
         const response = await uploadFiles(props.chatId, droppedFiles);
         if (response.ok) {
             console.log(response);
+            const _files = await response.json();
+            props.onUpload(props.chatId, _files);
         } else {
             console.error(response);
         }
