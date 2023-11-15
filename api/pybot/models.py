@@ -15,6 +15,7 @@ class Conversation(JsonModel):
     kernel_id: Optional[UUID] = None
     """TODO: This is a transitent field, the kernel could be culled, I need to handle it elsewhere."""
 
+
 class File(JsonModel):
     filename: str
     path: str
