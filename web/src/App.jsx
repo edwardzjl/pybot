@@ -114,6 +114,22 @@ function App() {
     );
   };
 
+  const onFilesUploaded = async (convId, files) => {
+    files.forEach((file) => {
+      const msg = {
+        conversation: convId,
+        from: username,
+        content: file,
+        type: "file"
+      }
+      ws.current?.send(JSON.stringify(msg));
+      dispatch({
+        type: "messageAdded",
+        id: convId,
+        message: msg,
+      });
+    });
+  }
 
   /**
    * All conversations of the current user.
@@ -211,7 +227,7 @@ function App() {
               </ChatLog>
               <ChatInput chatId={currentConv?.id} onSend={sendMessage} />
             </section>
-            <FileView chatId={currentConv?.id} />
+            <FileView chatId={currentConv?.id} onUpload={onFilesUploaded} />
           </ConversationContext.Provider>
         </UserContext.Provider>
       </SnackbarContext.Provider>

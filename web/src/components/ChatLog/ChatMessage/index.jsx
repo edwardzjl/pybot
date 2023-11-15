@@ -60,7 +60,8 @@ const ChatMessage = (props) => {
         </Avatar>
         <ReactMarkdown
           className="chat-message-content"
-          children={props.message.content}
+          // TODO: handle file message
+          children={props.message.type === "file" ? props.message.content.filename : props.message.content}
           // remarkPlugins={[remarkGfm]}
           components={{
             code({ node, inline, className, children, ...props }) {
