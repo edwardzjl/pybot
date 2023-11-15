@@ -17,14 +17,17 @@ class CodeSandbox(BaseTool):
     name = "code_sandbox"
     timeout: int = 60
     """The timeout for the tool in seconds."""
-    shared_volume: str = "/mnt/data"
-    description = f"""Use this tool when you want to execute python code.
-When you send a message containing Python code to {name}, it will be executed in a stateful Jupyter notebook environment.
-{name} will respond with the output of the execution or time out after {timeout} seconds.
-{name} has the following dependency environment: python3, pandas.
-The drive at '{shared_volume}' can be used to save and persist user files.
-Internet access for this session is disabled. Do not make external web requests or API calls as they will fail.
-When using {name}, make sure to follow the following schema:
+    description = f"""**Description**: {name} is a powerful tool designed for executing Python code, facilitating diverse tasks such as like data analysis, data visualization, etc.
+
+**Execution Environment:** python3 Jupyter notebook with the following core dependencies:
+
+- pandas==1.5.3
+- scikit-learn
+- scikit-image
+- seaborn
+- SQLAlchemy
+
+**Usage Schema**:
 
 ```yaml
 ToolRequest:
