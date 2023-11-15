@@ -32,10 +32,10 @@ ToolRequest:
   properties:
     tool_name:
       type: string
-      enum: ["code_sandbox"]
+      enum: ["{name}"]
     tool_input:
       type: string
-      description: the code you want code_sandbox to execute
+      description: the code you want {name} to execute
   required: [tool_name, tool_input]
 ```
 

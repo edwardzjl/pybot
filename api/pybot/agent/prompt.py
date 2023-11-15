@@ -11,6 +11,6 @@ Think carefully about how the information you find relates to the user's request
 
 TOOL_FORMAT_INSTRUCT = """## Tools
 
-The following tools are only provided for you, not for the user. Use these tools to help answer the user's question:
+The following tools are exclusively provided for your use and are not intended for user. Utilize them to effectively address and resolve the user's inquiries:
 
 {tools}"""
