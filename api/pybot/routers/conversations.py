@@ -52,21 +52,19 @@ async def get_conversation(
 
 @router.post("", status_code=201, response_model=ConversationDetail)
 async def create_conversation(userid: Annotated[str | None, UserIdHeader()] = None):
-    # specifying namespace requires allocating namespace before creating kernel
-    # also unable to create pod under specific namespace, so disabling this for now
-    request = CreateKernelRequest(
-        env={
-            "KERNEL_USERNAME": userid,
-            # "KERNEL_NAMESPACE": f"pybot-{userid}",
-            "KERNEL_VOLUME_MOUNTS": [{"name": "nfs-volume", "mountPath": "/mnt/data"}],
-            "KERNEL_VOLUMES": [
-                {
-                    "name": "nfs-volume",
-                    "nfs": {"server": settings.nfs_server, "path": settings.nfs_path},
-                }
-            ],
-        }
-    )
+    env = {
+        "KERNEL_USERNAME": userid,
+        "KERNEL_VOLUME_MOUNTS": [{"name": "nfs-volume", "mountPath": "/mnt/data"}],
+        "KERNEL_VOLUMES": [
+            {
+                "name": "nfs-volume",
+                "nfs": {"server": settings.nfs_server, "path": settings.nfs_path},
+            }
+        ],
+    }
+    if settings.kernel_namespace:
+        env["KERNEL_NAMESPACE"] = settings.kernel_namespace
+    request = CreateKernelRequest(env=env)
     response = gateway_client.create_kernel(request)
     conv = ORMConversation(title=f"New chat", owner=userid, kernel_id=response.id)
     await conv.save()
