@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Any, Optional
 from uuid import UUID, uuid4
 
-from pydantic import BaseModel, Field, field_serializer
+from pydantic import BaseModel, Field, field_validator
 
 
 class CreateKernelRequest(BaseModel):
@@ -12,10 +12,20 @@ class CreateKernelRequest(BaseModel):
     env: Optional[dict[str, Any]] = None
     """A dictionary of environment variables and values to include in the kernel process - subject to filtering."""
 
-    @field_serializer("env")
-    def serialize_env(self, env: dict[str, Any], _info):
-        _env = {key: json.dumps(value) for key, value in env.items()}
-        return _env
+    @field_validator("env")
+    @classmethod
+    def convert_env_value_to_str(cls, v: dict[str, Any]) -> dict[str, str]:
+        if "KERNEL_VOLUME_MOUNTS" in v:
+            v["KERNEL_VOLUME_MOUNTS"] = json.dumps(v["KERNEL_VOLUME_MOUNTS"])
+        if "KERNEL_VOLUMES" in v:
+            v["KERNEL_VOLUMES"] = json.dumps(v["KERNEL_VOLUMES"])
+        return v
+
+    def model_dump(self):
+        return super().model_dump(by_alias=True, exclude_none=True)
+
+    def model_dump_json(self):
+        return super().model_dump_json(by_alias=True, exclude_none=True)
 
 
 class CreateKernelResponse(BaseModel):
