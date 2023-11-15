@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from langchain.memory import RedisChatMessageHistory
+from loguru import logger
 
 from pybot.config import settings
 from pybot.jupyter import CreateKernelRequest, GatewayClient
@@ -88,5 +89,8 @@ async def delete_conversation(
     userid: Annotated[str | None, UserIdHeader()] = None,
 ):
     conv = await ORMConversation.get(conversation_id)
-    gateway_client.delete_kernel(conv.kernel_id)
+    try:
+        gateway_client.delete_kernel(conv.kernel_id)
+    except Exception as e:
+        logger.exception(f"failed to delete kernel {conv.kernel_id}, err: {str(e)}")
     await ORMConversation.delete(conversation_id)
