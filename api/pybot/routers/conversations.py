@@ -87,4 +87,6 @@ async def delete_conversation(
     conversation_id: str,
     userid: Annotated[str | None, UserIdHeader()] = None,
 ):
+    conv = await ORMConversation.get(conversation_id)
+    gateway_client.delete_kernel(conv.kernel_id)
     await ORMConversation.delete(conversation_id)
