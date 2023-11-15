@@ -78,6 +78,7 @@ class UpdateConversation(BaseModel):
 
     title: str
 
+
 class File(BaseModel):
     id: Optional[str] = None
     filename: str

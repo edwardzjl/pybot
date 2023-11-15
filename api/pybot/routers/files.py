@@ -15,6 +15,7 @@ router = APIRouter(
     tags=["files"],
 )
 
+
 @router.post("")
 async def upload_files(
     conversation_id: str,
@@ -31,16 +32,24 @@ async def upload_files(
         async with aiofiles.open(file_path, "wb") as out_file:
             while content := await file.read(1024):
                 await out_file.write(content)
-        f = ORMFile(filename=file.filename, path=file_path, owner=userid, conversation_id=conversation_id)
+        f = ORMFile(
+            filename=file.filename,
+            path=file_path,
+            owner=userid,
+            conversation_id=conversation_id,
+        )
         await f.save()
         res.append(File(**f.dict()))
     return res
+
 
 @router.get("")
 async def get_files(
     conversation_id: str,
     userid: Annotated[str | None, UserIdHeader()] = None,
 ) -> list[File]:
-    files = await ORMFile.find((ORMFile.owner == userid) & (ORMFile.conversation_id == conversation_id)).all()
+    files = await ORMFile.find(
+        (ORMFile.owner == userid) & (ORMFile.conversation_id == conversation_id)
+    ).all()
     files.sort(key=lambda x: x.filename)
     return [File(**file.dict()) for file in files]
