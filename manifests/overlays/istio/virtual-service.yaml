@@ -4,7 +4,7 @@ metadata:
   name: pybot
 spec:
   hosts:
-    - "*"
+    - pybot.agi.zjuici.com
   gateways:
     - istio-system/istio-ingressgateway
   http:
@@ -14,6 +14,6 @@ spec:
             prefix: /
       route:
         - destination:
-            host: pybot.jlzhou.svc.cluster.local
+            host: pybot.jlzhou-pybot.svc.cluster.local
             port:
               number: 8000
