@@ -23,6 +23,9 @@ class File(BaseModel):
             values["id"] = values["pk"]
         return values
 
+    def dump_minimal_json(self) -> str:
+        return super().model_dump_json(include={"filename", "path"})
+
 
 class ChatMessage(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
