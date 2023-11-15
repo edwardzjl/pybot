@@ -26,9 +26,9 @@ ENV PATH="/app/.venv/bin:$PATH"
 COPY api/ .
 COPY --from=frontend-builder /build/build ./static
 
-RUN adduser --system --no-create-home --group chatbot \
-  && chown -R chatbot:chatbot /app
-USER chatbot:chatbot
+RUN adduser --system --no-create-home --group pybot \
+  && chown -R pybot:pybot /app
+USER pybot:pybot
 
-ENTRYPOINT [ "python", "-m", "uvicorn", "chatbot.main:app" ]
+ENTRYPOINT [ "python", "-m", "uvicorn", "pybot.main:app" ]
 CMD [ "--host", "0.0.0.0", "--port", "8000" ]
