@@ -11,9 +11,9 @@ class GatewayClient(BaseModel):
     host: HttpUrl
 
     def create_kernel(self, payload: CreateKernelRequest) -> CreateKernelResponse:
-        response = requests.post(
-            urljoin(str(self.host), "/api/kernels"), json=payload.model_dump()
-        )
+        _body = payload.model_dump()
+        logger.debug(f"Starting kernel with payload {_body}")
+        response = requests.post(urljoin(str(self.host), "/api/kernels"), json=_body)
         if not response.ok:
             raise RuntimeError(
                 f"Error starting kernel: {response.status_code}\n{response.content}"
