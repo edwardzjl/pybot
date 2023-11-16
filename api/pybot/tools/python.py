@@ -17,31 +17,29 @@ class CodeSandbox(BaseTool):
     name = "code_sandbox"
     timeout: int = 60
     """The timeout for the tool in seconds."""
-    description = f"""**Description**: {name} is a powerful tool designed for executing Python code, facilitating diverse tasks such as like data analysis, data visualization, etc.
+    description = f"""
+- {name}:
+  - Description: {name} is a powerful tool designed for executing Python code, facilitating diverse tasks such as like data analysis, data visualization, etc.
+  - Execution Environment: python3 Jupyter notebook with the following major dependencies:
+    - pandas==1.5.3
+    - scikit-learn
+    - scikit-image
+    - seaborn
+    - SQLAlchemy
+  - Usage Schema: When involking {name}, ensure that you provide a JSON object adhering to the following schema:
 
-**Execution Environment:** python3 Jupyter notebook with the following core dependencies:
-
-- pandas==1.5.3
-- scikit-learn
-- scikit-image
-- seaborn
-- SQLAlchemy
-
-**Usage Schema**:
-
-```yaml
-ToolRequest:
-  type: object
-  properties:
-    tool_name:
-      type: string
-      enum: ["{name}"]
-    tool_input:
-      type: string
-      description: the code you want {name} to execute
-  required: [tool_name, tool_input]
-```
-
+    ```yaml
+    ToolRequest:
+    type: object
+    properties:
+        tool_name:
+        type: string
+        enum: ["{name}"]
+        tool_input:
+        type: string
+        description: the code you want {name} to execute
+    required: [tool_name, tool_input]
+    ```
 """
     channel_endpoint: str
 
