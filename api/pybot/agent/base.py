@@ -21,7 +21,7 @@ from langchain.tools import BaseTool
 from pydantic.v1 import Field
 
 from pybot.agent.output_parser import JsonOutputParser
-from pybot.agent.prompt import SYSTEM, TOOL_FORMAT_INSTRUCT
+from pybot.agent.prompt import EXAMPLES, SYSTEM, TOOLS
 from pybot.prompts import ChatMLPromptTemplate
 from pybot.tools import CodeSandbox
 
@@ -33,17 +33,12 @@ class PybotAgent(Agent):
 
     @classmethod
     def create_prompt(cls, tools: Sequence[BaseTool]) -> BasePromptTemplate:
-        tool_names = [tool.name for tool in tools]
-        tool_descs = "\n".join(
-            [f"### {tool.name}\n\n{tool.description}" for tool in tools]
-        )
-        tool_strings = TOOL_FORMAT_INSTRUCT.format(
-            tools=tool_descs, tool_names=", ".join(tool_names)
-        )
+        tool_descs = "\n".join([f"{tool.description}" for tool in tools])
+        tool_strings = TOOLS.format(tools=tool_descs)
         system_prompt = PromptTemplate(
             template=SYSTEM,
             input_variables=["date"],
-            partial_variables={"tools": tool_strings},
+            partial_variables={"tools": tool_strings, "examples": EXAMPLES},
         )
         messages = [
             SystemMessagePromptTemplate(prompt=system_prompt),
