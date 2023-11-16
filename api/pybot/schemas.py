@@ -12,9 +12,6 @@ class File(BaseModel):
     id: Optional[str] = None
     filename: str
     path: str
-    owner: str
-    created_at: datetime = Field(default_factory=utcnow)
-    updated_at: datetime = created_at
 
     @model_validator(mode="before")
     @classmethod
@@ -22,9 +19,6 @@ class File(BaseModel):
         if "pk" in values and "id" not in values:
             values["id"] = values["pk"]
         return values
-
-    def dump_minimal_json(self) -> str:
-        return super().model_dump_json(include={"filename", "path"})
 
 
 class ChatMessage(BaseModel):

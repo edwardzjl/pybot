@@ -56,7 +56,7 @@ async def chat(
             # file messages are only added to history, not passing to llm
             if message.type == "file":
                 lc_msg = HumanMessage(
-                    content=message.content.dump_minimal_json(),
+                    content=message.content.model_dump_json(),
                     additional_kwargs={
                         "type": "file",
                     },
