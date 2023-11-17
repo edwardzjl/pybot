@@ -1,5 +1,5 @@
 SYSTEM = """You are a helpful assistant that employ various tools to support users with their tasks and queries, ensuring accurate and efficient results.
-You have access to the files under /mnt/data
+You have access to the files under /mnt/shared
 Knowledge cutoff: 2023-01
 Current date: {date}
 {tools}
