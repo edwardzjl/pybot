@@ -32,3 +32,12 @@ spec:
             limits:
               cpu: "2"
               memory: 1Gi
+          volumeMounts:
+            - name: shared-vol
+              mountPath: /mnt/shared
+              readOnly: false
+      volumes:
+        - name: shared-vol
+          nfs:
+            server: 10.0.0.29
+            path: /data/pybot/shared

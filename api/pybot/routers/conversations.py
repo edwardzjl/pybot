@@ -57,12 +57,15 @@ async def get_conversation(
 async def create_conversation(
     userid: Annotated[str | None, UserIdHeader()] = None
 ) -> ConversationDetail:
+    # using the same path of shared volume on chat app and jupyter kernels will ease the maintainence
     env = {
         "KERNEL_USERNAME": userid,
-        "KERNEL_VOLUME_MOUNTS": [{"name": "nfs-volume", "mountPath": "/mnt/data"}],
+        "KERNEL_VOLUME_MOUNTS": [
+            {"name": "shared-vol", "mountPath": settings.shared_volume}
+        ],
         "KERNEL_VOLUMES": [
             {
-                "name": "nfs-volume",
+                "name": "shared-vol",
                 "nfs": {"server": settings.nfs_server, "path": settings.nfs_path},
             }
         ],
