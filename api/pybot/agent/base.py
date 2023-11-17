@@ -24,6 +24,7 @@ from pybot.agent.output_parser import JsonOutputParser
 from pybot.agent.prompt import EXAMPLES, SYSTEM, TOOLS
 from pybot.prompts import ChatMLPromptTemplate
 from pybot.tools import CodeSandbox
+from pybot.tools.base import ExtendedTool
 
 
 class PybotAgent(Agent):
@@ -35,10 +36,15 @@ class PybotAgent(Agent):
     def create_prompt(cls, tools: Sequence[BaseTool]) -> BasePromptTemplate:
         tool_descs = "\n".join([f"{tool.description}" for tool in tools])
         tool_strings = TOOLS.format(tools=tool_descs)
+        examples = ""
+        for tool in tools:
+            if isinstance(tool, ExtendedTool):
+                examples += f"{tool.examples}\n"
+        examples_strings = EXAMPLES.format(examples=examples)
         system_prompt = PromptTemplate(
             template=SYSTEM,
             input_variables=["date"],
-            partial_variables={"tools": tool_strings, "examples": EXAMPLES},
+            partial_variables={"tools": tool_strings, "examples": examples_strings},
         )
         messages = [
             SystemMessagePromptTemplate(prompt=system_prompt),
