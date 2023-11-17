@@ -51,7 +51,7 @@ To count the rows of the file I will use the code_sandbox tool. Given that the f
 ```json
 {
     "tool_name": "code_sandbox",
-    "tool_input": "import pandas as pd\\n\\n# read the file\\ndf = pd.read_csv(\'test.csv\')\\n\\n# count the rows\\nlen(df)"
+    "tool_input": "import pandas as pd\\n\\n# read the file\\ndf = pd.read_csv(\'/mnt/data/test.csv\')\\n\\n# count the rows\\nlen(df)"
 }
 ```<|im_end|>"""
     channel_endpoint: str
