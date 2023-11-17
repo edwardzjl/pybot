@@ -11,9 +11,10 @@ from websockets.client import connect as aconnect
 from websockets.sync.client import connect
 
 from pybot.jupyter.schema import ExecutionRequest, ExecutionResponse
+from pybot.tools.base import ExtendedTool
 
 
-class CodeSandbox(BaseTool):
+class CodeSandbox(ExtendedTool):
     name = "code_sandbox"
     timeout: int = 60
     """The timeout for the tool in seconds."""
@@ -41,6 +42,18 @@ class CodeSandbox(BaseTool):
     required: [tool_name, tool_input]
     ```
 """
+    examples: str = """<|im_start|>system example-user
+{"filename":"test.csv","path":"/mnt/data/test.csv"}<|im_end|>
+<|im_start|>system example-user
+how many rows are there?<|im_end|>
+<|im_start|>system example-assistant
+To count the rows of the file I will use the code_sandbox tool. Given that the file is in CSV format, I will use the pandas library to read the file and count the rows.
+```json
+{
+    "tool_name": "code_sandbox",
+    "tool_input": "import pandas as pd\\n\\n# read the file\\ndf = pd.read_csv(\'test.csv\')\\n\\n# count the rows\\nlen(df)"
+}
+```<|im_end|>"""
     channel_endpoint: str
 
     def _run(
