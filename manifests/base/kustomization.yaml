@@ -24,4 +24,4 @@ generatorOptions:
 
 images:
   - name: edwardlol/pybot
-    newTag: 0.1.0
+    newTag: 7b123a6
