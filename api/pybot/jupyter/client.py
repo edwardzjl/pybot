@@ -1,4 +1,4 @@
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse, urlunparse
 
 import requests
 from loguru import logger
@@ -44,3 +44,9 @@ class GatewayClient(BaseModel):
                 f"Error deleting kernel {kernel_id}: {response.status_code}\n{response.content}"
             )
         logger.info(f"Kernel {kernel_id} deleted")
+
+    def get_ws_endpoint(self, kernel_id: str) -> str:
+        base = urlparse(str(self.host))
+        ws_scheme = "wss" if base.scheme == "https" else "ws"
+        ws_base = urlunparse(base._replace(scheme=ws_scheme))
+        return urljoin(ws_base, f"/api/kernels/{kernel_id}/channels")
