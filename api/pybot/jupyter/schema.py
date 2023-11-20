@@ -28,6 +28,10 @@ class CreateKernelRequest(BaseModel):
         return super().model_dump_json(by_alias=True, exclude_none=True)
 
 
+class KernelNotFoundException(RuntimeError):
+    ...
+
+
 class CreateKernelResponse(BaseModel):
     id: UUID
     name: str

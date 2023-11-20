@@ -4,7 +4,11 @@ import requests
 from loguru import logger
 from pydantic import BaseModel, HttpUrl
 
-from pybot.jupyter.schema import CreateKernelRequest, CreateKernelResponse
+from pybot.jupyter.schema import (
+    CreateKernelRequest,
+    CreateKernelResponse,
+    KernelNotFoundException,
+)
 
 
 class GatewayClient(BaseModel):
@@ -22,13 +26,12 @@ class GatewayClient(BaseModel):
         logger.info(f"Started kernel with id {res.id}")
         return res
 
-    def get_kernel(self, kernel_id: str) -> CreateKernelRequest:
+    def get_kernel(self, kernel_id: str) -> CreateKernelResponse:
         response = requests.get(urljoin(str(self.host), f"/api/kernels/{kernel_id}"))
         if response.ok:
             return CreateKernelResponse.model_validate_json(response.text)
         elif response.status_code == 404:
-            # TODO: Handle 404
-            raise RuntimeError(f"kernel {kernel_id} not found")
+            raise KernelNotFoundException(f"kernel {kernel_id} not found")
         else:
             raise RuntimeError(
                 f"Error getting kernel {kernel_id}: {response.status_code}\n{response.content}"
