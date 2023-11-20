@@ -1,16 +1,23 @@
 import asyncio
-from typing import Optional
+from typing import Any, Optional
 
 from langchain.callbacks.manager import (
     AsyncCallbackManagerForToolRun,
     CallbackManagerForToolRun,
 )
-from langchain.tools import BaseTool
 from loguru import logger
+from pydantic.v1 import root_validator
 from websockets.client import connect as aconnect
 from websockets.sync.client import connect
 
-from pybot.jupyter.schema import ExecutionRequest, ExecutionResponse
+from pybot.config import settings
+from pybot.jupyter import (
+    CreateKernelRequest,
+    ExecutionRequest,
+    ExecutionResponse,
+    GatewayClient,
+)
+from pybot.jupyter.schema import KernelNotFoundException
 from pybot.tools.base import ExtendedTool
 
 
@@ -54,7 +61,16 @@ To count the rows of the file I will use the code_sandbox tool. Given that the f
     "tool_input": "import pandas as pd\\n\\n# read the file\\ndf = pd.read_csv(\'/mnt/data/test.csv\')\\n\\n# count the rows\\nlen(df)"
 }
 ```<|im_end|>"""
-    channel_endpoint: str
+    gateway_url: str
+    gateway_client: Optional[GatewayClient] = None
+    # TODO: storing userid and kernel_id seems weird
+    userid: str
+    kernel_id: str
+
+    @root_validator(pre=True)
+    def validate_environment(cls, values: dict[str, Any]) -> dict[str, Any]:
+        values["gateway_client"] = GatewayClient(host=values["gateway_url"])
+        return values
 
     def _run(
         self, code: str, run_manager: Optional[CallbackManagerForToolRun] = None
@@ -63,7 +79,8 @@ To count the rows of the file I will use the code_sandbox tool. Given that the f
         payload = ExecutionRequest.of_code(code)
         logger.debug(f"kernel execution payload: {payload.model_dump_json()}")
         result = ""
-        with connect(self.channel_endpoint) as websocket:
+        self._get_or_create_kernel(self.kernel_id)
+        with connect(self.gateway_client.get_ws_endpoint(self.kernel_id)) as websocket:
             try:
                 websocket.send(payload.model_dump_json())
                 while True:
@@ -97,7 +114,10 @@ To count the rows of the file I will use the code_sandbox tool. Given that the f
         payload = ExecutionRequest.of_code(code)
         logger.debug(f"kernel execution payload: {payload.model_dump_json()}")
         result = ""
-        async with aconnect(self.channel_endpoint) as websocket:
+        self._get_or_create_kernel(self.kernel_id)
+        async with aconnect(
+            self.gateway_client.get_ws_endpoint(self.kernel_id)
+        ) as websocket:
             try:
                 await websocket.send(payload.model_dump_json())
                 while True:
@@ -135,3 +155,29 @@ To count the rows of the file I will use the code_sandbox tool. Given that the f
                 logger.error(f"Something goes wrong, err: {str(e)}")
                 result = str(e)
         return result
+
+    def _get_or_create_kernel(self, kernel_id: str) -> None:
+        """Ensure the kernel exists before submitting code."""
+        try:
+            self.gateway_client.get_kernel(kernel_id)
+        except KernelNotFoundException:
+            env = {
+                "KERNEL_USERNAME": self.userid,
+                "KERNEL_VOLUME_MOUNTS": [
+                    {"name": "shared-vol", "mountPath": settings.shared_volume}
+                ],
+                "KERNEL_VOLUMES": [
+                    {
+                        "name": "shared-vol",
+                        "nfs": {
+                            "server": settings.nfs_server,
+                            "path": settings.nfs_path,
+                        },
+                    }
+                ],
+            }
+            if settings.kernel_namespace:
+                env["KERNEL_NAMESPACE"] = settings.kernel_namespace
+            request = CreateKernelRequest(env=env)
+            res = self.gateway_client.create_kernel(request)
+            self.kernel_id = str(res.id)

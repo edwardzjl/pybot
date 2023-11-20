@@ -1,6 +1,5 @@
 from datetime import date
 from typing import Annotated
-from urllib.parse import urljoin, urlparse, urlunparse
 
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from langchain.llms import BaseLLM
@@ -19,6 +18,7 @@ from pybot.models import Conversation
 from pybot.prompts import AI_PREFIX, AI_SUFFIX, HUMAN_PREFIX, HUMAN_SUFFIX
 from pybot.routers.dependencies import get_llm, get_message_history
 from pybot.schemas import ChatMessage
+from pybot.tools import CodeSandbox
 from pybot.utils import UserIdHeader
 
 router = APIRouter(
@@ -64,18 +64,16 @@ async def chat(
                 history.add_message(lc_msg)
                 continue
             conv = await Conversation.get(message.conversation)
-            # TODO: replace with ws? or simply add a ws field to the settings?
-            ws_base = urlunparse(
-                urlparse(str(settings.jupyter_enterprise_gateway_url))._replace(
-                    scheme="ws"
+            tools = [
+                CodeSandbox(
+                    gateway_url=str(settings.jupyter_enterprise_gateway_url),
+                    userid=userid,
+                    kernel_id=str(conv.kernel_id),
                 )
-            )
-            channel_endpoint = urljoin(
-                ws_base, f"/api/kernels/{conv.kernel_id}/channels"
-            )
+            ]
             agent_executor = create_agent(
                 llm=llm,
-                channel_endpoint=channel_endpoint,
+                tools=tools,
                 agent_executor_kwargs={
                     "memory": memory,
                     "return_intermediate_steps": True,
