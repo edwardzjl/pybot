@@ -23,7 +23,6 @@ from pydantic.v1 import Field
 from pybot.agent.output_parser import JsonOutputParser
 from pybot.agent.prompt import EXAMPLES, SYSTEM, TOOLS
 from pybot.prompts import ChatMLPromptTemplate
-from pybot.tools import CodeSandbox
 from pybot.tools.base import ExtendedTool
 
 
@@ -121,7 +120,7 @@ class CustomAgentExecutor(AgentExecutor):
 
 def create_agent(
     llm: BaseLanguageModel,
-    channel_endpoint: str,
+    tools: list[BaseTool],
     max_iterations: Optional[int] = 15,
     max_execution_time: Optional[float] = None,
     early_stopping_method: str = "force",
@@ -130,7 +129,6 @@ def create_agent(
     **kwargs: dict[str, Any],
 ) -> AgentExecutor:
     """Construct an SQL agent from an LLM and tools."""
-    tools = [CodeSandbox(channel_endpoint=channel_endpoint)]
     agent = PybotAgent.from_llm_and_tools(
         llm=llm,
         tools=tools,
