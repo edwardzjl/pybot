@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from langchain.memory import RedisChatMessageHistory
+from langchain.schema import HumanMessage
 from loguru import logger
 
 from pybot.config import settings
@@ -45,7 +46,7 @@ async def get_conversation(
             ChatMessage.from_lc(
                 lc_message=message, conv_id=conversation_id, from_=userid
             )
-            if message.type == "user"
+            if isinstance(message, HumanMessage)
             else ChatMessage.from_lc(lc_message=message, conv_id=conversation_id)
             for message in history.messages
         ],
