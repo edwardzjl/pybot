@@ -9,6 +9,7 @@ from loguru import logger
 
 from pybot.agent.base import create_agent
 from pybot.callbacks import (
+    AgentActionCallbackHandler,
     StreamingLLMCallbackHandler,
     UpdateConversationCallbackHandler,
 )
@@ -85,12 +86,19 @@ async def chat(
             update_conversation_callback = UpdateConversationCallbackHandler(
                 message.conversation
             )
+            action_callback = AgentActionCallbackHandler(
+                websocket, message.conversation, history
+            )
             await agent_executor.acall(
                 inputs={
                     "date": date.today(),
                     "input": message.content,
                 },
-                callbacks=[streaming_callback, update_conversation_callback],
+                callbacks=[
+                    streaming_callback,
+                    action_callback,
+                    update_conversation_callback,
+                ],
             )
         except WebSocketDisconnect:
             logger.info("websocket disconnected")
