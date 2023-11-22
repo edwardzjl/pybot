@@ -38,15 +38,15 @@ class CodeSandbox(ExtendedTool):
 
     ```yaml
     ToolRequest:
-    type: object
-    properties:
+      type: object
+      properties:
         tool_name:
-        type: string
-        enum: ["{name}"]
+          type: string
+          enum: ["{name}"]
         tool_input:
-        type: string
-        description: the code you want {name} to execute
-    required: [tool_name, tool_input]
+          type: string
+          description: the code you want {name} to execute
+      required: [tool_name, tool_input]
     ```
 """
     examples: str = """<|im_start|>system example-user
