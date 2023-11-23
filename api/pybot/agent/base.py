@@ -60,10 +60,7 @@ class PybotAgent(Agent):
     ) -> list[BaseMessage]:
         steps = []
         for action, observation in intermediate_steps:
-            # action.log contains too much noise
-            # maybe I should construct a pydantic model for `action_taken`
-            action_taken = {"tool_name": action.tool, "tool_input": action.tool_input}
-            steps.append(AIMessage(content=json.dumps(action_taken)))
+            steps.append(AIMessage(content=action.log))
             steps.append(SystemMessage(content=observation))
         return steps
 
