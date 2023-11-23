@@ -3,7 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from langchain.llms import BaseLLM
-from langchain.memory import RedisChatMessageHistory
+from langchain.memory import ConversationBufferWindowMemory, RedisChatMessageHistory
 from langchain.schema import HumanMessage
 from loguru import logger
 
@@ -14,9 +14,8 @@ from pybot.callbacks import (
     UpdateConversationCallbackHandler,
 )
 from pybot.config import settings
-from pybot.memory import FlexConversationBufferWindowMemory
 from pybot.models import Conversation
-from pybot.prompts import AI_PREFIX, AI_SUFFIX, HUMAN_PREFIX, HUMAN_SUFFIX
+from pybot.prompts import AI_PREFIX, HUMAN_PREFIX
 from pybot.routers.dependencies import get_llm, get_message_history
 from pybot.schemas import ChatMessage
 from pybot.tools import CodeSandbox
@@ -37,12 +36,9 @@ async def chat(
     userid: Annotated[str | None, UserIdHeader()] = None,
 ):
     await websocket.accept()
-    memory = FlexConversationBufferWindowMemory(
+    memory = ConversationBufferWindowMemory(
         human_prefix=HUMAN_PREFIX,
-        human_suffix=HUMAN_SUFFIX,
         ai_prefix=AI_PREFIX,
-        ai_suffix=AI_SUFFIX,
-        prefix_delimiter="\n",
         memory_key="history",
         input_key="input",
         output_key="output",
