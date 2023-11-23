@@ -1,4 +1,3 @@
-import json
 from typing import Any, Optional
 from uuid import UUID
 
@@ -36,32 +35,6 @@ class AgentActionCallbackHandler(AsyncCallbackHandler):
         """
         self.history.add_ai_message(action.log)
 
-    async def on_tool_start(
-        self,
-        serialized: dict[str, Any],
-        input_str: str,
-        *,
-        run_id: UUID,
-        parent_run_id: Optional[UUID] = None,
-        tags: Optional[list[str]] = None,
-        metadata: Optional[dict[str, Any]] = None,
-        **kwargs: Any,
-    ) -> None:
-        """Send action to user, and persist to history.
-        This can be done in 'on_agent_action' as well, but I left it here to pair with 'on_tool_end'
-        """
-        action = {"tool_name": serialized["name"], "tool_input": input_str}
-        action_str = json.dumps(action)
-        message = ChatMessage(
-            id=run_id,
-            conversation=self.conversation_id,
-            from_="system",
-            content=action_str,
-            type="text",
-        )
-        await self.websocket.send_text(message.model_dump_json())
-        self.history.add_message(SystemMessage(content=action_str))
-
     async def on_tool_end(
         self,
         output: str,
@@ -80,7 +53,15 @@ class AgentActionCallbackHandler(AsyncCallbackHandler):
             type="text",
         )
         await self.websocket.send_text(message.model_dump_json())
-        self.history.add_message(SystemMessage(content=output))
+        self.history.add_message(
+            SystemMessage(
+                content=output,
+                additional_kwargs={
+                    "prefix": "<|im_start|>system-observation\n",
+                    "suffix": "<|im_end|>",
+                },
+            )
+        )
 
     async def on_tool_error(
         self,
