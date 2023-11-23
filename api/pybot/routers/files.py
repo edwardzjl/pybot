@@ -16,7 +16,7 @@ router = APIRouter(
 )
 
 
-@router.post("")
+@router.post("", status_code=201)
 async def upload_files(
     conversation_id: str,
     files: list[UploadFile],
