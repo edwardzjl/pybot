@@ -41,8 +41,7 @@ class JsonOutputParser(AgentOutputParser):
     tool_input_key: str = "tool_input"
 
     def parse(self, text: str) -> Union[AgentAction, AgentFinish]:
-        dicts: list[dict] = list(find_dicts(text))
-        for _dict, i in dicts:
+        for _dict, i in find_dicts(text):
             if self.tool_name_key in _dict:
                 tool_name = _dict.get(self.tool_name_key)
                 tool_input = _dict.get(self.tool_input_key, "")
