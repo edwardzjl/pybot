@@ -3,8 +3,8 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from langchain.llms import BaseLLM
-from langchain.memory import ConversationBufferWindowMemory, RedisChatMessageHistory
-from langchain.schema import HumanMessage
+from langchain.memory import RedisChatMessageHistory
+from langchain.schema import BaseMemory, HumanMessage
 from loguru import logger
 
 from pybot.agent.base import create_agent
@@ -14,12 +14,16 @@ from pybot.callbacks import (
     UpdateConversationCallbackHandler,
 )
 from pybot.config import settings
+from pybot.context import principal, session_id
 from pybot.models import Conversation
-from pybot.prompts import AI_PREFIX, HUMAN_PREFIX
-from pybot.routers.dependencies import get_llm, get_message_history
+from pybot.routers.dependencies import (
+    UserIdHeader,
+    get_llm,
+    get_memory,
+    get_message_history,
+)
 from pybot.schemas import ChatMessage
 from pybot.tools import CodeSandbox
-from pybot.utils import UserIdHeader
 
 router = APIRouter(
     prefix="/api/chat",
@@ -33,23 +37,16 @@ async def chat(
     websocket: WebSocket,
     llm: Annotated[BaseLLM, Depends(get_llm)],
     history: Annotated[RedisChatMessageHistory, Depends(get_message_history)],
+    memory: Annotated[BaseMemory, Depends(get_memory)],
     userid: Annotated[str | None, UserIdHeader()] = None,
 ):
+    principal.set(userid)
     await websocket.accept()
-    memory = ConversationBufferWindowMemory(
-        human_prefix=HUMAN_PREFIX,
-        ai_prefix=AI_PREFIX,
-        memory_key="history",
-        input_key="input",
-        output_key="output",
-        chat_memory=history,
-        return_messages=True,
-    )
     while True:
         try:
             payload: str = await websocket.receive_text()
             message = ChatMessage.model_validate_json(payload)
-            history.session_id = f"{userid}:{message.conversation}"
+            session_id.set(f"{userid}:{message.conversation}")
             # file messages are only added to history, not passing to llm
             if message.type == "file":
                 lc_msg = HumanMessage(
@@ -64,7 +61,6 @@ async def chat(
             tools = [
                 CodeSandbox(
                     gateway_url=str(settings.jupyter_enterprise_gateway_url),
-                    userid=userid,
                     kernel_id=str(conv.kernel_id),
                 )
             ]
