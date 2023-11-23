@@ -12,8 +12,8 @@ from loguru import logger
 
 from pybot.routers.chat import router as chat_router
 from pybot.routers.conversations import router as conversation_router
+from pybot.routers.dependencies import UserIdHeader
 from pybot.routers.files import router as files_router
-from pybot.utils import UserIdHeader
 
 
 @asynccontextmanager

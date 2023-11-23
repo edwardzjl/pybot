@@ -11,6 +11,7 @@ from websockets.client import connect as aconnect
 from websockets.sync.client import connect
 
 from pybot.config import settings
+from pybot.context import principal
 from pybot.jupyter import (
     CreateKernelRequest,
     ExecutionRequest,
@@ -23,8 +24,6 @@ from pybot.tools.base import ExtendedTool
 
 class CodeSandbox(ExtendedTool):
     name = "code_sandbox"
-    timeout: int = 60
-    """The timeout for the tool in seconds."""
     description = f"""- {name}:
   - Description: {name} is a powerful tool designed for executing Python code, facilitating diverse tasks such as like data analysis, data visualization, etc. When performing data analysis, inspect the dataset first to make sure you understand it properly.
   - Execution Environment: python3 Jupyter notebook with the following major dependencies:
@@ -61,9 +60,9 @@ Sure, I can help you with that. Let's start by examining the initial rows of the
 ```<|im_end|>"""
     gateway_url: str
     gateway_client: Optional[GatewayClient] = None
-    # TODO: storing userid and kernel_id seems weird
-    userid: str
     kernel_id: str
+    timeout: int = 60
+    """The timeout for the tool in seconds."""
 
     @root_validator(pre=True)
     def validate_environment(cls, values: dict[str, Any]) -> dict[str, Any]:
@@ -160,7 +159,7 @@ Sure, I can help you with that. Let's start by examining the initial rows of the
             self.gateway_client.get_kernel(kernel_id)
         except KernelNotFoundException:
             env = {
-                "KERNEL_USERNAME": self.userid,
+                "KERNEL_USERNAME": principal.get(),
                 "KERNEL_VOLUME_MOUNTS": [
                     {"name": "shared-vol", "mountPath": settings.shared_volume}
                 ],

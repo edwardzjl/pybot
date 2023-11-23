@@ -6,16 +6,16 @@ from langchain.schema import HumanMessage
 from loguru import logger
 
 from pybot.config import settings
+from pybot.context import session_id
 from pybot.jupyter import CreateKernelRequest, GatewayClient
 from pybot.models import Conversation as ORMConversation
-from pybot.routers.dependencies import get_message_history
+from pybot.routers.dependencies import UserIdHeader, get_message_history
 from pybot.schemas import (
     ChatMessage,
     Conversation,
     ConversationDetail,
     UpdateConversation,
 )
-from pybot.utils import UserIdHeader
 
 router = APIRouter(
     prefix="/api/conversations",
@@ -40,7 +40,7 @@ async def get_conversation(
     userid: Annotated[str | None, UserIdHeader()] = None,
 ) -> ConversationDetail:
     conv = await ORMConversation.get(conversation_id)
-    history.session_id = f"{userid}:{conversation_id}"
+    session_id.set(f"{userid}:{conversation_id}")
     return ConversationDetail(
         messages=[
             ChatMessage.from_lc(

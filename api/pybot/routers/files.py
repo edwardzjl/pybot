@@ -7,8 +7,8 @@ from fastapi import APIRouter, UploadFile
 
 from pybot.config import settings
 from pybot.models import File as ORMFile
+from pybot.routers.dependencies import UserIdHeader
 from pybot.schemas import File
-from pybot.utils import UserIdHeader
 
 router = APIRouter(
     prefix="/api/conversations/{conversation_id}/files",
