@@ -27,7 +27,7 @@ class CodeSandbox(ExtendedTool):
     """The timeout for the tool in seconds."""
     description = f"""
 - {name}:
-  - Description: {name} is a powerful tool designed for executing Python code, facilitating diverse tasks such as like data analysis, data visualization, etc. When analyzing dataset, review the dataset first to make sure you understand it properly.
+  - Description: {name} is a powerful tool designed for executing Python code, facilitating diverse tasks such as like data analysis, data visualization, etc. When performing data analysis, inspect the dataset first to make sure you understand it properly.
   - Execution Environment: python3 Jupyter notebook with the following major dependencies:
     - pandas==1.5.3
     - scikit-learn
@@ -58,7 +58,7 @@ Sure, I can help you with that. Let's start by examining the initial rows of the
 ```json
 {
     "tool_name": "code_sandbox",
-    "tool_input": "import pandas as pd\\n\\n# read the file\\ndf = pd.read_csv(\'/mnt/data/test.csv\')\\n\\n# Display the initial rows of the dataframe\\ndf.head()"
+    "tool_input": "import pandas as pd\\n\\n# read the file\\ndf = pd.read_csv(\'/mnt/data/test.csv\')\\n\\n# Display the initial rows of the dataframe\\nprint(df.head())"
 }
 ```<|im_end|>"""
     gateway_url: str
