@@ -43,17 +43,27 @@ class ChatMLPromptValue(ChatPromptValue):
         """Return prompt as string."""
         string_messages = []
         for m in self.messages:
-            if isinstance(m, HumanMessage):
+            if "prefix" in m.additional_kwargs:
+                prefix = m.additional_kwargs["prefix"]
+            elif isinstance(m, HumanMessage):
                 prefix = self.human_prefix
-                suffix = self.human_suffix
             elif isinstance(m, AIMessage):
                 prefix = self.ai_prefix
-                suffix = self.ai_suffix
             elif isinstance(m, SystemMessage):
                 prefix = self.system_prefix
-                suffix = self.system_suffix
             elif isinstance(m, ChatMessage):
                 prefix = m.role
+            else:
+                raise ValueError(f"Got unsupported message type: {m}")
+            if "suffix" in m.additional_kwargs:
+                suffix = m.additional_kwargs["suffix"]
+            elif isinstance(m, HumanMessage):
+                suffix = self.human_suffix
+            elif isinstance(m, AIMessage):
+                suffix = self.ai_suffix
+            elif isinstance(m, SystemMessage):
+                suffix = self.system_suffix
+            elif isinstance(m, ChatMessage):
                 suffix = ""
             else:
                 raise ValueError(f"Got unsupported message type: {m}")

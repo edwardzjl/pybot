@@ -49,11 +49,11 @@ class CodeSandbox(ExtendedTool):
       required: [tool_name, tool_input]
     ```
 """
-    examples: str = """<|im_start|>system example-user
+    examples: str = """<|im_start|>system-example-user
 {"filename":"test.csv","path":"/mnt/data/test.csv"}<|im_end|>
-<|im_start|>system example-user
+<|im_start|>system-example-user
 how many rows are there?<|im_end|>
-<|im_start|>system example-assistant
+<|im_start|>system-example-assistant
 To count the rows of the file I will use the code_sandbox tool. Given that the file is in CSV format, I will use the pandas library to read the file and count the rows.
 ```json
 {
