@@ -20,7 +20,6 @@ def get_llm() -> BaseLLM:
         max_new_tokens=1024,
         temperature=0.1,
         top_p=0.9,
-        repetition_penalty=1.01,
         streaming=True,
         callbacks=[TracingLLMCallbackHandler()],
     )

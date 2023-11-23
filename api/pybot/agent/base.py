@@ -34,11 +34,13 @@ class PybotAgent(Agent):
     def create_prompt(cls, tools: Sequence[BaseTool]) -> BasePromptTemplate:
         tool_descs = "\n".join([f"{tool.description}" for tool in tools])
         tool_strings = TOOLS.format(tools=tool_descs)
-        examples = ""
-        for tool in tools:
-            if isinstance(tool, ExtendedTool):
-                examples += f"{tool.examples}\n"
+
+        ext_tools: list[ExtendedTool] = list(
+            filter(lambda tool: isinstance(tool, ExtendedTool), tools)
+        )
+        examples = "\n".join([f"{tool.examples}" for tool in ext_tools])
         examples_strings = EXAMPLES.format(examples=examples)
+
         system_prompt = PromptTemplate(
             template=SYSTEM,
             input_variables=["date"],

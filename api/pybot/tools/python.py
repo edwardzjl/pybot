@@ -25,8 +25,7 @@ class CodeSandbox(ExtendedTool):
     name = "code_sandbox"
     timeout: int = 60
     """The timeout for the tool in seconds."""
-    description = f"""
-- {name}:
+    description = f"""- {name}:
   - Description: {name} is a powerful tool designed for executing Python code, facilitating diverse tasks such as like data analysis, data visualization, etc. When performing data analysis, inspect the dataset first to make sure you understand it properly.
   - Execution Environment: python3 Jupyter notebook with the following major dependencies:
     - pandas==1.5.3
@@ -47,8 +46,7 @@ class CodeSandbox(ExtendedTool):
           type: string
           description: the code you want {name} to execute
       required: [tool_name, tool_input]
-    ```
-"""
+    ```"""
     examples: str = """<|im_start|>system-example-user
 {"filename":"test.csv","path":"/mnt/data/test.csv"}<|im_end|>
 <|im_start|>system-example-user
