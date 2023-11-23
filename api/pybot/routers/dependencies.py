@@ -21,7 +21,6 @@ def get_llm() -> BaseLLM:
         temperature=0.1,
         top_p=0.9,
         repetition_penalty=1.01,
-        stop_sequences=["</s>"],
         streaming=True,
         callbacks=[TracingLLMCallbackHandler()],
     )
