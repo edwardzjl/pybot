@@ -61,7 +61,15 @@ class PybotAgent(Agent):
         steps = []
         for action, observation in intermediate_steps:
             steps.append(AIMessage(content=action.log))
-            steps.append(SystemMessage(content=observation))
+            steps.append(
+                SystemMessage(
+                    content=observation,
+                    additional_kwargs={
+                        "prefix": "<|im_start|>system-observation\n",
+                        "suffix": "<|im_end|>",
+                    },
+                )
+            )
         return steps
 
     @classmethod
