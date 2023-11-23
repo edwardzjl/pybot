@@ -52,12 +52,10 @@ class CodeSandbox(ExtendedTool):
 Help me analyze this data.<|im_end|>
 <|im_start|>system-example-assistant
 Sure, I can help you with that. Let's start by examining the initial rows of the dataset to understand its structure. I'll use the code_sandbox tool for this.
-```json
 {
     "tool_name": "code_sandbox",
     "tool_input": "import pandas as pd\\n\\n# read the file\\ndf = pd.read_csv(\'/mnt/data/test.csv\')\\n\\n# Display the initial rows of the dataframe\\nprint(df.head())"
-}
-```<|im_end|>"""
+}<|im_end|>"""
     gateway_url: str
     gateway_client: Optional[GatewayClient] = None
     kernel_id: str
