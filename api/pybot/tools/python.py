@@ -27,7 +27,7 @@ class CodeSandbox(ExtendedTool):
     """The timeout for the tool in seconds."""
     description = f"""
 - {name}:
-  - Description: {name} is a powerful tool designed for executing Python code, facilitating diverse tasks such as like data analysis, data visualization, etc.
+  - Description: {name} is a powerful tool designed for executing Python code, facilitating diverse tasks such as like data analysis, data visualization, etc. When analyzing dataset, review the dataset first to make sure you understand it properly.
   - Execution Environment: python3 Jupyter notebook with the following major dependencies:
     - pandas==1.5.3
     - scikit-learn
@@ -52,13 +52,13 @@ class CodeSandbox(ExtendedTool):
     examples: str = """<|im_start|>system-example-user
 {"filename":"test.csv","path":"/mnt/data/test.csv"}<|im_end|>
 <|im_start|>system-example-user
-how many rows are there?<|im_end|>
+Help me analyze this data.<|im_end|>
 <|im_start|>system-example-assistant
-To count the rows of the file I will use the code_sandbox tool. Given that the file is in CSV format, I will use the pandas library to read the file and count the rows.
+Sure, I can help you with that. Let's start by examining the initial rows of the dataset to understand its structure. I'll use the code_sandbox tool for this.
 ```json
 {
     "tool_name": "code_sandbox",
-    "tool_input": "import pandas as pd\\n\\n# read the file\\ndf = pd.read_csv(\'/mnt/data/test.csv\')\\n\\n# count the rows\\nlen(df)"
+    "tool_input": "import pandas as pd\\n\\n# read the file\\ndf = pd.read_csv(\'/mnt/data/test.csv\')\\n\\n# Display the initial rows of the dataframe\ndf.head()"
 }
 ```<|im_end|>"""
     gateway_url: str
