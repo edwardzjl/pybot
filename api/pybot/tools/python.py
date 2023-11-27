@@ -7,8 +7,6 @@ from langchain.callbacks.manager import (
 )
 from loguru import logger
 from pydantic.v1 import root_validator
-from websockets.client import connect as aconnect
-from websockets.sync.client import connect
 
 from pybot.jupyter import ExecutionRequest, ExecutionResponse, GatewayClient
 from pybot.jupyter.kernel import ContextAwareKernelManager
@@ -59,7 +57,7 @@ Sure, I can help you with that. Let's start by examining the initial rows of the
     def validate_environment(cls, values: dict[str, Any]) -> dict[str, Any]:
         values["gateway_client"] = GatewayClient(host=values["gateway_url"])
         values["kernel_manager"] = ContextAwareKernelManager(
-            gateway_url=values["gateway_url"]
+            gateway_host=values["gateway_url"]
         )
         return values
 
@@ -68,7 +66,7 @@ Sure, I can help you with that. Let's start by examining the initial rows of the
     ) -> str:
         """Use the tool."""
         kernel = self.kernel_manager.start_kernel()
-        with connect(self.gateway_client.get_ws_endpoint(kernel.id)) as websocket:
+        with self.kernel_manager.upgrade(str(kernel.id)) as websocket:
             payload = ExecutionRequest.of_code(code)
             logger.debug(f"kernel execution payload: {payload.model_dump_json()}")
             result = ""
@@ -103,9 +101,7 @@ Sure, I can help you with that. Let's start by examining the initial rows of the
     ) -> str:
         """Use the tool asynchronously."""
         kernel = await self.kernel_manager.astart_kernel()
-        async with aconnect(
-            self.gateway_client.get_ws_endpoint(kernel.id)
-        ) as websocket:
+        async with self.kernel_manager.aupgrade(str(kernel.id)) as websocket:
             payload = ExecutionRequest.of_code(code)
             logger.debug(f"kernel execution payload: {payload.model_dump_json()}")
             result = ""
