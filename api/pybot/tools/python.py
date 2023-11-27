@@ -72,8 +72,7 @@ Sure, I can help you with that. Let's start by examining the initial rows of the
             result = ""
             try:
                 websocket.send(payload.model_dump_json())
-                while True:
-                    message = websocket.recv(timeout=self.timeout)
+                while message := websocket.recv(timeout=self.timeout):
                     logger.trace(f"kernel execution message: [{message}]")
                     response = ExecutionResponse.model_validate_json(message)
                     match response.msg_type:
@@ -107,10 +106,9 @@ Sure, I can help you with that. Let's start by examining the initial rows of the
             result = ""
             try:
                 await websocket.send(payload.model_dump_json())
-                while True:
-                    message = await asyncio.wait_for(
-                        websocket.recv(), timeout=self.timeout
-                    )
+                while message := await asyncio.wait_for(
+                    websocket.recv(), timeout=self.timeout
+                ):
                     logger.debug(f"kernel execution message: [{message}]")
                     response = ExecutionResponse.model_validate_json(message)
                     if response.parent_header.msg_id != payload.header.msg_id:
