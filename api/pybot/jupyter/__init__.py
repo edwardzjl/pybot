@@ -1,4 +1,5 @@
 from pybot.jupyter.client import GatewayClient
+from pybot.jupyter.kernel import ContextAwareKernelManager
 from pybot.jupyter.schema import (
     CreateKernelRequest,
     ExecutionRequest,
@@ -7,6 +8,7 @@ from pybot.jupyter.schema import (
 )
 
 __all__ = [
+    "ContextAwareKernelManager",
     "CreateKernelRequest",
     "ExecutionRequest",
     "ExecutionResponse",
