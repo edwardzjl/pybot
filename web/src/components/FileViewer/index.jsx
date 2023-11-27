@@ -46,6 +46,7 @@ const FileView = (props) => {
         if (response.ok) {
             const _files = await response.json();
             props.onUpload(props.chatId, _files);
+            setFiles([...files, ..._files]);
         } else {
             console.error(response);
         }
@@ -67,7 +68,7 @@ const FileView = (props) => {
                             <div key={file.filename} className="icon">
                                 <FileIcon extension={extension} {...defaultStyles[extension]} />
                             </div>
-                            <div>{file.filename}</div>
+                            <div className="filename">{file.filename}</div>
                         </div>
                     )
                 })}
