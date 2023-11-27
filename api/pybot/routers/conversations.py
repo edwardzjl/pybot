@@ -7,7 +7,7 @@ from loguru import logger
 
 from pybot.config import settings
 from pybot.context import session_id
-from pybot.jupyter import CreateKernelRequest, GatewayClient
+from pybot.jupyter import ContextAwareKernelManager, GatewayClient
 from pybot.models import Conversation as ORMConversation
 from pybot.routers.dependencies import UserIdHeader, get_message_history
 from pybot.schemas import (
@@ -24,6 +24,9 @@ router = APIRouter(
 )
 gateway_client = GatewayClient(host=settings.jupyter_enterprise_gateway_url)
 session_store = RedisSessionStore()
+kernel_manager = ContextAwareKernelManager(
+    gateway_host=settings.jupyter_enterprise_gateway_url
+)
 
 
 @router.get("")
@@ -60,28 +63,13 @@ async def get_conversation(
 async def create_conversation(
     userid: Annotated[str | None, UserIdHeader()] = None
 ) -> ConversationDetail:
-    # using the same path of shared volume on chat app and jupyter kernels will ease the maintainence
-    env = {
-        "KERNEL_USERNAME": userid,
-        "KERNEL_VOLUME_MOUNTS": [
-            {"name": "shared-vol", "mountPath": settings.shared_volume}
-        ],
-        "KERNEL_VOLUMES": [
-            {
-                "name": "shared-vol",
-                "nfs": {"server": settings.nfs_server, "path": settings.nfs_path},
-            }
-        ],
-    }
-    if settings.kernel_namespace:
-        env["KERNEL_NAMESPACE"] = settings.kernel_namespace
-    request = CreateKernelRequest(env=env)
-    response = gateway_client.create_kernel(request)
-    conv = ORMConversation(title=f"New chat", owner=userid, kernel_id=response.id)
+    conv = ORMConversation(title=f"New chat", owner=userid)
     await conv.save()
     # create session
-    session = Session(pk=f"{userid}:{conv.pk}", user_id=userid, kernel_id=response.id)
+    session = Session(pk=f"{userid}:{conv.pk}", user_id=userid)
     await session_store.asave(session)
+    session_id.set(session.pk)
+    await kernel_manager.astart_kernel()
     return ConversationDetail(**conv.dict())
 
 

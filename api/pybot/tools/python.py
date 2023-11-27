@@ -8,8 +8,7 @@ from langchain.callbacks.manager import (
 from loguru import logger
 from pydantic.v1 import root_validator
 
-from pybot.jupyter import ExecutionRequest, ExecutionResponse, GatewayClient
-from pybot.jupyter.kernel import ContextAwareKernelManager
+from pybot.jupyter import ContextAwareKernelManager, ExecutionRequest, ExecutionResponse
 from pybot.tools.base import ExtendedTool
 
 
@@ -48,14 +47,12 @@ Sure, I can help you with that. Let's start by examining the initial rows of the
     "tool_input": "import pandas as pd\\n\\n# read the file\\ndf = pd.read_csv(\'/mnt/data/test.csv\')\\n\\n# Display the initial rows of the dataframe\\nprint(df.head())"
 }<|im_end|>"""
     gateway_url: str
-    gateway_client: Optional[GatewayClient] = None
     kernel_manager: Optional[ContextAwareKernelManager] = None
     timeout: int = 60
     """The timeout for the tool in seconds."""
 
     @root_validator(pre=True)
     def validate_environment(cls, values: dict[str, Any]) -> dict[str, Any]:
-        values["gateway_client"] = GatewayClient(host=values["gateway_url"])
         values["kernel_manager"] = ContextAwareKernelManager(
             gateway_host=values["gateway_url"]
         )
