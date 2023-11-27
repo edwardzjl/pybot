@@ -11,6 +11,21 @@ import Tooltip from "@mui/material/Tooltip";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 
 import { getFirstLetters, stringToColor } from "commons";
+import TextMessage from "./TextMessage";
+import FileMessage from "./FileMessage";
+
+
+
+const Message = ({ content, type }) => {
+  switch (type) {
+    case "file":
+      return <FileMessage filename={content.filename} />;
+    case "text":
+      return <TextMessage text={content} />;
+    default:
+      return null;
+  }
+};
 
 /**
  *
@@ -58,7 +73,8 @@ const ChatMessage = (props) => {
             ? "AI"
             : getFirstLetters(props.message.from)}
         </Avatar>
-        <ReactMarkdown
+        <Message content={props.message.content} type={props.message.type} />
+        {/* <ReactMarkdown
           className="chat-message-content"
           // TODO: handle file message
           children={props.message.type === "file" ? props.message.content.filename : props.message.content}
@@ -81,7 +97,7 @@ const ChatMessage = (props) => {
               );
             },
           }}
-        />
+        /> */}
         {botMessage(props.message) && (
           <Tooltip title={copyTooltipTitle}>
             <ContentCopyIcon

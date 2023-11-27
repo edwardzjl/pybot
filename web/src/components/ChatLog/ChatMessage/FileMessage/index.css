@@ -1,0 +1,25 @@
+.file-message {
+    display: flex;
+}
+
+.file-message-icon {
+    width: 48px;
+    margin: 16px;
+}
+
+.file-message-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.file-message-name {
+    font-size: 16px;
+    font-weight: bold;
+    margin: 5px;
+}
+
+.file-message-size {
+    font-size: 12px;
+    margin: 5px;
+}
