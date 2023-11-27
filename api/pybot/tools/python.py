@@ -10,19 +10,9 @@ from pydantic.v1 import root_validator
 from websockets.client import connect as aconnect
 from websockets.sync.client import connect
 
-from pybot.context import session_id
-from pybot.jupyter import (
-    CreateKernelRequest,
-    ExecutionRequest,
-    ExecutionResponse,
-    GatewayClient,
-)
-from pybot.jupyter.schema import Kernel, KernelNotFoundException
-from pybot.session import RedisSessionStore
+from pybot.jupyter import ExecutionRequest, ExecutionResponse, GatewayClient
+from pybot.jupyter.kernel import ContextAwareKernelManager
 from pybot.tools.base import ExtendedTool
-from pybot.utils import default_kernel_env
-
-session_store = RedisSessionStore()
 
 
 class CodeSandbox(ExtendedTool):
@@ -61,19 +51,23 @@ Sure, I can help you with that. Let's start by examining the initial rows of the
 }<|im_end|>"""
     gateway_url: str
     gateway_client: Optional[GatewayClient] = None
+    kernel_manager: Optional[ContextAwareKernelManager] = None
     timeout: int = 60
     """The timeout for the tool in seconds."""
 
     @root_validator(pre=True)
     def validate_environment(cls, values: dict[str, Any]) -> dict[str, Any]:
         values["gateway_client"] = GatewayClient(host=values["gateway_url"])
+        values["kernel_manager"] = ContextAwareKernelManager(
+            gateway_url=values["gateway_url"]
+        )
         return values
 
     def _run(
         self, code: str, run_manager: Optional[CallbackManagerForToolRun] = None
     ) -> str:
         """Use the tool."""
-        kernel = self._start_kernel()
+        kernel = self.kernel_manager.start_kernel()
         with connect(self.gateway_client.get_ws_endpoint(kernel.id)) as websocket:
             payload = ExecutionRequest.of_code(code)
             logger.debug(f"kernel execution payload: {payload.model_dump_json()}")
@@ -108,7 +102,7 @@ Sure, I can help you with that. Let's start by examining the initial rows of the
         self, code: str, run_manager: Optional[AsyncCallbackManagerForToolRun] = None
     ) -> str:
         """Use the tool asynchronously."""
-        kernel = await self._astart_kernel()
+        kernel = await self.kernel_manager.astart_kernel()
         async with aconnect(
             self.gateway_client.get_ws_endpoint(kernel.id)
         ) as websocket:
@@ -152,34 +146,3 @@ Sure, I can help you with that. Let's start by examining the initial rows of the
                 logger.error(f"Something goes wrong, err: {str(e)}")
                 result = str(e)
         return result
-
-    # TODO: should be moved somewhere else? kernel manager?
-    def _start_kernel(self) -> Kernel:
-        sid = session_id.get()
-        session = session_store.get(sid)
-        try:
-            return self.gateway_client.get_kernel(session.kernel_id)
-        except KernelNotFoundException:
-            env = {
-                "KERNEL_USERNAME": session.user_id,
-            }
-            request = CreateKernelRequest(env=default_kernel_env | env)
-            res = self.gateway_client.create_kernel(request)
-            session.kernel_id = str(res.id)
-            session_store.save(session)
-            return res
-
-    async def _astart_kernel(self) -> Kernel:
-        sid = session_id.get()
-        session = await session_store.aget(sid)
-        try:
-            return self.gateway_client.get_kernel(session.kernel_id)
-        except KernelNotFoundException:
-            env = {
-                "KERNEL_USERNAME": session.user_id,
-            }
-            request = CreateKernelRequest(env=default_kernel_env | env)
-            res = self.gateway_client.create_kernel(request)
-            session.kernel_id = str(res.id)
-            await session_store.asave(session)
-            return res
