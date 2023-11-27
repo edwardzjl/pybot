@@ -10,16 +10,19 @@ from pydantic.v1 import root_validator
 from websockets.client import connect as aconnect
 from websockets.sync.client import connect
 
-from pybot.config import settings
-from pybot.context import principal
+from pybot.context import session_id
 from pybot.jupyter import (
     CreateKernelRequest,
     ExecutionRequest,
     ExecutionResponse,
     GatewayClient,
 )
-from pybot.jupyter.schema import KernelNotFoundException
+from pybot.jupyter.schema import Kernel, KernelNotFoundException
+from pybot.session import RedisSessionStore
 from pybot.tools.base import ExtendedTool
+from pybot.utils import default_kernel_env
+
+session_store = RedisSessionStore()
 
 
 class CodeSandbox(ExtendedTool):
@@ -58,7 +61,6 @@ Sure, I can help you with that. Let's start by examining the initial rows of the
 }<|im_end|>"""
     gateway_url: str
     gateway_client: Optional[GatewayClient] = None
-    kernel_id: str
     timeout: int = 60
     """The timeout for the tool in seconds."""
 
@@ -71,11 +73,11 @@ Sure, I can help you with that. Let's start by examining the initial rows of the
         self, code: str, run_manager: Optional[CallbackManagerForToolRun] = None
     ) -> str:
         """Use the tool."""
-        payload = ExecutionRequest.of_code(code)
-        logger.debug(f"kernel execution payload: {payload.model_dump_json()}")
-        result = ""
-        self._get_or_create_kernel(self.kernel_id)
-        with connect(self.gateway_client.get_ws_endpoint(self.kernel_id)) as websocket:
+        kernel = self._start_kernel()
+        with connect(self.gateway_client.get_ws_endpoint(kernel.id)) as websocket:
+            payload = ExecutionRequest.of_code(code)
+            logger.debug(f"kernel execution payload: {payload.model_dump_json()}")
+            result = ""
             try:
                 websocket.send(payload.model_dump_json())
                 while True:
@@ -106,13 +108,13 @@ Sure, I can help you with that. Let's start by examining the initial rows of the
         self, code: str, run_manager: Optional[AsyncCallbackManagerForToolRun] = None
     ) -> str:
         """Use the tool asynchronously."""
-        payload = ExecutionRequest.of_code(code)
-        logger.debug(f"kernel execution payload: {payload.model_dump_json()}")
-        result = ""
-        self._get_or_create_kernel(self.kernel_id)
+        kernel = await self._astart_kernel()
         async with aconnect(
-            self.gateway_client.get_ws_endpoint(self.kernel_id)
+            self.gateway_client.get_ws_endpoint(kernel.id)
         ) as websocket:
+            payload = ExecutionRequest.of_code(code)
+            logger.debug(f"kernel execution payload: {payload.model_dump_json()}")
+            result = ""
             try:
                 await websocket.send(payload.model_dump_json())
                 while True:
@@ -151,28 +153,33 @@ Sure, I can help you with that. Let's start by examining the initial rows of the
                 result = str(e)
         return result
 
-    def _get_or_create_kernel(self, kernel_id: str) -> None:
-        """Ensure the kernel exists before submitting code."""
+    # TODO: should be moved somewhere else? kernel manager?
+    def _start_kernel(self) -> Kernel:
+        sid = session_id.get()
+        session = session_store.get(sid)
         try:
-            self.gateway_client.get_kernel(kernel_id)
+            return self.gateway_client.get_kernel(session.kernel_id)
         except KernelNotFoundException:
             env = {
-                "KERNEL_USERNAME": principal.get(),
-                "KERNEL_VOLUME_MOUNTS": [
-                    {"name": "shared-vol", "mountPath": settings.shared_volume}
-                ],
-                "KERNEL_VOLUMES": [
-                    {
-                        "name": "shared-vol",
-                        "nfs": {
-                            "server": settings.nfs_server,
-                            "path": settings.nfs_path,
-                        },
-                    }
-                ],
+                "KERNEL_USERNAME": session.user_id,
             }
-            if settings.kernel_namespace:
-                env["KERNEL_NAMESPACE"] = settings.kernel_namespace
-            request = CreateKernelRequest(env=env)
+            request = CreateKernelRequest(env=default_kernel_env | env)
             res = self.gateway_client.create_kernel(request)
-            self.kernel_id = str(res.id)
+            session.kernel_id = str(res.id)
+            session_store.save(session)
+            return res
+
+    async def _astart_kernel(self) -> Kernel:
+        sid = session_id.get()
+        session = await session_store.aget(sid)
+        try:
+            return self.gateway_client.get_kernel(session.kernel_id)
+        except KernelNotFoundException:
+            env = {
+                "KERNEL_USERNAME": session.user_id,
+            }
+            request = CreateKernelRequest(env=default_kernel_env | env)
+            res = self.gateway_client.create_kernel(request)
+            session.kernel_id = str(res.id)
+            await session_store.asave(session)
+            return res
