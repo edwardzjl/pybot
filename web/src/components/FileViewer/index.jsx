@@ -19,7 +19,6 @@ const FileView = (props) => {
         const initialization = async (chatId) => {
             const myFiles = await getFiles(chatId);
             setFiles(myFiles);
-            console.log(myFiles);
         };
         if (props.chatId) {
             initialization(props.chatId);
@@ -45,7 +44,6 @@ const FileView = (props) => {
         const droppedFiles = Array.from(event.dataTransfer.files);
         const response = await uploadFiles(props.chatId, droppedFiles);
         if (response.ok) {
-            console.log(response);
             const _files = await response.json();
             props.onUpload(props.chatId, _files);
         } else {
