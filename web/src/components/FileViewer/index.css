@@ -5,10 +5,17 @@
 .files {
     display: flex;
     flex-wrap: wrap;
+    padding: 20px;
 }
 
 .icon {
     width: 48px;
     margin: 16px;
     margin-bottom: 4px;
+}
+
+.filename {
+    width: 80px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
