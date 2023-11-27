@@ -21,6 +21,7 @@ def UserIdHeader(alias: Optional[str] = None, **kwargs):
 def get_message_history() -> RedisChatMessageHistory:
     return ContextAwareMessageHistory(
         url=str(settings.redis_om_url),
+        key_prefix="pybot:messages:",
         session_id="sid",  # a fake session id as it is required
     )
 
