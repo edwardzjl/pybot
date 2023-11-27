@@ -1,4 +1,4 @@
-from urllib.parse import urljoin, urlparse, urlunparse
+from urllib.parse import urljoin
 
 import requests
 from loguru import logger
@@ -40,10 +40,3 @@ class GatewayClient(BaseModel):
                 f"Error deleting kernel {kernel_id}: {response.status_code}\n{response.content}"
             )
         logger.info(f"Kernel {kernel_id} deleted")
-
-    # TODO: maybe refactor to some 'upgrade' function
-    def get_ws_endpoint(self, kernel_id: str) -> str:
-        base = urlparse(str(self.host))
-        ws_scheme = "wss" if base.scheme == "https" else "ws"
-        ws_base = urlunparse(base._replace(scheme=ws_scheme))
-        return urljoin(ws_base, f"/api/kernels/{kernel_id}/channels")
