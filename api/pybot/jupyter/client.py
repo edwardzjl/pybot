@@ -4,17 +4,13 @@ import requests
 from loguru import logger
 from pydantic import BaseModel, HttpUrl
 
-from pybot.jupyter.schema import (
-    CreateKernelRequest,
-    CreateKernelResponse,
-    KernelNotFoundException,
-)
+from pybot.jupyter.schema import CreateKernelRequest, Kernel, KernelNotFoundException
 
 
 class GatewayClient(BaseModel):
     host: HttpUrl
 
-    def create_kernel(self, payload: CreateKernelRequest) -> CreateKernelResponse:
+    def create_kernel(self, payload: CreateKernelRequest) -> Kernel:
         _body = payload.model_dump()
         logger.debug(f"Starting kernel with payload {_body}")
         response = requests.post(urljoin(str(self.host), "/api/kernels"), json=_body)
@@ -22,14 +18,14 @@ class GatewayClient(BaseModel):
             raise RuntimeError(
                 f"Error starting kernel: {response.status_code}\n{response.content}"
             )
-        res = CreateKernelResponse.model_validate_json(response.text)
+        res = Kernel.model_validate_json(response.text)
         logger.info(f"Started kernel with id {res.id}")
         return res
 
-    def get_kernel(self, kernel_id: str) -> CreateKernelResponse:
+    def get_kernel(self, kernel_id: str) -> Kernel:
         response = requests.get(urljoin(str(self.host), f"/api/kernels/{kernel_id}"))
         if response.ok:
-            return CreateKernelResponse.model_validate_json(response.text)
+            return Kernel.model_validate_json(response.text)
         elif response.status_code == 404:
             raise KernelNotFoundException(f"kernel {kernel_id} not found")
         else:
@@ -45,6 +41,7 @@ class GatewayClient(BaseModel):
             )
         logger.info(f"Kernel {kernel_id} deleted")
 
+    # TODO: maybe refactor to some 'upgrade' function
     def get_ws_endpoint(self, kernel_id: str) -> str:
         base = urlparse(str(self.host))
         ws_scheme = "wss" if base.scheme == "https" else "ws"

@@ -28,17 +28,17 @@ class CreateKernelRequest(BaseModel):
         return super().model_dump_json(by_alias=True, exclude_none=True)
 
 
-class KernelNotFoundException(RuntimeError):
-    ...
-
-
-class CreateKernelResponse(BaseModel):
+class Kernel(BaseModel):
     id: UUID
     name: str
     last_activity: datetime
     execution_state: str
     """idk if it belongs to {'starting', 'idle', 'busy', 'restarting', 'dead'}"""
     connections: int
+
+
+class KernelNotFoundException(RuntimeError):
+    ...
 
 
 def uuid4_hex() -> str:

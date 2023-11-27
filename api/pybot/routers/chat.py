@@ -15,7 +15,6 @@ from pybot.callbacks import (
 )
 from pybot.config import settings
 from pybot.context import principal, session_id
-from pybot.models import Conversation
 from pybot.routers.dependencies import (
     UserIdHeader,
     get_llm,
@@ -57,11 +56,9 @@ async def chat(
                 )
                 history.add_message(lc_msg)
                 continue
-            conv = await Conversation.get(message.conversation)
             tools = [
                 CodeSandbox(
                     gateway_url=str(settings.jupyter_enterprise_gateway_url),
-                    kernel_id=str(conv.kernel_id),
                 )
             ]
             agent_executor = create_agent(

@@ -16,12 +16,14 @@ from pybot.schemas import (
     ConversationDetail,
     UpdateConversation,
 )
+from pybot.session import RedisSessionStore, Session
 
 router = APIRouter(
     prefix="/api/conversations",
     tags=["conversation"],
 )
 gateway_client = GatewayClient(host=settings.jupyter_enterprise_gateway_url)
+session_store = RedisSessionStore()
 
 
 @router.get("")
@@ -77,6 +79,9 @@ async def create_conversation(
     response = gateway_client.create_kernel(request)
     conv = ORMConversation(title=f"New chat", owner=userid, kernel_id=response.id)
     await conv.save()
+    # create session
+    session = Session(pk=f"{userid}:{conv.pk}", user_id=userid, kernel_id=response.id)
+    await session_store.asave(session)
     return ConversationDetail(**conv.dict())
 
 
@@ -96,9 +101,13 @@ async def delete_conversation(
     conversation_id: str,
     userid: Annotated[str | None, UserIdHeader()] = None,
 ) -> None:
-    conv = await ORMConversation.get(conversation_id)
+    session = await session_store.aget(f"{userid}:{conversation_id}")
+    # delete kernel
     try:
-        gateway_client.delete_kernel(conv.kernel_id)
+        gateway_client.delete_kernel(str(session.kernel_id))
     except Exception as e:
-        logger.exception(f"failed to delete kernel {conv.kernel_id}, err: {str(e)}")
+        logger.exception(f"failed to delete kernel {session.kernel_id}, err: {str(e)}")
+    # delete session
+    await session_store.adelete(f"{userid}:{conversation_id}")
+    # delete conversation
     await ORMConversation.delete(conversation_id)
