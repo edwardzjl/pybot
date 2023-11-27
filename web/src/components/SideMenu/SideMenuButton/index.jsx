@@ -173,22 +173,19 @@ const ChatTab = (props) => {
         <FormControl
           id="chat-title"
           variant="standard"
-          sx={{
-            maxWidth: 140,
-          }}
-        // TODO: className not working, there's a MuiFormControl-root that will override className
-        // className="chat-title"
         >
           <Input
-            id="chat-input"
+            id="chat-title"
+            // TODO: className not working, there's a MuiFormControl-root that will override className
             className="chat-title"
             disableUnderline
-            // TODO: className not working
-            // className="input-text"
             inputProps={{
               style: {
+                width: 160,
                 height: 10,
                 color: "white",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
               },
             }}
             readOnly={titleReadOnly}
