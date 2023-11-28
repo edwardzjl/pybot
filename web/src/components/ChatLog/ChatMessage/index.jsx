@@ -21,6 +21,7 @@ const Message = ({ content, type }) => {
     case "file":
       return <FileMessage filename={content.filename} />;
     case "text":
+    case "stream":
       return <TextMessage text={content} />;
     default:
       return null;
