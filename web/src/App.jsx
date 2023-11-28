@@ -45,14 +45,14 @@ function App() {
               dispatch({
                 type: "messageAdded",
                 id: payload.conversation,
-                message: { from: payload.from, content: payload.content || "" },
+                message: { from: payload.from, content: payload.content || "", type: "stream" },
               });
               break;
             case "stream":
               dispatch({
                 type: "messageAppended",
                 id: payload.conversation,
-                message: { from: payload.from, content: payload.content },
+                message: { from: payload.from, content: payload.content, type: "stream" },
               });
               break;
             case "error":
@@ -66,7 +66,7 @@ function App() {
               dispatch({
                 type: "messageAdded",
                 id: payload.conversation,
-                message: { from: payload.from, content: payload.content },
+                message: { from: payload.from, content: payload.content, type: "text" },
               });
               break;
             default:

@@ -1,10 +1,6 @@
 import "./index.css";
 
 import { useState } from "react";
-import ReactMarkdown from "react-markdown";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import remarkGfm from "remark-gfm";
-import { darcula } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 import Avatar from "@mui/material/Avatar";
 import Tooltip from "@mui/material/Tooltip";
@@ -75,30 +71,6 @@ const ChatMessage = (props) => {
             : getFirstLetters(props.message.from)}
         </Avatar>
         <Message content={props.message.content} type={props.message.type} />
-        {/* <ReactMarkdown
-          className="chat-message-content"
-          // TODO: handle file message
-          children={props.message.type === "file" ? props.message.content.filename : props.message.content}
-          remarkPlugins={[remarkGfm]}
-          components={{
-            code({ node, inline, className, children, ...props }) {
-              const match = /language-(\w+)/.exec(className || "");
-              return !inline && match ? (
-                <SyntaxHighlighter
-                  {...props}
-                  children={String(children).replace(/\n$/, "")}
-                  style={darcula}
-                  language={match[1]}
-                  PreTag="div"
-                />
-              ) : (
-                <code {...props} className={className}>
-                  {children}
-                </code>
-              );
-            },
-          }}
-        /> */}
         {botMessage(props.message) && (
           <Tooltip title={copyTooltipTitle}>
             <ContentCopyIcon

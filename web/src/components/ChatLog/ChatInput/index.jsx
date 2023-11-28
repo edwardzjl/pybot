@@ -36,7 +36,7 @@ const ChatInput = (props) => {
     dispatch({
       type: "messageAdded",
       id: props.chatId,
-      message: { from: username, content: payload },
+      message: { from: username, content: payload, type: "text" },
     });
     // if current chat is not the first in the list, move it to the first when send message.
     if (conversations[0].id !== props.chatId) {
