@@ -12,13 +12,13 @@ import FileMessage from "./FileMessage";
 
 
 
-const Message = ({ content, type }) => {
+const Message = ({ className, content, type }) => {
   switch (type) {
     case "file":
-      return <FileMessage filename={content.filename} />;
+      return <FileMessage className={className} filename={content.filename} />;
     case "text":
     case "stream":
-      return <TextMessage text={content} />;
+      return <TextMessage className={className} text={content} />;
     default:
       return null;
   }
@@ -70,7 +70,7 @@ const ChatMessage = (props) => {
             ? "AI"
             : getFirstLetters(props.message.from)}
         </Avatar>
-        <Message content={props.message.content} type={props.message.type} />
+        <Message className="chat-message-content" content={props.message.content} type={props.message.type} />
         {botMessage(props.message) && (
           <Tooltip title={copyTooltipTitle}>
             <ContentCopyIcon

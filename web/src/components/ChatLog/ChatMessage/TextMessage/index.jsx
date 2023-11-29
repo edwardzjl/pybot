@@ -3,11 +3,11 @@ import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import remarkGfm from "remark-gfm";
 import { darcula } from "react-syntax-highlighter/dist/esm/styles/prism";
 
-const TextMessage = (props) => {
+const TextMessage = ({ className, text }) => {
     return (
         <ReactMarkdown
-            className="chat-message-content"
-            children={props.text}
+            className={className}
+            children={text}
             remarkPlugins={[remarkGfm]}
             components={{
                 code({ node, inline, className, children, ...props }) {
