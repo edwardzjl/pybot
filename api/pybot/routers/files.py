@@ -35,6 +35,7 @@ async def upload_files(
         f = ORMFile(
             filename=file.filename,
             path=file_path,
+            size=os.path.getsize(file_path),
             owner=userid,
             conversation_id=conversation_id,
         )
