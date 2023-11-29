@@ -12,6 +12,7 @@ class File(BaseModel):
     id: Optional[str] = None
     filename: str
     path: str
+    size: int
 
     @model_validator(mode="before")
     @classmethod

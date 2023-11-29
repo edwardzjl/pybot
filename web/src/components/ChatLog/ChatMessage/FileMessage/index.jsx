@@ -2,7 +2,7 @@ import "./index.css";
 
 import { FileIcon, defaultStyles } from "react-file-icon";
 
-import { getExtension } from "commons";
+import { formatBytes, getExtension } from "commons";
 
 
 const FileMessage = ({ className, filename, size }) => {
@@ -15,7 +15,7 @@ const FileMessage = ({ className, filename, size }) => {
             </div>
             <div className="file-message-info">
                 <div className="file-message-name">{filename}</div>
-                <div className="file-message-size">{size || "0kb"}</div>
+                <div className="file-message-size">{formatBytes(size)}</div>
             </div>
         </div>
     );

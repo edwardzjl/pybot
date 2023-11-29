@@ -37,7 +37,7 @@ class CodeSandbox(ExtendedTool):
       required: [tool_name, tool_input]
     ```"""
     examples: str = """<|im_start|>system-example-user
-{"filename":"test.csv","path":"/mnt/data/test.csv"}<|im_end|>
+{"filename": "test.csv", "path": "/mnt/data/test.csv"}<|im_end|>
 <|im_start|>system-example-user
 Help me analyze this data.<|im_end|>
 <|im_start|>system-example-assistant
