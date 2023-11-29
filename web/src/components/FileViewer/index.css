@@ -1,11 +1,12 @@
 .file-view {
     max-width: 17%;
+    padding: 10px;
 }
 
 .files {
     display: flex;
     flex-wrap: wrap;
-    padding: 20px;
+    padding: 10px;
 }
 
 .icon {

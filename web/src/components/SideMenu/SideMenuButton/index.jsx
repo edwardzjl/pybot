@@ -21,21 +21,20 @@ import {
 
 /**
  *
- * @param {Object} props
- * @param {Object} props.chat
- * @param {string} props.chat.id
- * @param {string} props.chat.title
- * @param {boolean} props.chat.active whether this chat is active
+ * @param {Object} chat
+ * @param {string} chat.id
+ * @param {string} chat.title
+ * @param {boolean} chat.active whether this chat is active
  * @returns
  */
-const ChatTab = (props) => {
+const ChatTab = ({ chat }) => {
   const { conversations, dispatch } = useContext(ConversationContext);
   const setSnackbar = useContext(SnackbarContext);
 
-  const [title, setTitle] = useState(props.chat?.title);
+  const [title, setTitle] = useState(chat?.title);
   useEffect(() => {
-    setTitle(props.chat?.title);
-  }, [props.chat?.title]);
+    setTitle(chat?.title);
+  }, [chat?.title]);
   const titleRef = useRef(null);
 
   const [titleReadOnly, setTitleReadOnly] = useState(true);
@@ -166,8 +165,8 @@ const ChatTab = (props) => {
 
   return (
     <div
-      className={`sidemenu-button ${props.chat.active && "selected"}`}
-      onClick={(e) => selectChat(e, props.chat)}
+      className={`sidemenu-button ${chat.active && "selected"}`}
+      onClick={(e) => selectChat(e, chat)}
     >
       <Tooltip title={title}>
         <FormControl
@@ -208,7 +207,7 @@ const ChatTab = (props) => {
         {operationConfirm?.onConfirm && (
           <ClickAwayListener onClickAway={onCancel}>
             <div>
-              <CheckOutlinedIcon onClick={(e) => onConfirm(e, props.chat.id)} />
+              <CheckOutlinedIcon onClick={(e) => onConfirm(e, chat.id)} />
               <CloseOutlinedIcon onClick={(e) => onCancel(e)} />
             </div>
           </ClickAwayListener>

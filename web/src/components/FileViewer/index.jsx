@@ -10,7 +10,7 @@ import { getFiles, uploadFiles } from "requests";
  * <https://claritydev.net/blog/react-typescript-drag-drop-file-upload-guide>
  * <https://claritydev.net/blog/react-hook-form-multipart-form-data-file-uploads>
  */
-const FileView = (props) => {
+const FileView = ({ chatId, onUpload }) => {
     const [isOver, setIsOver] = useState(false);
     const [files, setFiles] = useState([]);
 
@@ -20,12 +20,12 @@ const FileView = (props) => {
             const myFiles = await getFiles(chatId);
             setFiles(myFiles);
         };
-        if (props.chatId) {
-            initialization(props.chatId);
+        if (chatId !== undefined) {
+            initialization(chatId);
         }
 
         return () => { };
-    }, [props.chatId]);
+    }, [chatId]);
 
     // Define the event handlers
     const handleDragOver = (event) => {
@@ -42,10 +42,10 @@ const FileView = (props) => {
         event.preventDefault();
         setIsOver(false);
         const droppedFiles = Array.from(event.dataTransfer.files);
-        const response = await uploadFiles(props.chatId, droppedFiles);
+        const response = await uploadFiles(chatId, droppedFiles);
         if (response.ok) {
             const _files = await response.json();
-            props.onUpload(props.chatId, _files);
+            onUpload(chatId, _files);
             setFiles([...files, ..._files]);
         } else {
             console.error(response);
@@ -64,8 +64,8 @@ const FileView = (props) => {
                 {files.map((file) => {
                     const extension = getExtension(file.filename);
                     return (
-                        <div>
-                            <div key={file.filename} className="icon">
+                        <div key={file.filename}>
+                            <div className="icon">
                                 <FileIcon extension={extension} {...defaultStyles[extension]} />
                             </div>
                             <div className="filename">{file.filename}</div>
