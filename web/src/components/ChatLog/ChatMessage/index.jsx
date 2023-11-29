@@ -25,21 +25,16 @@ const Message = ({ className, content, type }) => {
 
 /**
  *
- * @param {object} props
- * @param {object} props.message
- * @param {string} props.message.from
- * @param {string} props.message.content
+ * @param {object} message
+ * @param {string} message.from
+ * @param {string} message.content
  * @returns
  */
-const ChatMessage = (props) => {
+const ChatMessage = ({ message }) => {
   const [copyTooltipTitle, setCopyTooltipTitle] = useState("copy content");
 
-  const handleMouseIn = () => {
-    setCopyTooltipTitle("copy content");
-  };
-
   const onCopyClick = () => {
-    navigator.clipboard.writeText(props.message.content);
+    navigator.clipboard.writeText(message.content);
     setCopyTooltipTitle("copied!");
   };
 
@@ -53,24 +48,24 @@ const ChatMessage = (props) => {
   };
 
   return (
-    <div className={`chat-message ${botMessage(props.message) && "AI"}`}>
+    <div className={`chat-message ${botMessage(message) && "AI"}`}>
       <div
         className="chat-message-center"
-        onMouseEnter={handleMouseIn}
+        onMouseEnter={() => setCopyTooltipTitle("copy content")}
       >
         <Avatar
           className="chat-message-avatar"
           // Cannot handle string to color in css
           sx={{
-            bgcolor: stringToColor(props.message.from),
+            bgcolor: stringToColor(message.from),
           }}
         >
-          {botMessage(props.message)
+          {botMessage(message)
             ? "AI"
-            : getFirstLetters(props.message.from)}
+            : getFirstLetters(message.from)}
         </Avatar>
-        <Message className="chat-message-content" content={props.message.content} type={props.message.type} />
-        {botMessage(props.message) && (
+        <Message className="chat-message-content" content={message.content} type={message.type} />
+        {botMessage(message) && (
           <Tooltip title={copyTooltipTitle}>
             <ContentCopyIcon
               className="chat-message-content-copy"
