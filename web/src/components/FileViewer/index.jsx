@@ -1,17 +1,23 @@
 import "./index.css";
 
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { FileIcon, defaultStyles } from "react-file-icon";
 
 import { getExtension } from "commons";
 import { getFiles, uploadFiles } from "requests";
+import { ConversationContext } from "contexts/conversation";
+import { UserContext } from "contexts/user";
+import { WebsocketContext } from "contexts/websocket";
 
 /**
  * <https://claritydev.net/blog/react-typescript-drag-drop-file-upload-guide>
  * <https://claritydev.net/blog/react-hook-form-multipart-form-data-file-uploads>
  */
-const FileView = ({ chatId, onUpload }) => {
-    const [isOver, setIsOver] = useState(false);
+const FileView = ({ chatId }) => {
+    const [username,] = useContext(UserContext);
+    const [, dispatch] = useContext(ConversationContext);
+    const [, , send] = useContext(WebsocketContext);
+    const [, setIsOver] = useState(false);
     const [files, setFiles] = useState([]);
 
     // initialization
@@ -45,7 +51,20 @@ const FileView = ({ chatId, onUpload }) => {
         const response = await uploadFiles(chatId, droppedFiles);
         if (response.ok) {
             const _files = await response.json();
-            onUpload(chatId, _files);
+            _files.forEach((file) => {
+                const msg = {
+                    conversation: chatId,
+                    from: username,
+                    content: file,
+                    type: "file"
+                }
+                send(JSON.stringify(msg));
+                dispatch({
+                    type: "messageAdded",
+                    id: chatId,
+                    message: msg,
+                });
+            });
             setFiles([...files, ..._files]);
         } else {
             console.error(response);
