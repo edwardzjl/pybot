@@ -1,4 +1,4 @@
-import os
+from datetime import datetime
 from pathlib import Path
 from typing import Annotated
 
@@ -22,20 +22,25 @@ async def upload_files(
     files: list[UploadFile],
     userid: Annotated[str | None, UserIdHeader()] = None,
 ) -> list[File]:
-    parent_dir = Path(
-        os.path.join(str(settings.shared_volume), userid, conversation_id)
-    )
+    base = Path(settings.shared_volume)
+    parent_dir = base.joinpath(userid).joinpath(conversation_id)
     parent_dir.mkdir(exist_ok=True, parents=True)
     res = []
     for file in files:
-        file_path = os.path.join(parent_dir, file.filename)
+        file_path = parent_dir.joinpath(file.filename)
+        if file_path.is_file():
+            suffix = datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
+            file_path = parent_dir.joinpath(
+                f"{file_path.stem}_{suffix}{file_path.suffix}"
+            )
+
         async with aiofiles.open(file_path, "wb") as out_file:
             while content := await file.read(1024):
                 await out_file.write(content)
         f = ORMFile(
-            filename=file.filename,
-            path=file_path,
-            size=os.path.getsize(file_path),
+            filename=file_path.name,
+            path=file_path.absolute().as_posix(),
+            size=file.size,
             owner=userid,
             conversation_id=conversation_id,
         )
