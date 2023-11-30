@@ -7,14 +7,15 @@ import Input from '@mui/material/Input';
 
 import { ConversationContext } from "contexts/conversation";
 import { UserContext } from "contexts/user";
+import { WebsocketContext } from "contexts/websocket";
 
 /**
  * @param {string} chatId
- * @param {*} onSend
  */
-const ChatInput = ({ chatId, onSend }) => {
+const ChatInput = ({ chatId }) => {
   const [username,] = useContext(UserContext);
   const [conversations, dispatch] = useContext(ConversationContext);
+  const [ready, , send] = useContext(WebsocketContext);
 
   const [input, setInput] = useState("");
   const inputRef = useRef(null);
@@ -29,6 +30,9 @@ const ChatInput = ({ chatId, onSend }) => {
   }, [chatId]);
 
   const handleSubmit = async (e) => {
+    if (!ready) {
+      return;
+    }
     e.preventDefault();
     const payload = input;
     setInput("");
@@ -45,7 +49,14 @@ const ChatInput = ({ chatId, onSend }) => {
         id: chatId,
       });
     }
-    await onSend(chatId, payload);
+    send(
+      JSON.stringify({
+        conversation: chatId,
+        from: username,
+        content: payload,
+        type: "text",
+      })
+    );
   };
 
   const handleKeyDown = async (e) => {
@@ -93,7 +104,7 @@ const ChatInput = ({ chatId, onSend }) => {
           Enter to send message, Shift + Enter to add a new line
         </FormHelperText>
       </FormControl>
-      <button className="input-submit-button" type="submit">
+      <button disabled={!ready} className="input-submit-button" type="submit">
         Send
       </button>
     </form>
