@@ -9,15 +9,10 @@ import ChatLog from "components/ChatLog";
 import ChatMessage from "components/ChatLog/ChatMessage";
 import ChatInput from "components/ChatLog/ChatInput";
 import FileView from "components/FileViewer";
-import {
-  createConversation,
-  getConversations,
-  getConversation,
-} from "requests";
+
 import { ConversationContext } from "contexts/conversation";
 import { SnackbarContext } from "contexts/snackbar";
-import { WebsocketContext } from "contexts/websocket";
-import { getCurrentConversation } from "conversationsReducer";
+
 
 const Alert = forwardRef(function Alert(props, ref) {
   return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
@@ -25,98 +20,18 @@ const Alert = forwardRef(function Alert(props, ref) {
 
 
 const App = () => {
-  const [, val,] = useContext(WebsocketContext);
-  const [conversations, dispatch] = useContext(ConversationContext);
+  const [conversations,] = useContext(ConversationContext);
   const [snackbar, setSnackbar] = useContext(SnackbarContext);
-
-  useEffect(() => {
-    // <https://react.dev/learn/queueing-a-series-of-state-updates>
-    // <https://react.dev/learn/updating-arrays-in-state>
-    try {
-      const { type, conversation, from, content } = JSON.parse(val);
-      switch (type) {
-        case "start":
-          dispatch({
-            type: "messageAdded",
-            id: conversation,
-            message: { from: from, content: content || "", type: "stream" },
-          });
-          break;
-        case "stream":
-          dispatch({
-            type: "messageAppended",
-            id: conversation,
-            message: { from: from, content: content, type: "stream" },
-          });
-          break;
-        case "error":
-          setSnackbar({
-            open: true,
-            severity: "error",
-            message: "Something goes wrong, please try again later.",
-          });
-          break;
-        case "text":
-          dispatch({
-            type: "messageAdded",
-            id: conversation,
-            message: { from: from, content: content, type: "text" },
-          });
-          break;
-        case "end":
-          break;
-        default:
-          console.warn("unknown message type", type);
-      }
-    } catch (error) {
-      console.debug("not a json message", val);
-    }
-  }, [val]);
 
   const [currentConv, setCurrentConv] = useState(
     /** @type {{id: string, title: string?, messages: Array}} */ {}
   );
   useEffect(() => {
     if (conversations?.length > 0) {
-      const currentConv = getCurrentConversation(conversations);
+      const currentConv = conversations.find((c) => c.active);
       setCurrentConv(currentConv);
     }
   }, [conversations]);
-
-  // initialization
-  useEffect(() => {
-    const initialization = async () => {
-      let convs = await getConversations();
-      if (convs.length > 0) {
-        dispatch({
-          type: "replaceAll",
-          conversations: convs,
-        });
-      } else {
-        console.log("no chats, initializing a new one");
-        const conv = await createConversation();
-        dispatch({
-          type: "added",
-          conversation: conv,
-        });
-        convs = [conv];
-      }
-
-      const activated = convs[0];
-      const detailedConv = await getConversation(activated.id);
-      dispatch({
-        type: "updated",
-        conversation: {
-          ...detailedConv,
-          messages: detailedConv.messages,
-        },
-      });
-    };
-
-    initialization();
-
-    return () => { };
-  }, []);
 
   const closeSnackbar = (event, reason) => {
     if (reason === "clickaway") {
