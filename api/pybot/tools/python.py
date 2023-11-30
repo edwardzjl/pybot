@@ -14,8 +14,10 @@ from pybot.tools.base import ExtendedTool
 
 class CodeSandbox(ExtendedTool):
     name = "code_sandbox"
+    timeout: int = 60
+    """The timeout for the tool in seconds."""
     description = f"""- {name}:
-  - Description: {name} is a powerful tool designed for executing Python code, facilitating diverse tasks such as like data analysis, data visualization, etc. When performing data analysis, inspect the dataset first to make sure you understand it properly.
+  - Description: {name} is a powerful tool designed for executing Python code, facilitating diverse tasks such as like data analysis, data visualization, etc. {name} will respond with the output of the execution or time out after {timeout} seconds. The driver at '/mnt/data' can be used to save and persist user files. When performing data analysis, inspect the dataset first to make sure you understand it properly.
   - Execution Environment: python3 Jupyter notebook with the following major dependencies:
     - pandas==1.5.3
     - scikit-learn
@@ -48,8 +50,6 @@ Sure, I can help you with that. Let's start by examining the initial rows of the
 }<|im_end|>"""
     gateway_url: str
     kernel_manager: Optional[ContextAwareKernelManager] = None
-    timeout: int = 60
-    """The timeout for the tool in seconds."""
 
     @root_validator(pre=True)
     def validate_environment(cls, values: dict[str, Any]) -> dict[str, Any]:
