@@ -16,7 +16,7 @@ import { WebsocketContext } from "contexts/websocket";
 const FileView = ({ chatId }) => {
     const [username,] = useContext(UserContext);
     const [, dispatch] = useContext(ConversationContext);
-    const [, , send] = useContext(WebsocketContext);
+    const [, send] = useContext(WebsocketContext);
     const [, setIsOver] = useState(false);
     const [files, setFiles] = useState([]);
 
