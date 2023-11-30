@@ -4,7 +4,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from langchain.llms import BaseLLM
 from langchain.memory import RedisChatMessageHistory
-from langchain.schema import BaseMemory, HumanMessage
+from langchain.schema import BaseMemory
 from loguru import logger
 
 from pybot.agent.base import create_agent
@@ -48,12 +48,7 @@ async def chat(
             session_id.set(f"{userid}:{message.conversation}")
             # file messages are only added to history, not passing to llm
             if message.type == "file":
-                lc_msg = HumanMessage(
-                    content=message.content.model_dump_json(),
-                    additional_kwargs={
-                        "type": "file",
-                    },
-                )
+                lc_msg = message.to_lc()
                 history.add_message(lc_msg)
                 continue
             tools = [

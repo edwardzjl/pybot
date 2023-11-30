@@ -1,8 +1,9 @@
+import json
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 from uuid import UUID, uuid4
 
-from langchain.schema import BaseMessage
+from langchain.schema import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from pybot.utils import utcnow
@@ -12,7 +13,7 @@ class File(BaseModel):
     id: Optional[str] = None
     filename: str
     path: str
-    size: int
+    size: int = 0
 
     @model_validator(mode="before")
     @classmethod
@@ -32,7 +33,7 @@ class ChatMessage(BaseModel):
     from_: Optional[str] = Field(None, alias="from")
     """A transient field to determine conversation id."""
     content: Optional[str | File] = None
-    type: str
+    type: Literal["text", "stream", "start", "end", "file", "info", "error"] = "text"
     # sent_at is not an important information for the user, as far as I can tell.
     # But it introduces some complexity in the code, so I'm removing it for now.
     # sent_at: datetime = Field(default_factory=datetime.now)
@@ -41,11 +42,28 @@ class ChatMessage(BaseModel):
     def from_lc(
         lc_message: BaseMessage, conv_id: str, from_: str = None
     ) -> "ChatMessage":
+        """Convert from langchain message.
+        Note: for file messages, the content is used for LLM, and other fields are used for displaying to frontend.
+
+        Args:
+            lc_message (BaseMessage): _description_
+            conv_id (str): _description_
+            from_ (str, optional): _description_. Defaults to None.
+
+        Returns:
+            ChatMessage: _description_
+        """
         msg_id_str = lc_message.additional_kwargs.get("id", None)
         msg_id = UUID(msg_id_str) if msg_id_str else uuid4()
         msg_type = lc_message.additional_kwargs.get("type", "text")
         if msg_type == "file":
-            msg_content = File.model_validate_json(lc_message.content)
+            msg_content = File.model_validate(
+                {
+                    "id": lc_message.additional_kwargs.get("file_id", None),
+                    "size": lc_message.additional_kwargs.get("size", None),
+                    **json.loads(lc_message.content),
+                }
+            )
         else:
             msg_content = lc_message.content
         return ChatMessage(
@@ -55,6 +73,44 @@ class ChatMessage(BaseModel):
             content=msg_content,
             type=msg_type,
         )
+
+    def to_lc(self) -> BaseMessage:
+        """Convert to langchain message.
+        Note: for file messages, the content is used for LLM, and other fields are used for displaying to frontend.
+        """
+        additional_kwargs = {
+            "id": str(self.id),
+            "type": self.type,
+        }
+        if self.type == "file":
+            content = json.dumps(
+                {
+                    "filename": self.content.filename,
+                    "path": self.content.path,
+                }
+            )
+            additional_kwargs = additional_kwargs | {
+                "file_id": str(self.content.id),
+                "size": self.content.size,
+            }
+        else:
+            content = self.content
+        match self.from_:
+            case "system":
+                return SystemMessage(
+                    content=content,
+                    additional_kwargs=additional_kwargs,
+                )
+            case "ai":
+                return AIMessage(
+                    content=content,
+                    additional_kwargs=additional_kwargs,
+                )
+            case _:  # username
+                return HumanMessage(
+                    content=content,
+                    additional_kwargs=additional_kwargs,
+                )
 
     def model_dump(
         self, by_alias: bool = True, exclude_none: bool = True, **kwargs
