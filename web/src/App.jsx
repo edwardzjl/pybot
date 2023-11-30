@@ -9,7 +9,6 @@ import ChatLog from "components/ChatLog";
 import ChatMessage from "components/ChatLog/ChatMessage";
 import ChatInput from "components/ChatLog/ChatInput";
 import FileView from "components/FileViewer";
-import generateName from "names";
 import {
   createConversation,
   getConversations,
@@ -17,7 +16,6 @@ import {
 } from "requests";
 import { ConversationContext } from "contexts/conversation";
 import { SnackbarContext } from "contexts/snackbar";
-import { UserContext } from "contexts/user";
 import { WebsocketContext } from "contexts/websocket";
 import { getCurrentConversation } from "conversationsReducer";
 
@@ -27,7 +25,6 @@ const Alert = forwardRef(function Alert(props, ref) {
 
 
 const App = () => {
-  const [, setUsername] = useContext(UserContext);
   const [, val,] = useContext(WebsocketContext);
   const [conversations, dispatch] = useContext(ConversationContext);
   const [snackbar, setSnackbar] = useContext(SnackbarContext);
@@ -89,21 +86,6 @@ const App = () => {
   // initialization
   useEffect(() => {
     const initialization = async () => {
-      let _username;
-      const res = await fetch("/api/userinfo");
-      if (res.ok) {
-        const data = await res.json();
-        if (data.username) {
-          _username = data.username;
-        } else {
-          _username = generateName();
-        }
-      } else {
-        console.error("error getting userinfo, generating fake user", res);
-        _username = generateName();
-      }
-      setUsername(_username);
-
       let convs = await getConversations();
       if (convs.length > 0) {
         dispatch({
