@@ -14,7 +14,7 @@ class TestConversationSchema(unittest.TestCase):
 
 class TestMessageSchema(unittest.TestCase):
     def test_create_message(self):
-        msg = ChatMessage(from_="ai", content="foo", type="stream")
+        msg = ChatMessage(from_="ai", content="foo", type="stream/text")
 
 
 if __name__ == "__main__":
