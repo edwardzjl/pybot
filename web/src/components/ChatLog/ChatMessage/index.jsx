@@ -16,7 +16,6 @@ const Message = ({ className, content, type }) => {
     case "file":
       return <FileMessage className={className} filename={content.filename} size={content.size} />;
     case "text":
-    case "stream":
       return <TextMessage className={className} text={content} />;
     default:
       return null;

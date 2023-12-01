@@ -33,7 +33,9 @@ class ChatMessage(BaseModel):
     from_: Optional[str] = Field(None, alias="from")
     """A transient field to determine conversation id."""
     content: Optional[str | File] = None
-    type: Literal["text", "stream", "start", "end", "file", "info", "error"] = "text"
+    type: Literal[
+        "text", "stream/start", "stream/text", "stream/end", "file", "info", "error"
+    ] = "text"
     # sent_at is not an important information for the user, as far as I can tell.
     # But it introduces some complexity in the code, so I'm removing it for now.
     # sent_at: datetime = Field(default_factory=datetime.now)
