@@ -24,7 +24,7 @@ class CodeSandbox(ExtendedTool):
     - scikit-image
     - seaborn
     - SQLAlchemy
-  - Usage Schema: When involking {name}, ensure that you provide a JSON object adhering to the following schema:
+  - Usage Schema: When using {name}, make sure to provide a JSON object adhering to the following schema:
 
     ```yaml
     ToolRequest:

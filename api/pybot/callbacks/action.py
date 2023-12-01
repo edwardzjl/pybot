@@ -20,6 +20,7 @@ class AgentActionCallbackHandler(AsyncCallbackHandler):
         self.websocket = websocket
         self.conversation_id = conversation_id
         self.history = history
+        self.sessions = {}
 
     async def on_agent_action(
         self,
@@ -34,6 +35,7 @@ class AgentActionCallbackHandler(AsyncCallbackHandler):
         Action log was sent to user by streaming callback, I don't need to send it again here.
         """
         self.history.add_ai_message(action.log)
+        self.sessions[run_id] = action.tool
 
     async def on_tool_end(
         self,
@@ -45,6 +47,7 @@ class AgentActionCallbackHandler(AsyncCallbackHandler):
         **kwargs: Any,
     ) -> None:
         """Send 'observation' (action result) to user, and persist to history."""
+        tool = self.sessions.pop(parent_run_id, "system-observation")
         message = ChatMessage(
             id=run_id,
             conversation=self.conversation_id,
@@ -57,7 +60,7 @@ class AgentActionCallbackHandler(AsyncCallbackHandler):
             SystemMessage(
                 content=output,
                 additional_kwargs={
-                    "prefix": "<|im_start|>system-observation\n",
+                    "prefix": f"<|im_start|>{tool}\n",
                     "suffix": "<|im_end|>",
                 },
             )
@@ -72,6 +75,7 @@ class AgentActionCallbackHandler(AsyncCallbackHandler):
         tags: Optional[list[str]] = None,
         **kwargs: Any,
     ) -> None:
+        self.sessions.pop(parent_run_id, None)
         message = ChatMessage(
             id=run_id,
             conversation=self.conversation_id,

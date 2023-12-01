@@ -66,7 +66,7 @@ class PybotAgent(Agent):
                 SystemMessage(
                     content=observation,
                     additional_kwargs={
-                        "prefix": "<|im_start|>system-observation\n",
+                        "prefix": f"<|im_start|>{action.tool}\n",
                         "suffix": "<|im_end|>",
                     },
                 )
