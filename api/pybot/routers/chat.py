@@ -10,7 +10,7 @@ from loguru import logger
 from pybot.agent.base import create_agent
 from pybot.callbacks import (
     AgentActionCallbackHandler,
-    StreamingLLMCallbackHandler,
+    StreamingThoughtLLMCallbackHandler,
     UpdateConversationCallbackHandler,
 )
 from pybot.config import settings
@@ -60,7 +60,7 @@ async def chat(
                     "return_intermediate_steps": True,
                 },
             )
-            streaming_callback = StreamingLLMCallbackHandler(
+            streaming_callback = StreamingThoughtLLMCallbackHandler(
                 websocket, message.conversation
             )
             update_conversation_callback = UpdateConversationCallbackHandler(

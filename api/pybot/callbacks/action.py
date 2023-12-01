@@ -7,7 +7,7 @@ from langchain_core.callbacks import AsyncCallbackHandler
 from langchain_core.chat_history import BaseChatMessageHistory
 from langchain_core.messages import SystemMessage
 
-from pybot.schemas import ChatMessage
+from pybot.schemas import Action, ChatMessage
 
 
 class AgentActionCallbackHandler(AsyncCallbackHandler):
@@ -34,9 +34,19 @@ class AgentActionCallbackHandler(AsyncCallbackHandler):
         **kwargs: Any,
     ) -> None:
         """Persist 'thought' (action log) to history.
-        Action log was sent to user by streaming callback, I don't need to send it again here.
+        The thought part (without action) was streamed to user by streaming callback, I don't need to send it again here.
+        However I need to send the action part for display purpose.
         """
         self.history.add_ai_message(action.log)
+        message = ChatMessage(
+            id=run_id,
+            conversation=self.conversation_id,
+            from_="ai",
+            content=Action(tool_name=action.tool, tool_input=action.tool_input),
+            type="action",
+        )
+        await self.websocket.send_text(message.model_dump_json())
+        # temporary save the tool name to session, so that I can use it in on_tool_end
         self.sessions[run_id] = action.tool
 
     async def on_tool_end(

@@ -27,6 +27,11 @@ class File(BaseModel):
         return values
 
 
+class Action(BaseModel):
+    tool_name: str
+    tool_input: Optional[str] = None
+
+
 class ChatMessage(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
@@ -36,9 +41,9 @@ class ChatMessage(BaseModel):
     """Conversation id"""
     from_: Optional[str] = Field(None, alias="from")
     """A transient field to determine conversation id."""
-    content: Optional[str | File] = None
+    content: Optional[str | File | Action] = None
     type: Literal[
-        "text", "stream/start", "stream/text", "stream/end", "file", "info", "error"
+        "text", "stream/start", "stream/text", "stream/end", "file", "action", "info", "error"
     ] = "text"
     feedback: Literal["thumbup", "thumbdown", None] = None
     additional_kwargs: Optional[dict[str, Any]] = None
