@@ -12,7 +12,7 @@ import { WebsocketProvider } from "contexts/websocket";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-  <React.StrictMode>
+  // <React.StrictMode>
     <SnackbarProvider>
       <UserProvider>
         <ConversationProvider>
@@ -22,7 +22,7 @@ root.render(
         </ConversationProvider>
       </UserProvider>
     </SnackbarProvider>
-  </React.StrictMode>
+  // </React.StrictMode>
 );
 
 // If you want to start measuring performance in your app, pass a function
