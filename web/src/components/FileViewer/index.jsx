@@ -13,25 +13,26 @@ import { WebsocketContext } from "contexts/websocket";
  * <https://claritydev.net/blog/react-typescript-drag-drop-file-upload-guide>
  * <https://claritydev.net/blog/react-hook-form-multipart-form-data-file-uploads>
  */
-const FileView = ({ chatId }) => {
+const FileView = () => {
     const [username,] = useContext(UserContext);
-    const [, dispatch] = useContext(ConversationContext);
+    const [, currentConv, dispatch] = useContext(ConversationContext);
     const [, send] = useContext(WebsocketContext);
     const [, setIsOver] = useState(false);
     const [files, setFiles] = useState([]);
 
+    const initialization = async (chatId) => {
+        const myFiles = await getFiles(chatId);
+        setFiles(myFiles);
+    };
+
     // initialization
     useEffect(() => {
-        const initialization = async (chatId) => {
-            const myFiles = await getFiles(chatId);
-            setFiles(myFiles);
-        };
-        if (chatId !== undefined) {
-            initialization(chatId);
+        if (currentConv?.id) {
+            initialization(currentConv.id);
         }
 
         return () => { };
-    }, [chatId]);
+    }, [currentConv?.id]);
 
     // Define the event handlers
     const handleDragOver = (event) => {
@@ -48,12 +49,12 @@ const FileView = ({ chatId }) => {
         event.preventDefault();
         setIsOver(false);
         const droppedFiles = Array.from(event.dataTransfer.files);
-        const response = await uploadFiles(chatId, droppedFiles);
+        const response = await uploadFiles(currentConv.id, droppedFiles);
         if (response.ok) {
             const _files = await response.json();
             _files.forEach((file) => {
                 const msg = {
-                    conversation: chatId,
+                    conversation: currentConv.id,
                     from: username,
                     content: file,
                     type: "file"
@@ -61,7 +62,7 @@ const FileView = ({ chatId }) => {
                 send(JSON.stringify(msg));
                 dispatch({
                     type: "messageAdded",
-                    id: chatId,
+                    id: currentConv.id,
                     message: msg,
                 });
             });

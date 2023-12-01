@@ -1,5 +1,5 @@
 import "./App.css";
-import { forwardRef, useContext, useEffect, useState } from "react";
+import { forwardRef, useContext } from "react";
 
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
@@ -7,7 +7,7 @@ import MuiAlert from "@mui/material/Alert";
 import SideMenu from "components/SideMenu";
 import ChatLog from "components/ChatLog";
 import ChatMessage from "components/ChatLog/ChatMessage";
-import ChatInput from "components/ChatLog/ChatInput";
+import ChatInput from "components/ChatInput";
 import FileView from "components/FileViewer";
 
 import { ConversationContext } from "contexts/conversation";
@@ -20,18 +20,8 @@ const Alert = forwardRef(function Alert(props, ref) {
 
 
 const App = () => {
-  const [conversations,] = useContext(ConversationContext);
+  const [, currentConv,] = useContext(ConversationContext);
   const [snackbar, setSnackbar] = useContext(SnackbarContext);
-
-  const [currentConv, setCurrentConv] = useState(
-    /** @type {{id: string, title: string?, messages: Array}} */ {}
-  );
-  useEffect(() => {
-    if (conversations?.length > 0) {
-      const currentConv = conversations.find((c) => c.active);
-      setCurrentConv(currentConv);
-    }
-  }, [conversations]);
 
   const closeSnackbar = (event, reason) => {
     if (reason === "clickaway") {
@@ -49,7 +39,7 @@ const App = () => {
             <ChatMessage key={index} message={message} />
           ))}
         </ChatLog>
-        <ChatInput chatId={currentConv?.id} />
+        <ChatInput />
       </section>
       <FileView chatId={currentConv?.id} />
       <Snackbar
