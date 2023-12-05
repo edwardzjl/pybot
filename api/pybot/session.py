@@ -12,6 +12,7 @@ class Session(JsonModel):
 
     user_id: str = Field(index=True)
     """The user id of the owner of the session."""
+    conv_id: Optional[str] = None
     kernel_id: Optional[UUID] = None
     """Last activate kernel id of the session.
     When it expires (culled by the gateway), I need to start a new kernel and update this field."""

@@ -44,8 +44,8 @@ def get_llm() -> BaseLLM:
     return HuggingFaceTextGenInference(
         inference_server_url=str(settings.inference_server_url),
         max_new_tokens=1024,
-        temperature=0.1,
-        top_p=0.9,
+        temperature=None,
+        # top_p=0.9,
         stop_sequences=[
             AI_SUFFIX
         ],  # not all mistral models have a decent tokenizer config.
