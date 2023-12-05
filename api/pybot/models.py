@@ -23,6 +23,8 @@ class File(JsonModel):
     filename: str
     path: str
     """absolute path to file"""
+    mounted_path: str
+    """absolute path to file mounted in jupyter kernel"""
     size: int
     """size of file, in bytes"""
     conversation_id: str = Field(index=True)

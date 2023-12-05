@@ -1,6 +1,22 @@
 import unittest
 
-from pybot.schemas import ChatMessage, Conversation
+from pybot.schemas import ChatMessage, Conversation, File
+
+
+class TestFileSchema(unittest.TestCase):
+    def test_path(self):
+        payload = {
+            "filename": "foo",
+            "path": "/mnt/share/some-user/some-conversation/foo",
+            "mounted_path": "/mnt/share/foo",
+            "size": 123,
+            "owner": "some-user",
+            "conversation_id": "some-conversation",
+        }
+        f = File.model_validate(payload)
+        self.assertEqual(f.path, payload["mounted_path"])
+        dumped = f.model_dump()
+        self.assertEqual(dumped["path"], payload["mounted_path"])
 
 
 class TestConversationSchema(unittest.TestCase):

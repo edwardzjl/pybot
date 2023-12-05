@@ -10,6 +10,9 @@ from pybot.utils import utcnow
 
 
 class File(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    """`from_attributes` allows model_validate from ORM File without converting to dict first."""
+
     id: Optional[str] = None
     filename: str
     path: str
@@ -20,6 +23,10 @@ class File(BaseModel):
     def set_id(cls, values):
         if "pk" in values and "id" not in values:
             values["id"] = values["pk"]
+        # I don't want to expose the full path to the user or LLM, so I use a mounted path instead.
+        # It may looks weird, but using alias sucks.
+        if "mounted_path" in values:
+            values["path"] = values["mounted_path"]
         return values
 
 
