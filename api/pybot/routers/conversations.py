@@ -66,7 +66,7 @@ async def create_conversation(
     conv = ORMConversation(title=f"New chat", owner=userid)
     await conv.save()
     # create session
-    session = Session(pk=f"{userid}:{conv.pk}", user_id=userid)
+    session = Session(pk=f"{userid}:{conv.pk}", user_id=userid, conv_id=conv.pk)
     await session_store.asave(session)
     session_id.set(session.pk)
     await kernel_manager.astart_kernel()

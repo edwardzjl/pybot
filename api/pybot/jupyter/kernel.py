@@ -1,14 +1,16 @@
 from contextlib import asynccontextmanager, contextmanager
+from pathlib import Path
+from typing import Any
 from urllib.parse import urljoin, urlparse, urlunparse
 
 from websockets.client import connect as aconnect
 from websockets.sync.client import connect
 
+from pybot.config import settings
 from pybot.context import session_id
 from pybot.jupyter import GatewayClient
 from pybot.jupyter.schema import CreateKernelRequest, Kernel, KernelNotFoundException
 from pybot.session import RedisSessionStore
-from pybot.utils import default_kernel_env
 
 
 class ContextAwareKernelManager:
@@ -23,10 +25,8 @@ class ContextAwareKernelManager:
         try:
             return self.gateway_client.get_kernel(session.kernel_id)
         except KernelNotFoundException:
-            env = {
-                "KERNEL_USERNAME": session.user_id,
-            }
-            request = CreateKernelRequest(env=default_kernel_env | env)
+            env = self._get_kernel_env(session.user_id, session.conv_id)
+            request = CreateKernelRequest(env=env)
             res = self.gateway_client.create_kernel(request)
             session.kernel_id = str(res.id)
             self.session_store.save(session)
@@ -38,10 +38,8 @@ class ContextAwareKernelManager:
         try:
             return self.gateway_client.get_kernel(session.kernel_id)
         except KernelNotFoundException:
-            env = {
-                "KERNEL_USERNAME": session.user_id,
-            }
-            request = CreateKernelRequest(env=default_kernel_env | env)
+            env = self._get_kernel_env(session.user_id, session.conv_id)
+            request = CreateKernelRequest(env=env)
             res = self.gateway_client.create_kernel(request)
             session.kernel_id = str(res.id)
             await self.session_store.asave(session)
@@ -70,3 +68,25 @@ class ContextAwareKernelManager:
         ws_scheme = "wss" if base.scheme == "https" else "ws"
         ws_base = urlunparse(base._replace(scheme=ws_scheme))
         return urljoin(ws_base, f"/api/kernels/{kernel_id}/channels")
+
+    def _get_kernel_env(self, userid: str, conv_id: str) -> dict[str, Any]:
+        nfs_path = Path(settings.nfs_path).joinpath(userid).joinpath(conv_id)
+        nfs_path.mkdir(exist_ok=True, parents=True)
+        env = {
+            "KERNEL_USERNAME": userid,
+            "KERNEL_VOLUME_MOUNTS": [
+                {"name": "shared-vol", "mountPath": settings.shared_volume}
+            ],
+            "KERNEL_VOLUMES": [
+                {
+                    "name": "shared-vol",
+                    "nfs": {
+                        "server": settings.nfs_server,
+                        "path": nfs_path.absolute().as_posix(),
+                    },
+                }
+            ],
+        }
+        if settings.kernel_namespace:
+            env["KERNEL_NAMESPACE"] = settings.kernel_namespace
+        return env
