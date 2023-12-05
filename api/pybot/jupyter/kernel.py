@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urljoin, urlparse, urlunparse
 
+from loguru import logger
 from websockets.client import connect as aconnect
 from websockets.sync.client import connect
 
@@ -25,6 +26,7 @@ class ContextAwareKernelManager:
         try:
             return self.gateway_client.get_kernel(session.kernel_id)
         except KernelNotFoundException:
+            logger.debug("kernel not found, creating a new one.")
             env = self._get_kernel_env(session.user_id, session.conv_id)
             request = CreateKernelRequest(env=env)
             res = self.gateway_client.create_kernel(request)
@@ -38,6 +40,7 @@ class ContextAwareKernelManager:
         try:
             return self.gateway_client.get_kernel(session.kernel_id)
         except KernelNotFoundException:
+            logger.debug("kernel not found, creating a new one.")
             env = self._get_kernel_env(session.user_id, session.conv_id)
             request = CreateKernelRequest(env=env)
             res = self.gateway_client.create_kernel(request)
@@ -48,6 +51,7 @@ class ContextAwareKernelManager:
     @contextmanager
     def upgrade(self, kernel_id: str):
         ws_url = self._get_ws_url(kernel_id)
+        logger.debug(f"connecting to {ws_url}")
         try:
             conn = connect(ws_url)
             yield conn
@@ -57,6 +61,7 @@ class ContextAwareKernelManager:
     @asynccontextmanager
     async def aupgrade(self, kernel_id: str):
         ws_url = self._get_ws_url(kernel_id)
+        logger.debug(f"connecting to {ws_url}")
         try:
             conn = await aconnect(ws_url)
             yield conn
@@ -70,7 +75,9 @@ class ContextAwareKernelManager:
         return urljoin(ws_base, f"/api/kernels/{kernel_id}/channels")
 
     def _get_kernel_env(self, userid: str, conv_id: str) -> dict[str, Any]:
-        nfs_path = Path(settings.nfs_path).joinpath(userid).joinpath(conv_id)
+        # volume was mounted to `settings.shared_volume` in app
+        nfs_path = Path(settings.shared_volume).joinpath(userid).joinpath(conv_id)
+        logger.debug(f"creating shared path: {nfs_path}")
         nfs_path.mkdir(exist_ok=True, parents=True)
         env = {
             "KERNEL_USERNAME": userid,
