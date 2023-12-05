@@ -46,7 +46,7 @@ async def upload_files(
             conversation_id=conversation_id,
         )
         await f.save()
-        res.append(File.model_validate(f))
+        res.append(File.model_validate(f.dict()))
     return res
 
 
@@ -59,4 +59,4 @@ async def get_files(
         (ORMFile.owner == userid) & (ORMFile.conversation_id == conversation_id)
     ).all()
     files.sort(key=lambda x: x.filename)
-    return [File.model_validate(file) for file in files]
+    return [File.model_validate(file.dict()) for file in files]
