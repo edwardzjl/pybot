@@ -27,25 +27,26 @@ async def upload_files(
     parent_dir.mkdir(exist_ok=True, parents=True)
     res = []
     for file in files:
-        file_path = parent_dir.joinpath(file.filename)
+        filename = file.filename
+        file_path = parent_dir.joinpath(filename)
         if file_path.is_file():
             suffix = datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
-            file_path = parent_dir.joinpath(
-                f"{file_path.stem}_{suffix}{file_path.suffix}"
-            )
+            filename = f"{file_path.stem}_{suffix}{file_path.suffix}"
+            file_path = parent_dir.joinpath(filename)
 
         async with aiofiles.open(file_path, "wb") as out_file:
             while content := await file.read(1024):
                 await out_file.write(content)
         f = ORMFile(
-            filename=file_path.name,
+            filename=filename,
             path=file_path.absolute().as_posix(),
+            mounted_path=base.joinpath(filename).absolute().as_posix(),
             size=file.size,
             owner=userid,
             conversation_id=conversation_id,
         )
         await f.save()
-        res.append(File(**f.dict()))
+        res.append(File.model_validate(f))
     return res
 
 
@@ -58,4 +59,4 @@ async def get_files(
         (ORMFile.owner == userid) & (ORMFile.conversation_id == conversation_id)
     ).all()
     files.sort(key=lambda x: x.filename)
-    return [File(**file.dict()) for file in files]
+    return [File.model_validate(file) for file in files]
