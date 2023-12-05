@@ -76,9 +76,10 @@ class ContextAwareKernelManager:
 
     def _get_kernel_env(self, userid: str, conv_id: str) -> dict[str, Any]:
         # volume was mounted to `settings.shared_volume` in app
-        nfs_path = Path(settings.shared_volume).joinpath(userid).joinpath(conv_id)
-        logger.debug(f"creating shared path: {nfs_path}")
-        nfs_path.mkdir(exist_ok=True, parents=True)
+        shared_path = Path(settings.shared_volume).joinpath(userid).joinpath(conv_id)
+        logger.debug(f"creating shared path: {shared_path}")
+        shared_path.mkdir(exist_ok=True, parents=True)
+        nfs_path = Path(settings.nfs_path).joinpath(userid).joinpath(conv_id)
         env = {
             "KERNEL_USERNAME": userid,
             "KERNEL_VOLUME_MOUNTS": [
