@@ -9,7 +9,7 @@ from langchain.schema import BaseMemory
 from pybot.callbacks import TracingLLMCallbackHandler
 from pybot.config import settings
 from pybot.history import ContextAwareMessageHistory
-from pybot.prompts import AI_PREFIX, HUMAN_PREFIX
+from pybot.prompts import AI_PREFIX, AI_SUFFIX, HUMAN_PREFIX
 
 
 def UserIdHeader(alias: Optional[str] = None, **kwargs):
@@ -46,6 +46,9 @@ def get_llm() -> BaseLLM:
         max_new_tokens=1024,
         temperature=0.1,
         top_p=0.9,
+        stop_sequences=[
+            AI_SUFFIX
+        ],  # not all mistral models have a decent tokenizer config.
         streaming=True,
         callbacks=[TracingLLMCallbackHandler()],
     )
