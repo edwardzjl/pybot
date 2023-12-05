@@ -3,6 +3,7 @@ from typing import Generator, Union
 
 from langchain.agents import AgentOutputParser
 from langchain.schema import AgentAction, AgentFinish
+from loguru import logger
 
 
 def find_dicts(s: str) -> Generator[tuple[dict, int], None, None]:
@@ -25,7 +26,12 @@ def find_dicts(s: str) -> Generator[tuple[dict, int], None, None]:
             stack.pop(-1)
             buffer += ch
             if not stack:
-                yield ast.literal_eval(buffer), i
+                try:
+                    yield ast.literal_eval(buffer), i
+                except ValueError:
+                    # LLM could generate non-dict {} pairs, which is also valid
+                    # So I only set the log level to debug, and continue searching.
+                    logger.debug(f"Failed to parse {buffer} into a dict")
                 buffer = ""
         elif stack:
             buffer += ch
