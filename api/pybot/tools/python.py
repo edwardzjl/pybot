@@ -17,7 +17,8 @@ class CodeSandbox(ExtendedTool):
     timeout: int = 60
     """The timeout for the tool in seconds."""
     description = f"""- {name}:
-  - Description: {name} is a powerful tool designed for executing Python code, facilitating diverse tasks such as like data analysis, data visualization, etc. {name} will respond with the output of the execution or time out after {timeout} seconds. The driver at '/mnt/data' can be used to save and persist user files. When performing data analysis, inspect the dataset first to make sure you understand it properly.
+  - Description: {name} is a powerful tool designed for executing Python code, facilitating diverse tasks such as like data analysis, data visualization, etc. {name} will respond with the output of the execution or time out after {timeout} seconds. The driver at '/mnt/data' can be used to save and persist user files.
+  - Reminder: During data analysis with pandas, if you encounter missing columns, make sure to refer to `df.head()` for initial insights into the dataset.
   - Execution Environment: python3 Jupyter notebook with the following major dependencies:
     - pandas==1.5.3
     - scikit-learn
