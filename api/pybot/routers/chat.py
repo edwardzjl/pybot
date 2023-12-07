@@ -14,7 +14,7 @@ from pybot.callbacks import (
     UpdateConversationCallbackHandler,
 )
 from pybot.config import settings
-from pybot.context import principal, session_id
+from pybot.context import session_id
 from pybot.routers.dependencies import (
     UserIdHeader,
     get_llm,
@@ -39,7 +39,6 @@ async def chat(
     memory: Annotated[BaseMemory, Depends(get_memory)],
     userid: Annotated[str | None, UserIdHeader()] = None,
 ):
-    principal.set(userid)
     await websocket.accept()
     while True:
         try:
