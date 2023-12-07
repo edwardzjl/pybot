@@ -8,7 +8,7 @@ from websockets.client import connect as aconnect
 from websockets.sync.client import connect
 
 from pybot.config import settings
-from pybot.context import session_id
+from pybot.context import CurrentSession
 from pybot.jupyter import GatewayClient
 from pybot.jupyter.schema import CreateKernelRequest, Kernel, KernelNotFoundException
 from pybot.session import RedisSessionStore
@@ -19,10 +19,10 @@ class ContextAwareKernelManager:
         self.gateway_host = gateway_host
         self.gateway_client = GatewayClient(host=gateway_host)
         self.session_store = RedisSessionStore()
+        self.current_session = CurrentSession(session_store=self.session_store)
 
     def start_kernel(self) -> Kernel:
-        sid = session_id.get()
-        session = self.session_store.get(sid)
+        session = self.current_session.get()
         try:
             return self.gateway_client.get_kernel(session.kernel_id)
         except KernelNotFoundException:
@@ -35,8 +35,7 @@ class ContextAwareKernelManager:
             return res
 
     async def astart_kernel(self) -> Kernel:
-        sid = session_id.get()
-        session = await self.session_store.aget(sid)
+        session = await self.current_session.aget()
         try:
             return self.gateway_client.get_kernel(session.kernel_id)
         except KernelNotFoundException:
