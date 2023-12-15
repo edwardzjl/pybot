@@ -5,6 +5,7 @@ import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
 
 import SideMenu from "components/SideMenu";
+import ChatboxHeader from "components/ChatboxHeader";
 import ChatLog from "components/ChatLog";
 import ChatMessage from "components/ChatLog/ChatMessage";
 import ChatInput from "components/ChatInput";
@@ -12,6 +13,7 @@ import FileView from "components/FileViewer";
 
 import { ConversationContext } from "contexts/conversation";
 import { SnackbarContext } from "contexts/snackbar";
+import { ThemeContext } from "contexts/theme";
 
 
 const Alert = forwardRef(function Alert(props, ref) {
@@ -20,6 +22,7 @@ const Alert = forwardRef(function Alert(props, ref) {
 
 
 const App = () => {
+  const { theme } = useContext(ThemeContext);
   const [, currentConv,] = useContext(ConversationContext);
   const [snackbar, setSnackbar] = useContext(SnackbarContext);
 
@@ -31,12 +34,13 @@ const App = () => {
   };
 
   return (
-    <div className="App">
+    <div className={`App theme-${theme}`}>
       <SideMenu />
       <section className="chatbox">
+        <ChatboxHeader />
         <ChatLog>
           {currentConv && currentConv.messages && currentConv.messages.map((message, index) => (
-            <ChatMessage key={index} message={message} />
+            <ChatMessage key={index} convId={currentConv.id} idx={index} message={message} />
           ))}
         </ChatLog>
         <ChatInput />

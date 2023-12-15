@@ -1,12 +1,18 @@
 import "./index.css";
 
-import { useState } from "react";
+import { useContext, useState } from "react";
 
 import Avatar from "@mui/material/Avatar";
 import Tooltip from "@mui/material/Tooltip";
+
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import ThumbUpIcon from '@mui/icons-material/ThumbUp';
+import ThumbUpOutlined from "@mui/icons-material/ThumbUpOutlined";
+import ThumbDownIcon from '@mui/icons-material/ThumbDown';
+import ThumbDownOutlined from "@mui/icons-material/ThumbDownOutlined";
 
 import { getFirstLetters, stringToColor } from "commons";
+import { ConversationContext } from "contexts/conversation";
 import TextMessage from "./TextMessage";
 import FileMessage from "./FileMessage";
 
@@ -23,18 +29,51 @@ const Message = ({ className, content, type }) => {
 };
 
 /**
- *
+ * @param {string} convId
+ * @param {integer} idx
  * @param {object} message
  * @param {string} message.from
  * @param {string} message.content
  * @returns
  */
-const ChatMessage = ({ message }) => {
+const ChatMessage = ({ convId, idx, message }) => {
+  const [, , dispatch] = useContext(ConversationContext);
   const [copyTooltipTitle, setCopyTooltipTitle] = useState("copy content");
+  const [thumbUpTooltipTitle, setThumbUpTooltipTitle] = useState("good answer");
+  const [thumbDownTooltipTitle, setThumbDownTooltipTitle] = useState("bad answer");
 
-  const onCopyClick = () => {
-    navigator.clipboard.writeText(message.content);
+  const onCopyClick = (content) => {
+    navigator.clipboard.writeText(content);
     setCopyTooltipTitle("copied!");
+    setTimeout(() => {
+      setCopyTooltipTitle("copy content");
+    }, "3000");
+  };
+  const onThumbUpClick = () => {
+    fetch(`/api/conversations/${convId}/messages/${idx}/thumbup`, {
+      method: "PUT",
+    }).then(() => {
+      setThumbUpTooltipTitle("thanks!");
+      dispatch({
+        type: "feedback",
+        id: convId,
+        idx: idx,
+        feedback: "thumbup",
+      });
+    });
+  };
+  const onThumbDownClick = () => {
+    fetch(`/api/conversations/${convId}/messages/${idx}/thumbup`, {
+      method: "PUT",
+    }).then(() => {
+      setThumbDownTooltipTitle("thanks!");
+      dispatch({
+        type: "feedback",
+        id: convId,
+        idx: idx,
+        feedback: "thumbdown",
+      });
+    });
   };
 
   /**
@@ -47,30 +86,37 @@ const ChatMessage = ({ message }) => {
   };
 
   return (
-    <div className={`chat-message ${botMessage(message) && "AI"}`}>
-      <div
-        className="chat-message-center"
-        onMouseEnter={() => setCopyTooltipTitle("copy content")}
-      >
+    <div className={`message-container ${botMessage(message) && "AI"}`}>
+      <div className="message-title">
         <Avatar
-          className="chat-message-avatar"
+          className="message-title-avatar"
           // Cannot handle string to color in css
           sx={{
             bgcolor: stringToColor(message.from),
           }}
         >
-          {botMessage(message)
-            ? "AI"
-            : getFirstLetters(message.from)}
+          {botMessage(message) ? "AI" : getFirstLetters(message.from)}
         </Avatar>
-        <Message className="chat-message-content" content={message.content} type={message.type} />
+        <div className="message-title-name">{botMessage(message) ? "AI" : "You"}</div>
+      </div>
+      <div className="message-body">
+        <Message className="message-content" content={message.content} type={message.type} />
         {botMessage(message) && (
-          <Tooltip title={copyTooltipTitle}>
-            <ContentCopyIcon
-              className="chat-message-content-copy"
-              onClick={onCopyClick}
-            />
-          </Tooltip>
+          <div className="message-feedbacks">
+            <Tooltip title={copyTooltipTitle}>
+              <ContentCopyIcon className="message-feedback" onClick={() => onCopyClick(message.content)} />
+            </Tooltip>
+            {message.feedback === "thumbdown" ? undefined : message.feedback === "thumbup" ? <ThumbUpIcon className="message-feedback" /> :
+              <Tooltip title={thumbUpTooltipTitle}>
+                <ThumbUpOutlined className="message-feedback" onClick={onThumbUpClick} />
+              </Tooltip>
+            }
+            {message.feedback === "thumbup" ? undefined : message.feedback === "thumbdown" ? <ThumbDownIcon className="message-feedback" /> :
+              <Tooltip title={thumbDownTooltipTitle}>
+                <ThumbDownOutlined className="message-feedback" onClick={onThumbDownClick} />
+              </Tooltip>
+            }
+          </div>
         )}
       </div>
     </div>
