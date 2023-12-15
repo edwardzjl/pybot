@@ -38,12 +38,15 @@ const App = () => {
       <SideMenu />
       <section className="chatbox">
         <ChatboxHeader />
-        <ChatLog>
+        <ChatLog className="chat-log">
           {currentConv && currentConv.messages && currentConv.messages.map((message, index) => (
             <ChatMessage key={index} convId={currentConv.id} idx={index} message={message} />
           ))}
         </ChatLog>
-        <ChatInput />
+        <div className="input-bottom">
+          <ChatInput />
+          <div className="footer">Pybot can make mistakes. Consider checking important information.</div>
+        </div>
       </section>
       <FileView chatId={currentConv?.id} />
       <Snackbar
