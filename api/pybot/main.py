@@ -14,6 +14,7 @@ from pybot.routers.chat import router as chat_router
 from pybot.routers.conversations import router as conversation_router
 from pybot.routers.dependencies import UserIdHeader
 from pybot.routers.files import router as files_router
+from pybot.routers.messages import router as message_router
 
 
 @asynccontextmanager
@@ -27,6 +28,7 @@ app = FastAPI(lifespan=lifespan, openapi_url="/api/openapi.json", docs_url="/api
 app.include_router(chat_router)
 app.include_router(conversation_router)
 app.include_router(files_router)
+app.include_router(message_router)
 
 
 @app.get("/api/healthz")

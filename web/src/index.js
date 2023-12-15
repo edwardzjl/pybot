@@ -7,22 +7,25 @@ import reportWebVitals from './reportWebVitals';
 
 import { ConversationProvider } from "contexts/conversation";
 import { SnackbarProvider } from "./contexts/snackbar";
+import { ThemeProvider } from "contexts/theme";
 import { UserProvider } from "contexts/user";
 import { WebsocketProvider } from "contexts/websocket";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-  // <React.StrictMode>
-    <SnackbarProvider>
-      <UserProvider>
-        <ConversationProvider>
-          <WebsocketProvider>
-            <App />
-          </WebsocketProvider>
-        </ConversationProvider>
-      </UserProvider>
-    </SnackbarProvider>
-  // </React.StrictMode>
+  <React.StrictMode>
+    <ThemeProvider>
+      <SnackbarProvider>
+        <UserProvider>
+          <ConversationProvider>
+            <WebsocketProvider>
+              <App />
+            </WebsocketProvider>
+          </ConversationProvider>
+        </UserProvider>
+      </SnackbarProvider>
+    </ThemeProvider>
+  </React.StrictMode>
 );
 
 // If you want to start measuring performance in your app, pass a function
