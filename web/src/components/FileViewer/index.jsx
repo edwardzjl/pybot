@@ -14,8 +14,8 @@ import { WebsocketContext } from "contexts/websocket";
  * <https://claritydev.net/blog/react-hook-form-multipart-form-data-file-uploads>
  */
 const FileView = () => {
-    const [username,] = useContext(UserContext);
-    const [, currentConv, dispatch] = useContext(ConversationContext);
+    const { username } = useContext(UserContext);
+    const { currentConv, dispatch } = useContext(ConversationContext);
     const [, send] = useContext(WebsocketContext);
     const [, setIsOver] = useState(false);
     const [files, setFiles] = useState([]);

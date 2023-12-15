@@ -10,7 +10,7 @@ import {
 /**
  * conversations, currentConversation, dispatch
  */
-export const ConversationContext = createContext([], undefined, () => { });
+export const ConversationContext = createContext({ conversations: [], currentConv: undefined, dispatch: () => { } });
 
 export const ConversationProvider = ({ children }) => {
     const [conversations, dispatch] = useReducer(
@@ -56,7 +56,7 @@ export const ConversationProvider = ({ children }) => {
     }, [conversations]);
 
     return (
-        <ConversationContext.Provider value={[conversations, currentConv, dispatch]}>
+        <ConversationContext.Provider value={{ conversations, currentConv, dispatch }}>
             {children}
         </ConversationContext.Provider>
     );
