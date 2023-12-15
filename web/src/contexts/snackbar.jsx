@@ -1,10 +1,13 @@
 import { createContext, useState } from "react";
 
 export const SnackbarContext = createContext({
-    open: false,
-    severity: "info",
-    message: "",
-}, () => { });
+    snackbar: {
+        open: false,
+        severity: "info",
+        message: "",
+    },
+    setSnackbar: () => { }
+});
 
 export const SnackbarProvider = ({ children }) => {
     /**
@@ -20,7 +23,7 @@ export const SnackbarProvider = ({ children }) => {
     );
 
     return (
-        <SnackbarContext.Provider value={[snackbar, setSnackbar]}>
+        <SnackbarContext.Provider value={{ snackbar, setSnackbar }}>
             {children}
         </SnackbarContext.Provider>
     );

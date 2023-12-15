@@ -37,7 +37,7 @@ const Message = ({ className, content, type }) => {
  * @returns
  */
 const ChatMessage = ({ convId, idx, message }) => {
-  const [, , dispatch] = useContext(ConversationContext);
+  const { dispatch } = useContext(ConversationContext);
   const [copyTooltipTitle, setCopyTooltipTitle] = useState("copy content");
   const [thumbUpTooltipTitle, setThumbUpTooltipTitle] = useState("good answer");
   const [thumbDownTooltipTitle, setThumbDownTooltipTitle] = useState("bad answer");
