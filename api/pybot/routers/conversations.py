@@ -9,7 +9,7 @@ from pybot.config import settings
 from pybot.context import session_id
 from pybot.jupyter import ContextAwareKernelManager, GatewayClient
 from pybot.models import Conversation as ORMConversation
-from pybot.routers.dependencies import UserIdHeader, get_message_history
+from pybot.routers.dependencies import MessageHistory, UserIdHeader
 from pybot.schemas import (
     ChatMessage,
     Conversation,
@@ -41,7 +41,7 @@ async def get_conversations(
 @router.get("/{conversation_id}")
 async def get_conversation(
     conversation_id: str,
-    history: Annotated[RedisChatMessageHistory, Depends(get_message_history)],
+    history: Annotated[RedisChatMessageHistory, Depends(MessageHistory)],
     userid: Annotated[str | None, UserIdHeader()] = None,
 ) -> ConversationDetail:
     conv = await ORMConversation.get(conversation_id)

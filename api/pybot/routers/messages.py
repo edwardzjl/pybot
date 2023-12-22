@@ -6,7 +6,7 @@ from langchain_core.chat_history import BaseChatMessageHistory
 
 from pybot.context import session_id
 from pybot.history import ContextAwareMessageHistory
-from pybot.routers.dependencies import UserIdHeader, get_message_history
+from pybot.routers.dependencies import MessageHistory, UserIdHeader
 
 router = APIRouter(
     prefix="/api/conversations/{conversation_id}/messages",
@@ -18,7 +18,7 @@ router = APIRouter(
 async def thumbup(
     conversation_id: str,
     message_idx: int,
-    history: Annotated[BaseChatMessageHistory, Depends(get_message_history)],
+    history: Annotated[BaseChatMessageHistory, Depends(MessageHistory)],
     userid: Annotated[str | None, UserIdHeader()] = None,
 ) -> None:
     """Using message index as the uuid is in the message body which is json dumped into redis,
@@ -42,7 +42,7 @@ async def thumbup(
 async def thumbdown(
     conversation_id: str,
     message_idx: int,
-    history: Annotated[BaseChatMessageHistory, Depends(get_message_history)],
+    history: Annotated[BaseChatMessageHistory, Depends(MessageHistory)],
     userid: Annotated[str | None, UserIdHeader()] = None,
 ) -> None:
     """Using message index as the uuid is in the message body which is json dumped into redis,
