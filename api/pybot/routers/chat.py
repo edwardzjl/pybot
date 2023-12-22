@@ -15,8 +15,10 @@ from pybot.callbacks import (
 )
 from pybot.config import settings
 from pybot.context import session_id
+from pybot.models import Conversation as ORMConversation
 from pybot.routers.dependencies import ChatMemory, Llm, MessageHistory, UserIdHeader
-from pybot.schemas import ChatMessage
+from pybot.schemas import ChatMessage, Conversation, InfoMessage
+from pybot.summarization import summarize
 from pybot.tools import CodeSandbox
 
 router = APIRouter(
@@ -78,6 +80,25 @@ async def chat(
                     update_conversation_callback,
                 ],
             )
+            # summarize if required
+            if (
+                message.additional_kwargs
+                and "require_summarization" in message.additional_kwargs
+                and message.additional_kwargs["require_summarization"]
+            ):
+                title = await summarize(llm, memory)
+                conv = await ORMConversation.get(message.conversation)
+                conv.title = title
+                await conv.save()
+                info_message = InfoMessage(
+                    conversation=message.conversation,
+                    from_="ai",
+                    content={
+                        "type": "update_conv",
+                        "payload": Conversation(**conv.dict()).model_dump(),
+                    },
+                )
+                await websocket.send_text(info_message.model_dump_json())
         except WebSocketDisconnect:
             logger.info("websocket disconnected")
             return
