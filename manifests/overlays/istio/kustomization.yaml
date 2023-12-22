@@ -8,5 +8,6 @@ kind: Kustomization
 namespace: jlzhou-pybot
 
 resources:
+  - ../../third-party/redis
   - ../../base
   - virtual-service.yaml
