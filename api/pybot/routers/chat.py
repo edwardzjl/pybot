@@ -15,12 +15,7 @@ from pybot.callbacks import (
 )
 from pybot.config import settings
 from pybot.context import session_id
-from pybot.routers.dependencies import (
-    UserIdHeader,
-    get_llm,
-    get_memory,
-    get_message_history,
-)
+from pybot.routers.dependencies import ChatMemory, Llm, MessageHistory, UserIdHeader
 from pybot.schemas import ChatMessage
 from pybot.tools import CodeSandbox
 
@@ -34,9 +29,9 @@ router = APIRouter(
 @router.websocket("/")
 async def chat(
     websocket: WebSocket,
-    llm: Annotated[BaseLLM, Depends(get_llm)],
-    history: Annotated[RedisChatMessageHistory, Depends(get_message_history)],
-    memory: Annotated[BaseMemory, Depends(get_memory)],
+    llm: Annotated[BaseLLM, Depends(Llm)],
+    history: Annotated[RedisChatMessageHistory, Depends(MessageHistory)],
+    memory: Annotated[BaseMemory, Depends(ChatMemory)],
     userid: Annotated[str | None, UserIdHeader()] = None,
 ):
     await websocket.accept()

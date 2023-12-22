@@ -18,7 +18,7 @@ def UserIdHeader(alias: Optional[str] = None, **kwargs):
     return Header(alias=alias, **kwargs)
 
 
-def get_message_history() -> RedisChatMessageHistory:
+def MessageHistory() -> RedisChatMessageHistory:
     return ContextAwareMessageHistory(
         url=str(settings.redis_om_url),
         key_prefix="pybot:messages:",
@@ -26,8 +26,8 @@ def get_message_history() -> RedisChatMessageHistory:
     )
 
 
-def get_memory(
-    history: Annotated[RedisChatMessageHistory, Depends(get_message_history)]
+def ChatMemory(
+    history: Annotated[RedisChatMessageHistory, Depends(MessageHistory)]
 ) -> BaseMemory:
     return ConversationBufferWindowMemory(
         human_prefix=HUMAN_PREFIX,
@@ -40,7 +40,7 @@ def get_memory(
     )
 
 
-def get_llm() -> BaseLLM:
+def Llm() -> BaseLLM:
     return HuggingFaceTextGenInference(
         inference_server_url=str(settings.inference_server_url),
         max_new_tokens=1024,
