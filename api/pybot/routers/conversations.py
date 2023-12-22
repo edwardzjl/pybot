@@ -3,20 +3,24 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 from langchain.memory import RedisChatMessageHistory
 from langchain.schema import HumanMessage
+from langchain_core.language_models import BaseLLM
+from langchain_core.memory import BaseMemory
 from loguru import logger
 
 from pybot.config import settings
 from pybot.context import session_id
 from pybot.jupyter import ContextAwareKernelManager, GatewayClient
 from pybot.models import Conversation as ORMConversation
-from pybot.routers.dependencies import MessageHistory, UserIdHeader
+from pybot.routers.dependencies import ChatMemory, Llm, MessageHistory, UserIdHeader
 from pybot.schemas import (
     ChatMessage,
     Conversation,
     ConversationDetail,
+    CreateConversation,
     UpdateConversation,
 )
 from pybot.session import RedisSessionStore, Session
+from pybot.summarization import summarize as summarize_conv
 
 router = APIRouter(
     prefix="/api/conversations",
@@ -61,9 +65,9 @@ async def get_conversation(
 
 @router.post("", status_code=201)
 async def create_conversation(
-    userid: Annotated[str | None, UserIdHeader()] = None
+    payload: CreateConversation, userid: Annotated[str | None, UserIdHeader()] = None
 ) -> ConversationDetail:
-    conv = ORMConversation(title=f"New chat", owner=userid)
+    conv = ORMConversation(title=payload.title, owner=userid)
     await conv.save()
     # create session
     session = Session(pk=f"{userid}:{conv.pk}", user_id=userid, conv_id=conv.pk)
@@ -99,3 +103,18 @@ async def delete_conversation(
     await session_store.adelete(f"{userid}:{conversation_id}")
     # delete conversation
     await ORMConversation.delete(conversation_id)
+
+
+@router.post("/{conversation_id}/summarization", status_code=201)
+async def summarize(
+    conversation_id: str,
+    llm: Annotated[BaseLLM, Depends(Llm)],
+    memory: Annotated[BaseMemory, Depends(ChatMemory)],
+    userid: Annotated[str | None, UserIdHeader()] = None,
+) -> dict[str, str]:
+    session_id.set(f"{userid}:{conversation_id}")
+    title = await summarize_conv(llm, memory)
+    conv = await ORMConversation.get(conversation_id)
+    conv.title = title
+    await conv.save()
+    return {"title": title}

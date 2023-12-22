@@ -40,30 +40,38 @@ export const WebsocketProvider = ({ children }) => {
                 // <https://react.dev/learn/queueing-a-series-of-state-updates>
                 // <https://react.dev/learn/updating-arrays-in-state>
                 try {
-                    const { type, conversation, from, content } = JSON.parse(event.data);
+                    const { id, type, conversation, from, content } = JSON.parse(event.data);
                     switch (type) {
                         case "text":
                             dispatch({
                                 type: "messageAdded",
                                 id: conversation,
-                                message: { from: from, content: content, type: "text" },
+                                message: { id: id, from: from, content: content, type: "text" },
                             });
                             break;
                         case "stream/start":
                             dispatch({
                                 type: "messageAdded",
                                 id: conversation,
-                                message: { from: from, content: content || "", type: "text" },
+                                message: { id: id, from: from, content: content || "", type: "text" },
                             });
                             break;
                         case "stream/text":
                             dispatch({
                                 type: "messageAppended",
                                 id: conversation,
-                                message: { from: from, content: content, type: "text" },
+                                message: { id: id, from: from, content: content, type: "text" },
                             });
                             break;
                         case "stream/end":
+                            break;
+                        case "info":
+                            if (content.type === "update_conv") {
+                                dispatch({
+                                    type: "updated",
+                                    conversation: content.payload,
+                                });
+                            }
                             break;
                         case "error":
                             setSnackbar({

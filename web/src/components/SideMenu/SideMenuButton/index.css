@@ -1,9 +1,75 @@
 .chat-title {
-    width: 6vw;
-    height: 1vw;
+    margin-left: 5px;
+    height: 1.3rem;
     color: var(--text-primary);
+    border: none;
+    /* the following 3 lines ellipsis text */
+    white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    background: transparent;
+}
+
+.chat-title:focus {
+    outline: none !important;
     border: none;
+    border-bottom: 1px solid var(--text-primary);
+}
+
+.chat-op-menu {
+    margin-left: auto;
+}
+
+.chat-op-menu-icon {
+    background: transparent;
+    border: unset;
+    color: var(--text-primary);
+}
+
+.chat-op-menu-list {
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    position: absolute;
+    z-index: 1;
+    padding: 0.5rem;
+}
+
+.chat-op-menu-item {
+    background: transparent;
+    border: unset;
+    border-radius: 5px;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    padding: 0.3vw;
+    width: 100%;
+}
+
+.chat-op-menu-item:hover {
+    background-color: var(--bg-secondary);
+}
+
+.chat-op-menu-item-text {
+    margin: 0.5vw;
+}
+
+.del-dialog {
+    color: var(--text-primary);
+    background-color: var(--bg-primary);
+    border: none;
+    border-radius: 5px;
+}
+
+.del-dialog-actions {
+    display: flex;
+    flex-direction: row-reverse;
+}
+
+.del-dialog-actions>button {
+    color: var(--text-primary);
+    background-color: var(--bg-secondary);
+    border: unset;
+    border-radius: 5px;
+    margin: 5px;
+    padding: 10px;
 }

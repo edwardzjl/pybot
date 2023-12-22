@@ -60,3 +60,5 @@ export const formatBytes = (bytes, decimals = 2) => {
 
     return parseFloat((bytes / Math.pow(k, i)).toFixed(decimals)) + ' ' + sizes[i];
 }
+
+export const DEFAULT_CONV_TITLE = "New Chat";
