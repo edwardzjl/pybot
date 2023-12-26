@@ -5,8 +5,8 @@ from fastapi import APIRouter, Depends
 from langchain_core.chat_history import BaseChatMessageHistory
 
 from pybot.context import session_id
+from pybot.dependencies import MessageHistory, UserIdHeader
 from pybot.history import ContextAwareMessageHistory
-from pybot.routers.dependencies import MessageHistory, UserIdHeader
 
 router = APIRouter(
     prefix="/api/conversations/{conversation_id}/messages",

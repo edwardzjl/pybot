@@ -15,8 +15,8 @@ from pybot.callbacks import (
 )
 from pybot.config import settings
 from pybot.context import session_id
+from pybot.dependencies import ChatMemory, Llm, MessageHistory, UserIdHeader
 from pybot.models import Conversation as ORMConversation
-from pybot.routers.dependencies import ChatMemory, Llm, MessageHistory, UserIdHeader
 from pybot.schemas import ChatMessage, Conversation, InfoMessage
 from pybot.summarization import summarize
 from pybot.tools import CodeSandbox
