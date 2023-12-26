@@ -12,7 +12,7 @@ from langchain_core.memory import BaseMemory
 from pybot.callbacks import TracingLLMCallbackHandler
 from pybot.config import settings
 from pybot.history import ContextAwareMessageHistory
-from pybot.prompts import AI_PREFIX, AI_SUFFIX, HUMAN_PREFIX
+from pybot.prompts.chatml import AI_PREFIX, AI_SUFFIX, HUMAN_PREFIX
 
 
 def UserIdHeader(alias: Optional[str] = None, **kwargs):

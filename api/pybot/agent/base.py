@@ -17,7 +17,7 @@ from pydantic.v1 import Field
 
 from pybot.agent.output_parser import JsonOutputParser
 from pybot.agent.prompt import EXAMPLES, SYSTEM, TOOLS
-from pybot.prompts import ChatMLPromptTemplate
+from pybot.prompts.chatml import ChatMLPromptTemplate
 from pybot.tools.base import ExtendedTool
 
 
