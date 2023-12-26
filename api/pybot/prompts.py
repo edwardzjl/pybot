@@ -1,8 +1,8 @@
 from typing import Any
 
-from langchain.prompts import ChatPromptTemplate
-from langchain.schema import AIMessage, ChatMessage, HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, ChatMessage, HumanMessage, SystemMessage
 from langchain_core.prompt_values import ChatPromptValue, PromptValue
+from langchain_core.prompts import ChatPromptTemplate
 
 SYSTEM_PREFIX = "<|im_start|>system"
 SYSTEM_SUFFIX = "<|im_end|>"

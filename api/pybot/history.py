@@ -1,7 +1,7 @@
 from uuid import uuid4
 
-from langchain.memory.chat_message_histories import RedisChatMessageHistory
-from langchain.schema import BaseMessage
+from langchain_community.chat_message_histories import RedisChatMessageHistory
+from langchain_core.messages import BaseMessage
 
 from pybot.context import session_id
 from pybot.utils import utcnow

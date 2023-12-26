@@ -1,8 +1,8 @@
 from typing import Any, Optional
 from uuid import UUID
 
-from langchain.callbacks.base import AsyncCallbackHandler
-from langchain.schema.output import ChatGenerationChunk, GenerationChunk, LLMResult
+from langchain_core.callbacks import AsyncCallbackHandler
+from langchain_core.outputs import ChatGenerationChunk, GenerationChunk, LLMResult
 from loguru import logger
 
 

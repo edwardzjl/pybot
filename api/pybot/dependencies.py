@@ -1,10 +1,13 @@
 from typing import Annotated, Optional
 
 from fastapi import Depends, Header
-from langchain.llms import BaseLLM
-from langchain.llms.huggingface_text_gen_inference import HuggingFaceTextGenInference
-from langchain.memory import ConversationBufferWindowMemory, RedisChatMessageHistory
-from langchain.schema import BaseMemory
+from langchain.memory import ConversationBufferWindowMemory
+from langchain_community.chat_message_histories import RedisChatMessageHistory
+from langchain_community.llms.huggingface_text_gen_inference import (
+    HuggingFaceTextGenInference,
+)
+from langchain_core.language_models import BaseLLM
+from langchain_core.memory import BaseMemory
 
 from pybot.callbacks import TracingLLMCallbackHandler
 from pybot.config import settings
