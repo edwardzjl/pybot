@@ -29,5 +29,5 @@ RUN adduser --system --no-create-home --group pybot \
   && chown -R pybot:pybot /app
 USER pybot:pybot
 
-ENTRYPOINT [ "python", "-m", "uvicorn", "pybot.main:app" ]
+ENTRYPOINT [ "python", "-m", "uvicorn", "pybot:app" ]
 CMD [ "--host", "0.0.0.0", "--port", "8000" ]
