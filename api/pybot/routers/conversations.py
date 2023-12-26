@@ -1,10 +1,10 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
-from langchain.memory import RedisChatMessageHistory
-from langchain.schema import HumanMessage
+from langchain_community.chat_message_histories import RedisChatMessageHistory
 from langchain_core.language_models import BaseLLM
 from langchain_core.memory import BaseMemory
+from langchain_core.messages import HumanMessage
 from loguru import logger
 
 from pybot.config import settings

@@ -1,6 +1,6 @@
 import unittest
 
-from langchain.schema import AIMessage, HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 
 from pybot.prompts import ChatMLPromptValue
 

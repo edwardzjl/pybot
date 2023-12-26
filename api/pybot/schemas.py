@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Any, Literal, Optional
 from uuid import UUID, uuid4
 
-from langchain.schema import AIMessage, BaseMessage, HumanMessage, SystemMessage
+from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from pybot.utils import utcnow

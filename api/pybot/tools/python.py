@@ -1,7 +1,7 @@
 import asyncio
 from typing import Any, Optional
 
-from langchain.callbacks.manager import (
+from langchain_core.callbacks import (
     AsyncCallbackManagerForToolRun,
     CallbackManagerForToolRun,
 )

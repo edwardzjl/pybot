@@ -2,9 +2,9 @@ from datetime import date
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
-from langchain.llms import BaseLLM
-from langchain.memory import RedisChatMessageHistory
-from langchain.schema import BaseMemory
+from langchain_community.chat_message_histories import RedisChatMessageHistory
+from langchain_core.language_models import BaseLLM
+from langchain_core.memory import BaseMemory
 from loguru import logger
 
 from pybot.agent.base import create_agent

@@ -2,8 +2,10 @@ from typing import Any, Optional
 from uuid import UUID
 
 from fastapi import WebSocket
-from langchain.callbacks.base import AsyncCallbackHandler
-from langchain.schema import AgentAction, BaseChatMessageHistory, SystemMessage
+from langchain_core.agents import AgentAction
+from langchain_core.callbacks import AsyncCallbackHandler
+from langchain_core.chat_history import BaseChatMessageHistory
+from langchain_core.messages import SystemMessage
 
 from pybot.schemas import ChatMessage
 

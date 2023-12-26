@@ -1,22 +1,18 @@
 from typing import Any, Optional, Sequence
 
-from langchain.agents.agent import Agent, AgentExecutor, AgentOutputParser
+from langchain.agents import Agent, AgentExecutor, AgentOutputParser
 from langchain.memory.chat_memory import BaseChatMemory
-from langchain.prompts import PromptTemplate
-from langchain.prompts.chat import (
+from langchain_core.agents import AgentAction
+from langchain_core.language_models import BaseLanguageModel
+from langchain_core.messages import AIMessage, BaseMessage, SystemMessage
+from langchain_core.prompts import (
+    BasePromptTemplate,
     HumanMessagePromptTemplate,
     MessagesPlaceholder,
+    PromptTemplate,
     SystemMessagePromptTemplate,
 )
-from langchain.schema import (
-    AgentAction,
-    AIMessage,
-    BaseMessage,
-    BasePromptTemplate,
-    SystemMessage,
-)
-from langchain.schema.language_model import BaseLanguageModel
-from langchain.tools import BaseTool
+from langchain_core.tools import BaseTool
 from pydantic.v1 import Field
 
 from pybot.agent.output_parser import JsonOutputParser

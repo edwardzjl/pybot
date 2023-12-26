@@ -2,7 +2,7 @@ import ast
 from typing import Generator, Union
 
 from langchain.agents import AgentOutputParser
-from langchain.schema import AgentAction, AgentFinish
+from langchain_core.agents import AgentAction, AgentFinish
 from loguru import logger
 
 
