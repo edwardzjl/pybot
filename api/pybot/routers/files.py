@@ -6,8 +6,8 @@ import aiofiles
 from fastapi import APIRouter, UploadFile
 
 from pybot.config import settings
+from pybot.dependencies import UserIdHeader
 from pybot.models import File as ORMFile
-from pybot.routers.dependencies import UserIdHeader
 from pybot.schemas import File
 
 router = APIRouter(
