@@ -32,7 +32,7 @@ const ChatInput = () => {
     if (!ready) {
       return;
     }
-    const message = { from: username, content: input, type: "text" };
+    const message = { id: crypto.randomUUID(), from: username, content: input, type: "text" };
     const payload = {
       conversation: currentConv.id,
       ...message,
