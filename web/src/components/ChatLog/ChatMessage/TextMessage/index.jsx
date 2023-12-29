@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 
 import Markdown from "react-markdown";
 import SyntaxHighlighter from "react-syntax-highlighter";
@@ -12,7 +12,27 @@ import { ThemeContext } from "contexts/theme";
 
 const TextMessage = ({ className, text }) => {
     const { theme } = useContext(ThemeContext);
+    const [markdownTheme, setMarkdownTheme] = useState(darcula);
     const [copyTooltipTitle, setCopyTooltipTitle] = useState("copy content");
+
+    useEffect(() => {
+        switch (theme) {
+          case "dark":
+            setMarkdownTheme(darcula);
+            break;
+          case "light":
+            setMarkdownTheme(googlecode);
+            break;
+          default: {
+            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+              setMarkdownTheme(darcula);
+            } else {
+              setMarkdownTheme(googlecode);
+            }
+          }
+        }
+      }, [theme]);
+
     const onCopyClick = (content) => {
         navigator.clipboard.writeText(content);
         setCopyTooltipTitle("copied!");
@@ -37,7 +57,7 @@ const TextMessage = ({ className, text }) => {
                             </div>
                             <SyntaxHighlighter
                                 {...props}
-                                style={theme === "dark" ? darcula : googlecode}
+                                style={markdownTheme}
                                 language={match[1]}
                                 PreTag="div"
                             >
