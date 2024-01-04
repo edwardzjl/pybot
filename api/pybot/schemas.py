@@ -170,3 +170,9 @@ class UpdateConversation(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     title: str
+
+
+class UserProfile(BaseModel):
+    userid: str
+    username: Optional[str] = None
+    email: Optional[str] = None

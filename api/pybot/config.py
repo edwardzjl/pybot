@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     """Volume to share data files with jypyter kernels."""
     nfs_server: str = "localhost"
     nfs_path: str = "/data/pybot/shared"
-    user_id_header: str = "kubeflow-userid"
+    user_id_header: str = "X-Forwarded-User"
 
 
 settings = Settings()
