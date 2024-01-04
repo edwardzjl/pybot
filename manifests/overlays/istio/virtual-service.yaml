@@ -3,17 +3,26 @@ kind: VirtualService
 metadata:
   name: pybot
 spec:
-  hosts:
-    - pybot.agi.zjuici.com
   gateways:
     - istio-system/istio-ingressgateway
+  hosts:
+    - pybot.agi.zjuici.com
   http:
+    - name: pybot-oauth2-proxy-route
+      match:
+        - uri:
+            prefix: /oauth2/
+      route:
+        - destination:
+            host: oauth2-proxy
+            port:
+              number: 8080
     - name: pybot-route
       match:
         - uri:
             prefix: /
       route:
         - destination:
-            host: pybot.jlzhou-pybot.svc.cluster.local
+            host: pybot
             port:
               number: 8000

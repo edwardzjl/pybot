@@ -1,0 +1,53 @@
+injectRequestHeaders:
+  - name: X-Forwarded-Groups
+    values:
+      - claim: groups
+  - name: X-Forwarded-User
+    values:
+      - claim: user
+  - name: X-Forwarded-Email
+    values:
+      - claim: email
+  - name: X-Forwarded-Preferred-Username
+    values:
+      - claim: preferred_username
+injectResponseHeaders:
+  - name: X-Forwarded-Groups
+    values:
+      - claim: groups
+  - name: X-Forwarded-User
+    values:
+      - claim: user
+  - name: X-Forwarded-Email
+    values:
+      - claim: email
+  - name: X-Forwarded-Preferred-Username
+    values:
+      - claim: preferred_username
+metricsServer:
+  BindAddress: ""
+  SecureBindAddress: ""
+  TLS: null
+providers:
+  # only the first provider works now.
+  # see <https://github.com/oauth2-proxy/oauth2-proxy/issues/926>
+  - provider: gitlab
+    id: gitlab
+    name: gitlab
+    clientID: f091865389905d9f505d4dd78cdeafd510f9f54298dda02814d18d044a34edbe
+    clientSecret: gloas-01e922e632bb88517d8fc090139806160bfc471fb874cb1e585a558eb60d8c5a
+    oidcConfig:
+      issuerUrl: https://gitlab.com
+      audienceClaims:
+        - aud
+server:
+  BindAddress: 0.0.0.0:4180
+  SecureBindAddress: ""
+  TLS: null
+# upstreamConfig is required or we will get 404 error.
+upstreamConfig:
+  upstreams:
+  - id: static://200
+    path: /
+    static: true
+    staticCode: 200
