@@ -63,7 +63,7 @@ const ChatMessage = ({ convId, idx, message }) => {
     });
   };
   const onThumbDownClick = () => {
-    fetch(`/api/conversations/${convId}/messages/${idx}/thumbup`, {
+    fetch(`/api/conversations/${convId}/messages/${idx}/thumbdown`, {
       method: "PUT",
     }).then(() => {
       setThumbDownTooltipTitle("thanks!");
