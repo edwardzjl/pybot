@@ -17,6 +17,7 @@ from pydantic.v1 import Field
 
 from pybot.agent.output_parser import JsonOutputParser
 from pybot.agent.prompt import EXAMPLES, SYSTEM, TOOLS
+from pybot.memory import PybotMemory
 from pybot.prompts.chatml import ChatMLPromptTemplate
 from pybot.tools.base import ExtendedTool
 
@@ -93,6 +94,8 @@ class CustomAgentExecutor(AgentExecutor):
     def prep_inputs(self, inputs: dict[str, Any] | Any) -> dict[str, str]:
         """Prepare and persist inputs."""
         inputs = super().prep_inputs(inputs)
+        if self.memory is not None and isinstance(self.memory, PybotMemory):
+            self.memory.history.add_user_message(inputs[self.memory.input_key])
         if self.memory is not None and isinstance(self.memory, BaseChatMemory):
             self.memory.chat_memory.add_user_message(inputs[self.memory.input_key])
         return inputs
@@ -105,10 +108,18 @@ class CustomAgentExecutor(AgentExecutor):
     ) -> dict[str, str]:
         """Prepare and persist outputs."""
         self._validate_outputs(outputs)
+        additional_kwargs = (
+            {"intermediate_steps": outputs["intermediate_steps"]}
+            if "intermediate_steps" in outputs
+            else {}
+        )
+        if self.memory is not None and isinstance(self.memory, PybotMemory):
+            msg = AIMessage(
+                content=outputs[self.memory.output_key],
+                additional_kwargs=additional_kwargs,
+            )
+            self.memory.history.add_message(msg)
         if self.memory is not None and isinstance(self.memory, BaseChatMemory):
-            additional_kwargs = {}
-            if "intermediate_steps" in outputs:
-                additional_kwargs["intermediate_steps"] = outputs["intermediate_steps"]
             msg = AIMessage(
                 content=outputs[self.memory.output_key],
                 additional_kwargs=additional_kwargs,
