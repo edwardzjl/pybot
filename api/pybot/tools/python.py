@@ -18,15 +18,15 @@ class CodeSandbox(ExtendedTool):
     """The timeout for the tool in seconds."""
     volume: str = "/mnt/shared"
     description = f"""- {name}:
-  - Description: {name} is a powerful tool designed for executing Python code, facilitating diverse tasks such as like data analysis, data visualization, etc. {name} will respond with the output of the execution or time out after {timeout} seconds. The driver at '{volume}' can be used to save and persist user files.
+  - Description: {name} is a stateful Jupyter notebook for executing Python code, facilitating diverse tasks such as like data analysis, data visualization, etc. {name} will respond with the output of the execution or time out after {timeout} seconds. The driver at '{volume}' can be used to persist files.
   - Reminder: During data analysis with pandas, if you encounter missing columns, make sure to refer to `df.head()` for initial insights into the dataset.
-  - Execution Environment: python3 Jupyter notebook with the following major dependencies:
+  - Execution Environment: python3 with the following major dependencies:
     - pandas==1.5.3
     - scikit-learn
     - scikit-image
     - seaborn
     - SQLAlchemy
-  - Usage Schema: When using {name}, make sure to provide a JSON object adhering to the following schema:
+  - Usage Schema: When using {name}, make sure to provide a JSON object adhering to the following openapi spec:
 
     ```yaml
     ToolRequest:
