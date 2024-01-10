@@ -5,7 +5,7 @@ from langchain_core.prompts import ChatPromptTemplate
 
 from pybot.prompts.base import FlexPromptValue
 
-# TODO: this section is mainly used for formatting histroy messages.
+# TODO: this section is mainly used for formatting history messages or agent scratchpads.
 # As Literal cannot use variables, this lead to a bit of duplication.
 HUMAN_PREFIX = "<|im_start|>user\n"
 HUMAN_SUFFIX = "<|im_end|>"
@@ -33,5 +33,5 @@ class ChatMLPromptValue(FlexPromptValue):
     human_suffix: Literal["<|im_end|>"] = "<|im_end|>"
     ai_prefix: Literal["<|im_start|>assistant\n"] = "<|im_start|>assistant\n"
     ai_suffix: Literal["<|im_end|>"] = "<|im_end|>"
-    tool_prefix: Literal["<|im_start|>"] = "<|im_start|>"
+    tool_prefix: Literal["<|im_start|>tool\n"] = "<|im_start|>tool "
     tool_suffix: Literal["<|im_end|>"] = "<|im_end|>"

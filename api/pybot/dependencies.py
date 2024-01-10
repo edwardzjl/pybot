@@ -13,7 +13,8 @@ from langchain_core.memory import BaseMemory
 from pybot.callbacks import TracingLLMCallbackHandler
 from pybot.config import settings
 from pybot.fake_chain import FakeUseToolChain
-from pybot.history import ContextAwareMessageHistory
+from pybot.history import PybotMessageHistory
+from pybot.memory import PybotMemory
 from pybot.prompts.chatml import AI_PREFIX, AI_SUFFIX, HUMAN_PREFIX
 
 
@@ -36,7 +37,7 @@ def EmailHeader(alias: Optional[str] = None, **kwargs):
 
 
 def MessageHistory() -> RedisChatMessageHistory:
-    return ContextAwareMessageHistory(
+    return PybotMessageHistory(
         url=str(settings.redis_om_url),
         key_prefix="pybot:messages:",
         session_id="sid",  # a fake session id as it is required
@@ -46,13 +47,11 @@ def MessageHistory() -> RedisChatMessageHistory:
 def ChatMemory(
     history: Annotated[RedisChatMessageHistory, Depends(MessageHistory)]
 ) -> BaseMemory:
-    return ConversationBufferWindowMemory(
-        human_prefix=HUMAN_PREFIX,
-        ai_prefix=AI_PREFIX,
+    return PybotMemory(
         memory_key="history",
         input_key="input",
         output_key="output",
-        chat_memory=history,
+        history=history,
         return_messages=True,
     )
 

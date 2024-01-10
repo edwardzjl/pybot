@@ -16,6 +16,7 @@ class CodeSandbox(ExtendedTool):
     name = "code_sandbox"
     timeout: int = 60
     """The timeout for the tool in seconds."""
+    volume: str = "/mnt/shared"
     description = f"""- {name}:
   - Description: {name} is a Jupyter notebook you can use to execute Python code. code_sandbox will respond with the output of the execution or time out after 60 seconds. The driver at \'/mnt/shared\' can be used to persist files.
   - Execution Environment: python3 Jupyter notebook with the following major dependencies:
@@ -24,7 +25,7 @@ class CodeSandbox(ExtendedTool):
     - scikit-image
     - seaborn
     - SQLAlchemy
-  - Usage Schema: When using {name}, make sure to provide a JSON object adhering to the following schema:
+  - Usage Schema: When using {name}, make sure to provide a JSON object adhering to the following openapi spec:
 
     ```yaml
     ToolRequest:
@@ -38,15 +39,16 @@ class CodeSandbox(ExtendedTool):
           description: the code you want {name} to execute
       required: [tool_name, tool_input]
     ```"""
+    # TODO: /mnt/shared is hardcoded, but I need to refactor the examples anyway
     examples: str = """<|im_start|>system-example-user
-{"filename": "test.csv", "path": "/mnt/data/test.csv"}<|im_end|>
+{"filename": "test.csv", "path": "/mnt/shared/test.csv"}<|im_end|>
 <|im_start|>system-example-user
 Help me analyze this data.<|im_end|>
 <|im_start|>system-example-assistant
 Sure, I can help you with that. Let's start by examining the initial rows of the dataset to understand its structure. I'll use the code_sandbox tool for this.
 {
     "tool_name": "code_sandbox",
-    "tool_input": "import pandas as pd\\n\\n# read the file\\ndf = pd.read_csv(\'/mnt/data/test.csv\')\\n\\n# Display the initial rows of the dataframe\\nprint(df.head())"
+    "tool_input": "import pandas as pd\\n\\n# read the file\\ndf = pd.read_csv(\'/mnt/shared/test.csv\')\\n\\n# Display the initial rows of the dataframe\\nprint(df.head())"
 }<|im_end|>"""
     gateway_url: str
     kernel_manager: Optional[ContextAwareKernelManager] = None

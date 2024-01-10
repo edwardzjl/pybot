@@ -56,7 +56,7 @@ class FlexPromptValue(ChatPromptValue):
         if isinstance(message, ChatMessage):
             # I can't decide the prefix for ChatMessage
             return message.role
-        # BaseMessage fails here
+        # BaseMessages fall here
         match message.type:
             case "human":
                 return self.human_prefix or ""
@@ -86,7 +86,7 @@ class FlexPromptValue(ChatPromptValue):
         if isinstance(message, ChatMessage):
             # I can't decide the suffix for ChatMessage
             return ""
-        # BaseMessage fails here
+        # BaseMessages fall here
         match message.type:
             case "human":
                 return self.human_suffix or ""
