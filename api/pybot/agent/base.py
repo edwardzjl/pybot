@@ -39,8 +39,8 @@ class PybotAgent(Agent):
 
         system_prompt = PromptTemplate(
             template=SYSTEM,
-            input_variables=["date"],
-            partial_variables={"tools": tool_strings, "examples": examples_strings},
+            input_variables=[],
+            partial_variables={"tools": tool_strings},
         )
         messages = [
             SystemMessagePromptTemplate(prompt=system_prompt),
@@ -49,7 +49,7 @@ class PybotAgent(Agent):
             MessagesPlaceholder(variable_name="agent_scratchpad"),
         ]
         return ChatMLPromptTemplate(
-            input_variables=["date", "input", "agent_scratchpad"], messages=messages
+            input_variables=["input", "agent_scratchpad"], messages=messages
         )
 
     def _construct_scratchpad(
