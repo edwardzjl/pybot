@@ -2,6 +2,7 @@ from datetime import date
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
+from langchain.chains.base import Chain
 from langchain_community.chat_message_histories import RedisChatMessageHistory
 from langchain_core.language_models import BaseLLM
 from langchain_core.memory import BaseMemory
@@ -15,7 +16,13 @@ from pybot.callbacks import (
 )
 from pybot.config import settings
 from pybot.context import session_id
-from pybot.dependencies import ChatMemory, Llm, MessageHistory, UserIdHeader
+from pybot.dependencies import (
+    ChatMemory,
+    FakeCodeSandboxChain,
+    Llm,
+    MessageHistory,
+    UserIdHeader,
+)
 from pybot.models import Conversation as ORMConversation
 from pybot.schemas import ChatMessage, Conversation, InfoMessage
 from pybot.summarization import summarize
@@ -34,6 +41,7 @@ async def chat(
     llm: Annotated[BaseLLM, Depends(Llm)],
     history: Annotated[RedisChatMessageHistory, Depends(MessageHistory)],
     memory: Annotated[BaseMemory, Depends(ChatMemory)],
+    preview_chain: Annotated[Chain, Depends(FakeCodeSandboxChain)],
     userid: Annotated[str | None, UserIdHeader()] = None,
 ):
     await websocket.accept()
@@ -46,6 +54,7 @@ async def chat(
             if message.type == "file":
                 lc_msg = message.to_lc()
                 history.add_message(lc_msg)
+                await preview_chain.acall(inputs={"input": message})
                 continue
             tools = [
                 CodeSandbox(

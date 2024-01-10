@@ -1,4 +1,5 @@
 """Main entrypoint for the app."""
+import os
 from contextlib import asynccontextmanager
 from typing import Annotated
 
@@ -21,6 +22,9 @@ from pybot.schemas import UserProfile
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     await Migrator().run()
+    # The scope is this process
+    os.umask(000)
+    logger.debug(f"Setting umask is completed!")
     yield
 
 

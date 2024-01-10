@@ -3,7 +3,13 @@ from datetime import datetime
 from typing import Any, Literal, Optional
 from uuid import UUID, uuid4
 
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage
+from langchain_core.messages import (
+    AIMessage,
+    BaseMessage,
+    HumanMessage,
+    SystemMessage,
+    ToolMessage,
+)
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from pybot.utils import utcnow
@@ -112,6 +118,12 @@ class ChatMessage(BaseModel):
                 )
             case "ai":
                 return AIMessage(
+                    content=content,
+                    additional_kwargs=additional_kwargs,
+                )
+            case "tool":
+                return ToolMessage(
+                    tool_call_id=uuid4().hex,
                     content=content,
                     additional_kwargs=additional_kwargs,
                 )

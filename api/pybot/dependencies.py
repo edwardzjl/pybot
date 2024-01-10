@@ -1,6 +1,7 @@
 from typing import Annotated, Optional
 
 from fastapi import Depends, Header
+from langchain.chains.base import Chain
 from langchain.memory import ConversationBufferWindowMemory
 from langchain_community.chat_message_histories import RedisChatMessageHistory
 from langchain_community.llms.huggingface_text_gen_inference import (
@@ -11,6 +12,7 @@ from langchain_core.memory import BaseMemory
 
 from pybot.callbacks import TracingLLMCallbackHandler
 from pybot.config import settings
+from pybot.fake_chain import FakeUseToolChain
 from pybot.history import ContextAwareMessageHistory
 from pybot.prompts.chatml import AI_PREFIX, AI_SUFFIX, HUMAN_PREFIX
 
@@ -67,3 +69,18 @@ def Llm() -> BaseLLM:
         streaming=True,
         callbacks=[TracingLLMCallbackHandler()],
     )
+
+
+def FakeCodeSandboxChain(
+    history: Annotated[RedisChatMessageHistory, Depends(MessageHistory)],
+) -> Chain:
+    memory = ConversationBufferWindowMemory(
+        human_prefix=HUMAN_PREFIX,
+        ai_prefix=AI_PREFIX,
+        memory_key="history",
+        input_key="input",
+        output_key="output",
+        chat_memory=history,
+        return_messages=True,
+    )
+    return FakeUseToolChain.from_memory(memory=memory)
