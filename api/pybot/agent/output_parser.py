@@ -1,4 +1,5 @@
 import ast
+import re
 from typing import Generator, Union
 
 from langchain.agents import AgentOutputParser
@@ -37,6 +38,32 @@ def find_dicts(s: str) -> Generator[tuple[dict, int], None, None]:
             buffer += ch
 
 
+def parse_python_markdown(source: str) -> str:
+    """
+    Parse a python code snippet from a Markdown string.
+
+    Args:
+        source: The Markdown string.
+
+    Returns:
+        The parsed Python code snippet.
+    """
+    # Try to find Python code within triple backticks
+    match = re.search(r"```python\n(.*)```", source, re.DOTALL)
+
+    # If no match found, assume the entire string is a JSON string
+    if match is None:
+        raise ValueError
+    else:
+        # If match found, use the content within the backticks
+        json_str = match.group(1)
+
+    # Strip whitespace and newlines from the start and end
+    json_str = json_str.strip()
+
+    return json_str
+
+
 class JsonOutputParser(AgentOutputParser):
     """Output parser that extracts all dicts in the output and try to parse them into actions.
     Only the first valid action will be returned.
@@ -52,7 +79,13 @@ class JsonOutputParser(AgentOutputParser):
                 tool_name = _dict.get(self.tool_name_key)
                 tool_input = _dict.get(self.tool_input_key, "")
                 return AgentAction(tool_name, tool_input, text[: i + 1])
-        return AgentFinish({"output": text}, text)
+        # find python markdown code snippet
+        try:
+            # TODO: this is a fallback workaround
+            code = parse_python_markdown(text)
+            return AgentAction("code_sandbox", code, text)
+        except ValueError:
+            return AgentFinish({"output": text}, text)
 
     @property
     def _type(self) -> str:
