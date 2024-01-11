@@ -2,7 +2,7 @@
  * main container of chat messages
  * align center and control max width
  */
- .message-container {
+.message-container {
     max-width: 40vw;
     margin-left: auto;
     margin-right: auto;

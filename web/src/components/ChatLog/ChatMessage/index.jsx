@@ -13,6 +13,7 @@ import ThumbDownOutlined from "@mui/icons-material/ThumbDownOutlined";
 
 import { getFirstLetters, stringToColor } from "commons";
 import { ConversationContext } from "contexts/conversation";
+import { UserContext } from "contexts/user";
 import TextMessage from "./TextMessage";
 import FileMessage from "./FileMessage";
 
@@ -37,6 +38,7 @@ const Message = ({ className, content, type }) => {
  * @returns
  */
 const ChatMessage = ({ convId, idx, message }) => {
+  const { username } = useContext(UserContext);
   const { dispatch } = useContext(ConversationContext);
   const [copyTooltipTitle, setCopyTooltipTitle] = useState("copy content");
   const [thumbUpTooltipTitle, setThumbUpTooltipTitle] = useState("good answer");
@@ -77,16 +79,16 @@ const ChatMessage = ({ convId, idx, message }) => {
   };
 
   /**
-   * Checks whether a message is sent by bot.
+   * Checks whether a message is sent by me.
    * @param {*} message
    */
-  const botMessage = (message) => {
+  const myMessage = (message) => {
     const msgFrom = message.from.toLowerCase();
-    return msgFrom === "ai" || msgFrom === "assistant";
+    return msgFrom === username;
   };
 
   return (
-    <div className={`message-container ${botMessage(message) && "AI"}`}>
+    <div className={`message-container ${myMessage(message) && "mine"}`}>
       <div className="message-title">
         <Avatar
           className="message-title-avatar"
@@ -95,13 +97,13 @@ const ChatMessage = ({ convId, idx, message }) => {
             bgcolor: stringToColor(message.from),
           }}
         >
-          {botMessage(message) ? "AI" : getFirstLetters(message.from)}
+          {myMessage(message) ? getFirstLetters(message.from) : "AI"}
         </Avatar>
-        <div className="message-title-name">{botMessage(message) ? "AI" : "You"}</div>
+        <div className="message-title-name">{myMessage(message) ? "You" : "AI"}</div>
       </div>
       <div className="message-body">
         <Message className="message-content" content={message.content} type={message.type} />
-        {botMessage(message) && (
+        {!myMessage(message) && (
           <div className="message-feedbacks">
             <Tooltip title={copyTooltipTitle}>
               <ContentCopyIcon className="message-feedback" onClick={() => onCopyClick(message.content)} />
