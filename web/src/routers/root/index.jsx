@@ -1,4 +1,5 @@
-import "./App.css";
+import "./index.css";
+
 import { forwardRef, useContext } from "react";
 
 import Snackbar from "@mui/material/Snackbar";
@@ -21,7 +22,7 @@ const Alert = forwardRef(function Alert(props, ref) {
 });
 
 
-const App = () => {
+const Root = () => {
   const { theme } = useContext(ThemeContext);
   const { currentConv } = useContext(ConversationContext);
   const { snackbar, setSnackbar } = useContext(SnackbarContext);
@@ -66,4 +67,4 @@ const App = () => {
   );
 }
 
-export default App;
+export default Root;
