@@ -1,10 +1,6 @@
-import "./index.css";
+import { useContext, useState } from "react";
 
-import { useContext, useEffect, useState } from "react";
-import { FileIcon, defaultStyles } from "react-file-icon";
-
-import { getExtension } from "commons";
-import { getFiles, uploadFiles } from "requests";
+import { uploadFiles } from "requests";
 import { ConversationContext } from "contexts/conversation";
 import { UserContext } from "contexts/user";
 import { WebsocketContext } from "contexts/websocket";
@@ -13,26 +9,12 @@ import { WebsocketContext } from "contexts/websocket";
  * <https://claritydev.net/blog/react-typescript-drag-drop-file-upload-guide>
  * <https://claritydev.net/blog/react-hook-form-multipart-form-data-file-uploads>
  */
-const FileView = () => {
+const FileUploader = ({ children }) => {
     const { username } = useContext(UserContext);
     const { currentConv, dispatch } = useContext(ConversationContext);
     const [, send] = useContext(WebsocketContext);
     const [, setIsOver] = useState(false);
     const [files, setFiles] = useState([]);
-
-    const initialization = async (chatId) => {
-        const myFiles = await getFiles(chatId);
-        setFiles(myFiles);
-    };
-
-    // initialization
-    useEffect(() => {
-        if (currentConv?.id) {
-            initialization(currentConv.id);
-        }
-
-        return () => { };
-    }, [currentConv?.id]);
 
     // Define the event handlers
     const handleDragOver = (event) => {
@@ -46,6 +28,7 @@ const FileView = () => {
     };
 
     const handleDrop = async (event) => {
+        console.log("handleDrop")
         event.preventDefault();
         setIsOver(false);
         const droppedFiles = Array.from(event.dataTransfer.files);
@@ -54,12 +37,14 @@ const FileView = () => {
             const _files = await response.json();
             _files.forEach((file) => {
                 const msg = {
+                    id: crypto.randomUUID(),
                     conversation: currentConv.id,
                     from: username,
                     content: file,
                     type: "file"
                 }
                 send(JSON.stringify(msg));
+                console.log("sent", msg)
                 dispatch({
                     type: "messageAdded",
                     id: currentConv.id,
@@ -74,27 +59,13 @@ const FileView = () => {
 
     return (
         <div
-            className="file-view"
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
         >
-            Drag and drop some files here
-            <div className="files">
-                {files.map((file) => {
-                    const extension = getExtension(file.filename);
-                    return (
-                        <div key={file.filename}>
-                            <div className="icon">
-                                <FileIcon extension={extension} {...defaultStyles[extension]} />
-                            </div>
-                            <div className="filename">{file.filename}</div>
-                        </div>
-                    )
-                })}
-            </div>
+            {children}
         </div>
     );
 }
 
-export default FileView;
+export default FileUploader;

@@ -11,7 +11,6 @@ import GitHubIcon from '@mui/icons-material/GitHub';
 import MailOutlineIcon from '@mui/icons-material/MailOutline';
 
 import Conversation from "routes/conversation";
-import FileView from "routes/conversation/FileViewer";
 import ChatTab from "./SideMenuButton";
 
 import { ConversationContext, conversationsReducer } from "contexts/conversation";
@@ -139,7 +138,6 @@ const Root = () => {
       <section className="chatbox">
         <Conversation currentConv={currentConv} />
       </section>
-      <FileView chatId={currentConv?.id} />
       <Snackbar
         open={snackbar.open}
         autoHideDuration={3000}
