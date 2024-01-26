@@ -1,32 +1,24 @@
 import "./index.css";
 
 import { useContext, useState, useRef, useEffect } from "react";
+import { Form, useSubmit } from "react-router-dom";
 
-// import { ConversationContext } from "contexts/conversation";
 import { UserContext } from "contexts/user";
 import { MessageContext } from "contexts/message";
 import { WebsocketContext } from "contexts/websocket";
+import { DEFAULT_CONV_TITLE } from "commons";
 
 
 /**
  *
  */
-const ChatInput = ({ conversation }) => {
+const ChatInput = () => {
   const { username } = useContext(UserContext);
   const { dispatch } = useContext(MessageContext);
   const [ready, send] = useContext(WebsocketContext);
-
+  const submit = useSubmit();
   const [input, setInput] = useState("");
   const inputRef = useRef(null);
-
-  /**
-   * Focus on input when chatId changes.
-   */
-  useEffect(() => {
-    if (conversation.id) {
-      inputRef.current.focus();
-    }
-  }, [conversation.id]);
 
   /**
    * Adjusting height of textarea.
@@ -45,9 +37,19 @@ const ChatInput = ({ conversation }) => {
     if (!ready) {
       return;
     }
+    // I need to use the conversation id later so I need to create a conversation here instead of in the 'react router action'
+    const conversation = await fetch("/api/conversations", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ title: DEFAULT_CONV_TITLE }),
+    }).then((res) => res.json());
+    submit(conversation, { method: "post", action: "/", encType: "application/json" });
     const message = { id: crypto.randomUUID(), from: username, content: input, type: "text" };
     const payload = {
       conversation: conversation.id,
+      additional_kwargs: { require_summarization: true },
       ...message,
     };
     send(JSON.stringify(payload));
@@ -57,18 +59,6 @@ const ChatInput = ({ conversation }) => {
       type: "added",
       message: message,
     });
-    // TODO: add this back
-    // Usually it can be done by calling `revalidator.revalidate()` (<https://reactrouter.com/en/main/hooks/use-revalidator>)
-    // either here or on `stream/end` message received.
-    // However, as I skipped the revalidation on `currentParams.convId === nextParams.convId`
-    // The `revalidator.revalidate()` will also be skipped.
-    // if current chat is not the first in the list, move it to the first when send message.
-    // if (conversations[0].id !== currentConv.id) {
-    //   dispatch({
-    //     type: "moveToFirst",
-    //     id: currentConv.id,
-    //   });
-    // }
   };
 
   const handleKeyDown = async (e) => {
@@ -84,7 +74,7 @@ const ChatInput = ({ conversation }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="input-container">
+    <Form className="input-container" method="post">
       <textarea
         className="input-text"
         ref={inputRef}
@@ -95,7 +85,7 @@ const ChatInput = ({ conversation }) => {
       <button disabled={!ready} className="input-submit-button" type="submit">
         Send
       </button>
-    </form>
+    </Form>
   );
 };
 

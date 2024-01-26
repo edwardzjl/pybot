@@ -16,8 +16,7 @@ from pybot.callbacks import (
 from pybot.config import settings
 from pybot.context import session_id
 from pybot.dependencies import ChatMemory, Llm, MessageHistory, UserIdHeader
-from pybot.models import Conversation as ORMConversation
-from pybot.schemas import ChatMessage, Conversation, InfoMessage
+from pybot.schemas import ChatMessage, InfoMessage
 from pybot.summarization import summarize
 from pybot.tools import CodeSandbox
 
@@ -87,15 +86,12 @@ async def chat(
                 and message.additional_kwargs["require_summarization"]
             ):
                 title = await summarize(llm, memory)
-                conv = await ORMConversation.get(message.conversation)
-                conv.title = title
-                await conv.save()
                 info_message = InfoMessage(
                     conversation=message.conversation,
                     from_="ai",
                     content={
-                        "type": "update_conv",
-                        "payload": Conversation(**conv.dict()).model_dump(),
+                        "type": "title-generated",
+                        "payload": title,
                     },
                 )
                 await websocket.send_text(info_message.model_dump_json())
