@@ -94,14 +94,14 @@ async def delete_conversation(
     conversation_id: str,
     userid: Annotated[str | None, UserIdHeader()] = None,
 ) -> None:
-    session = await session_store.aget(f"{userid}:{conversation_id}")
-    # delete kernel
     try:
+        session = await session_store.aget(f"{userid}:{conversation_id}")
+        # delete kernel
         gateway_client.delete_kernel(str(session.kernel_id))
+        # delete session
+        await session_store.adelete(f"{userid}:{conversation_id}")
     except Exception as e:
-        logger.exception(f"failed to delete kernel {session.kernel_id}, err: {str(e)}")
-    # delete session
-    await session_store.adelete(f"{userid}:{conversation_id}")
+        logger.exception(f"failed to delete session, err: {str(e)}")
     # delete conversation
     await ORMConversation.delete(conversation_id)
 
