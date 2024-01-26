@@ -12,7 +12,7 @@ import ThumbDownIcon from '@mui/icons-material/ThumbDown';
 import ThumbDownOutlined from "@mui/icons-material/ThumbDownOutlined";
 
 import { getFirstLetters, stringToColor } from "commons";
-import { ConversationContext } from "contexts/conversation";
+import { MessageContext } from "contexts/message";
 import { UserContext } from "contexts/user";
 import TextMessage from "./TextMessage";
 import FileMessage from "./FileMessage";
@@ -39,7 +39,7 @@ const Message = ({ className, content, type }) => {
  */
 const ChatMessage = ({ convId, idx, message }) => {
   const { username } = useContext(UserContext);
-  const { dispatch } = useContext(ConversationContext);
+  const { dispatch } = useContext(MessageContext);
   const [copyTooltipTitle, setCopyTooltipTitle] = useState("copy content");
   const [thumbUpTooltipTitle, setThumbUpTooltipTitle] = useState("good answer");
   const [thumbDownTooltipTitle, setThumbDownTooltipTitle] = useState("bad answer");

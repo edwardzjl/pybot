@@ -1,8 +1,9 @@
 import { useContext, useState } from "react";
+import { useParams } from 'react-router-dom';
 
 import { uploadFiles } from "requests";
-import { ConversationContext } from "contexts/conversation";
 import { UserContext } from "contexts/user";
+import { MessageContext } from "contexts/message";
 import { WebsocketContext } from "contexts/websocket";
 
 /**
@@ -10,8 +11,9 @@ import { WebsocketContext } from "contexts/websocket";
  * <https://claritydev.net/blog/react-hook-form-multipart-form-data-file-uploads>
  */
 const FileUploader = ({ children }) => {
+    const { convId } = useParams();
     const { username } = useContext(UserContext);
-    const { currentConv, dispatch } = useContext(ConversationContext);
+    const { dispatch } = useContext(MessageContext);
     const [, send] = useContext(WebsocketContext);
     const [, setIsOver] = useState(false);
     const [files, setFiles] = useState([]);
@@ -32,13 +34,13 @@ const FileUploader = ({ children }) => {
         event.preventDefault();
         setIsOver(false);
         const droppedFiles = Array.from(event.dataTransfer.files);
-        const response = await uploadFiles(currentConv.id, droppedFiles);
+        const response = await uploadFiles(convId, droppedFiles);
         if (response.ok) {
             const _files = await response.json();
             _files.forEach((file) => {
                 const msg = {
                     id: crypto.randomUUID(),
-                    conversation: currentConv.id,
+                    conversation: convId,
                     from: username,
                     content: file,
                     type: "file"
@@ -47,7 +49,7 @@ const FileUploader = ({ children }) => {
                 console.log("sent", msg)
                 dispatch({
                     type: "messageAdded",
-                    id: currentConv.id,
+                    id: convId,
                     message: msg,
                 });
             });

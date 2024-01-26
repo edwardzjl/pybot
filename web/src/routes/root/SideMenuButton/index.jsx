@@ -1,6 +1,7 @@
 import "./index.css";
 
-import { useState, useRef, useContext } from "react";
+import { useState, useRef } from "react";
+import { useSubmit } from "react-router-dom";
 import Tooltip from "@mui/material/Tooltip";
 
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
@@ -9,68 +10,21 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 
 import { DropdownMenu, DropdownHeader, DropdownList } from "components/DropdownMenu";
-import { ConversationContext } from "contexts/conversation";
-import { SnackbarContext } from "contexts/snackbar";
-import {
-  deleteConversation,
-  getConversation,
-  updateConversation,
-  summarizeConversation,
-} from "requests";
+import { summarizeConversation } from "requests";
 
 /**
  *
  * @param {Object} chat
  * @param {string} chat.id
  * @param {string} chat.title
- * @param {boolean} chat.active whether this chat is active
+ * @param {boolean} isActive whether this chat is active
  * @returns
  */
-const ChatTab = ({ chat, onConvDeleted }) => {
-  const { dispatch } = useContext(ConversationContext);
-  const { setSnackbar } = useContext(SnackbarContext);
+const ChatTab = ({ chat, isActive, onDeleteClick }) => {
+  const submit = useSubmit();
 
   const titleRef = useRef(null);
   const [titleEditable, setTitleEditable] = useState("false");
-
-  const delDialogRef = useRef();
-
-  const selectChat = async () => {
-    if (chat.active) {
-      return;
-    }
-    // we need to update messages, as there might be unfinished messages when we last time left the chat.
-    const detailedConv = await getConversation(chat.id);
-    dispatch({
-      type: "selected",
-      data: detailedConv,
-    });
-  };
-
-  const deleteChat = async () => {
-    deleteConversation(chat.id)
-      .then(() => {
-        dispatch({
-          type: "deleted",
-          id: chat.id,
-        });
-        onConvDeleted(chat);
-        setSnackbar({
-          open: true,
-          severity: "success",
-          message: "Chat deleted",
-        });
-      })
-      .catch((err) => {
-        console.error("error deleting chat", err);
-        setSnackbar({
-          open: true,
-          severity: "error",
-          message: "Delete chat failed",
-        });
-      });
-      delDialogRef.current?.close();
-  };
 
   const handleKeyDown = async (e) => {
     // TODO: this will trigger in Chinese IME on OSX
@@ -82,21 +36,11 @@ const ChatTab = ({ chat, onConvDeleted }) => {
 
   const renameChat = async (title) => {
     setTitleEditable("false");
-    updateConversation(chat.id, title).then((res) => {
-      if (res.ok) {
-        setSnackbar({
-          open: true,
-          severity: "success",
-          message: "Update chat success",
-        });
-      } else {
-        setSnackbar({
-          open: true,
-          severity: "error",
-          message: "Update chat failed",
-        });
-      }
-    });
+    submit(
+      { title: title },
+      { method: "put", action: `/conversations/${chat.id}`, encType: "application/json" }
+    );
+    // Maybe set snackbar to inform user?
   };
 
   const onUpdateClick = async (e) => {
@@ -116,18 +60,11 @@ const ChatTab = ({ chat, onConvDeleted }) => {
     summarizeConversation(chat.id)
       .then(data => {
         titleRef.current.innerText = data.title;
-        dispatch({
-          type: "updated",
-          conversation: { ...chat, title: data.title },
-        });
       });
   }
 
   return (
-    <div
-      className={`sidemenu-button ${chat.active && "selected"}`}
-      onClick={selectChat}
-    >
+    <>
       <Tooltip title={titleRef.current?.innerText}>
         {/* contentEditable moves control out of react, so useState won't work correctly.
           * I use ref to get the value instead.
@@ -141,7 +78,7 @@ const ChatTab = ({ chat, onConvDeleted }) => {
           onKeyDown={handleKeyDown}
         >{chat.title}</span>
       </Tooltip>
-      {chat.active && (
+      {isActive && (
         <DropdownMenu className="chat-op-menu">
           <DropdownHeader className="chat-op-menu-icon" >
             <MoreVertIcon />
@@ -160,7 +97,7 @@ const ChatTab = ({ chat, onConvDeleted }) => {
               </button>
             </li>
             <li>
-              <button className="chat-op-menu-item" onClick={() => delDialogRef.current?.showModal()}>
+              <button className="chat-op-menu-item" onClick={() => onDeleteClick(chat.id, titleRef.current?.innerText)}>
                 <DeleteOutlineIcon />
                 <span className="chat-op-menu-item-text">Delete</span>
               </button>
@@ -168,18 +105,7 @@ const ChatTab = ({ chat, onConvDeleted }) => {
           </DropdownList>
         </DropdownMenu>
       )}
-      <dialog
-        className="del-dialog"
-        ref={delDialogRef}
-      >
-        <h2>Delete conversation?</h2>
-        <p>This will delete '{titleRef.current?.innerText}'</p>
-        <div className="del-dialog-actions">
-          <button autoFocus onClick={deleteChat}>Delete</button>
-          <button onClick={() => delDialogRef.current?.close()}>Cancel</button>
-        </div>
-      </dialog>
-    </div>
+    </>
   );
 };
 

@@ -100,6 +100,22 @@
   overflow: auto;
 }
 
+.sidemenu ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sidemenu li {
+  list-style: none;
+  width: 100%;
+}
+
+.sidemenu a {
+  color: unset;
+  text-decoration: none;
+}
+
 .sidemenu-date-group {
   color: var(--text-3);
   text-align: start;
@@ -123,7 +139,7 @@
   background-color: var(--bg-secondary);
 }
 
-.sidemenu-button.selected {
+.sidemenu-button.active {
   background-color: var(--bg-secondary);
 }
 
@@ -155,4 +171,40 @@
   border: 1px solid var(--border-color);
   background-color: var(--bg-secondary);
   position: relative;
+}
+
+/*
+ * Add loading will break the dialog now
+ * Need to investigate more
+ * See <https://developer.mozilla.org/en-US/docs/Web/HTML/Element/dialog>
+ */
+/* .chatbox.loading {
+  opacity: 0.25;
+  transition: opacity 200ms;
+  transition-delay: 200ms;
+} */
+
+.del-dialog {
+  width: 25vw;
+  display: flex;
+  flex-direction: column;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+  border: none;
+  border-radius: 5px;
+}
+
+.del-dialog-actions {
+  margin-top: auto;
+  display: flex;
+  flex-direction: row-reverse;
+}
+
+.del-dialog-actions>button {
+  color: var(--text-primary);
+  background-color: var(--bg-secondary);
+  border: unset;
+  border-radius: 5px;
+  margin: 5px;
+  padding: 10px;
 }
