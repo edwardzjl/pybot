@@ -68,16 +68,18 @@ async def chat(
             action_callback = AgentActionCallbackHandler(
                 websocket, message.conversation, history
             )
-            await agent_executor.acall(
-                inputs={
+            await agent_executor.ainvoke(
+                input={
                     "date": date.today(),
                     "input": message.content,
                 },
-                callbacks=[
-                    streaming_callback,
-                    action_callback,
-                    update_conversation_callback,
-                ],
+                config={
+                    "callbacks": [
+                        streaming_callback,
+                        action_callback,
+                        update_conversation_callback,
+                    ],
+                },
             )
             # summarize if required
             if (
