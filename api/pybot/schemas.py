@@ -30,6 +30,7 @@ class File(BaseModel):
 class ChatMessage(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
 
+    parent_id: Optional[UUID] = None
     id: UUID = Field(default_factory=uuid4)
     """Message id, used to chain stream responses into message."""
     conversation: Optional[str] = None
@@ -61,6 +62,8 @@ class ChatMessage(BaseModel):
         Returns:
             ChatMessage: _description_
         """
+        msg_parent_id_str = lc_message.additional_kwargs.get("parent_id", None)
+        msg_parent_id = UUID(msg_parent_id_str) if msg_parent_id_str else None
         msg_id_str = lc_message.additional_kwargs.get("id", None)
         msg_id = UUID(msg_id_str) if msg_id_str else uuid4()
         msg_type = lc_message.additional_kwargs.get("type", "text")
@@ -75,6 +78,7 @@ class ChatMessage(BaseModel):
         else:
             msg_content = lc_message.content
         return ChatMessage(
+            parent_id=msg_parent_id,
             id=msg_id,
             conversation=conv_id,
             from_=from_ if from_ else lc_message.type,
@@ -91,6 +95,8 @@ class ChatMessage(BaseModel):
             "id": str(self.id),
             "type": self.type,
         }
+        if self.parent_id:
+            additional_kwargs["parent_id"] = str(self.parent_id)
         if self.type == "file":
             content = json.dumps(
                 {
