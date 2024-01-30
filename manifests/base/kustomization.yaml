@@ -5,7 +5,7 @@ labels:
   - pairs:
       app: pybot
       app.kubernetes.io/name: pybot
-      app.kubernetes.io/version: 7ab4052
+      app.kubernetes.io/version: 43fab9b
       app.kubernetes.io/managed-by: kubectl
     includeSelectors: false
 
@@ -24,4 +24,4 @@ generatorOptions:
 
 images:
   - name: edwardlol/pybot
-    newTag: 7ab4052
+    newTag: 43fab9b
