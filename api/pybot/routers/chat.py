@@ -80,6 +80,7 @@ async def chat(
                         update_conversation_callback,
                     ],
                 },
+                include_run_info=True,
             )
             # summarize if required
             if (
