@@ -4,7 +4,6 @@ import { useContext, useEffect } from "react";
 import { useLoaderData, redirect } from "react-router-dom";
 
 import ChatboxHeader from "components/ChatboxHeader";
-import FileUploader from "components/FileUploader";
 
 import { MessageContext } from "contexts/message";
 
@@ -65,13 +64,11 @@ const Conversation = () => {
     return (
         <>
             <ChatboxHeader />
-            <FileUploader>
                 <ChatLog className="chat-log">
                     {conversation && messages && messages.map((message, index) => (
                         <ChatMessage key={index} convId={conversation.id} idx={index} message={message} />
                     ))}
                 </ChatLog>
-            </FileUploader>
             <div className="input-bottom">
                 <ChatInput conversation={{ ...conversation, messages: messages }} />
                 <div className="footer">Pybot can make mistakes. Consider checking important information.</div>

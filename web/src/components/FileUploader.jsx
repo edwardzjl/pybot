@@ -12,7 +12,7 @@ import { WebsocketContext } from "contexts/websocket";
  * <https://claritydev.net/blog/react-typescript-drag-drop-file-upload-guide>
  * <https://claritydev.net/blog/react-hook-form-multipart-form-data-file-uploads>
  */
-const FileUploader = ({ children }) => {
+const FileUploader = ({ children, className }) => {
     const { convId } = useParams();
     const { username } = useContext(UserContext);
     const { dispatch } = useContext(MessageContext);
@@ -34,6 +34,11 @@ const FileUploader = ({ children }) => {
     const handleDrop = async (event) => {
         event.preventDefault();
         setIsOver(false);
+        // TODO: handle undefined convId
+        // I cannot submit a conversation creating here as it will redirect and cleanup the files
+        if (convId === undefined) {
+            return;
+        }
         const droppedFiles = Array.from(event.dataTransfer.files);
         const response = await uploadFiles(convId, droppedFiles);
         if (response.ok) {
@@ -61,7 +66,7 @@ const FileUploader = ({ children }) => {
 
     return (
         <div
-            className="file-uploader"
+            className={className}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
