@@ -151,6 +151,7 @@ class Conversation(BaseModel):
     id: Optional[str] = None
     title: str
     owner: str
+    pinned: bool = False
     created_at: datetime = Field(default_factory=utcnow)
     updated_at: datetime = created_at
 
@@ -175,7 +176,8 @@ class CreateConversation(BaseModel):
 class UpdateConversation(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
-    title: str
+    title: Optional[str] = None
+    pinned: Optional[bool] = None
 
 
 class UserProfile(BaseModel):
