@@ -187,22 +187,22 @@ const Root = () => {
           {groupedConvs && Object.entries(groupedConvs).flatMap(([grp, convs]) => (
             [
               <div key={grp}>
-              <div className="sidemenu-date-group">{grp}</div>
-              <ul>
-                {convs.map((conv) => (
-                  <li key={conv.id}>
-                    <NavLink
-                      to={`conversations/${conv.id}`}
-                      className={`sidemenu-button ${({ isActive, isPending }) => isActive ? "active" : isPending ? "pending" : ""}`}
-                    >
-                      {({ isActive, isPending, isTransitioning }) => (
-                        <ChatTab chat={conv} isActive={isActive} onDeleteClick={onDeleteClick} />
-                      )}
-                    </NavLink>
-                  </li>
-                ))}
-              </ul>
-            </div>
+                <div className="sidemenu-date-group">{grp}</div>
+                <ul>
+                  {convs.map((conv) => (
+                    <li key={conv.id}>
+                      <NavLink
+                        to={`conversations/${conv.id}`}
+                        className={`sidemenu-button ${({ isActive, isPending }) => isActive ? "active" : isPending ? "pending" : ""}`}
+                      >
+                        {({ isActive, isPending, isTransitioning }) => (
+                          <ChatTab chat={conv} isActive={isActive} onDeleteClick={onDeleteClick} />
+                        )}
+                      </NavLink>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ]
           ))}
           <hr className="sidemenu-bottom" />

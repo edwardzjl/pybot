@@ -1,3 +1,5 @@
+import "./index.css";
+
 import { useContext, useState } from "react";
 import { useParams } from 'react-router-dom';
 
@@ -61,6 +63,7 @@ const FileUploader = ({ children }) => {
 
     return (
         <div
+            className="file-uploader"
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
