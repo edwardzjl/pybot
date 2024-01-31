@@ -13,7 +13,7 @@ from pybot.tools.base import ExtendedTool
 
 
 class CodeSandbox(ExtendedTool):
-    name = "code_sandbox"
+    name = "python"
     timeout: int = 60
     """The timeout for the tool in seconds."""
     volume: str = "/mnt/shared"
@@ -41,16 +41,16 @@ class CodeSandbox(ExtendedTool):
       required: [tool_name, tool_input]
     ```"""
     # TODO: /mnt/shared is hardcoded, but I need to refactor the examples anyway
-    examples: str = """<|im_start|>system-example-user
-{"filename": "test.csv", "path": "/mnt/shared/test.csv"}<|im_end|>
+    examples: str = f"""<|im_start|>system-example-user
+{{"filename": "test.csv", "path": "/mnt/shared/test.csv"}}<|im_end|>
 <|im_start|>system-example-user
 Help me analyze this data.<|im_end|>
 <|im_start|>system-example-assistant
-Sure, I can help you with that. Let's start by examining the initial rows of the dataset to understand its structure. I'll use the code_sandbox tool for this.
-{
-    "tool_name": "code_sandbox",
+Sure, I can help you with that. Let's start by examining the initial rows of the dataset to understand its structure. I'll use the {name} tool for this.
+{{
+    "tool_name": "{name}",
     "tool_input": "import pandas as pd\\n\\n# read the file\\ndf = pd.read_csv(\'/mnt/shared/test.csv\')\\n\\n# Display the initial rows of the dataframe\\nprint(df.head())"
-}<|im_end|>"""
+}}<|im_end|>"""
     gateway_url: str
     kernel_manager: Optional[ContextAwareKernelManager] = None
 
