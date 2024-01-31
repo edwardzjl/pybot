@@ -32,7 +32,6 @@ const FileUploader = ({ children }) => {
     };
 
     const handleDrop = async (event) => {
-        console.log("handleDrop")
         event.preventDefault();
         setIsOver(false);
         const droppedFiles = Array.from(event.dataTransfer.files);
@@ -48,9 +47,8 @@ const FileUploader = ({ children }) => {
                     type: "file"
                 }
                 send(JSON.stringify(msg));
-                console.log("sent", msg)
                 dispatch({
-                    type: "messageAdded",
+                    type: "added",
                     id: convId,
                     message: msg,
                 });
