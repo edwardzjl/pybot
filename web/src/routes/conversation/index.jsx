@@ -6,6 +6,7 @@ import { useLoaderData, redirect } from "react-router-dom";
 import ChatboxHeader from "components/ChatboxHeader";
 
 import { MessageContext } from "contexts/message";
+import { WebsocketContext } from "contexts/websocket";
 
 import ChatLog from "./ChatLog";
 import ChatMessage from "./ChatMessage";
@@ -24,7 +25,7 @@ export async function action({ params, request }) {
                 title: conversation.title,
                 pinned: conversation.pinned,
             }),
-        })
+        });
         if (!resp.ok) {
             console.error("error updating conversation", resp);
             // TODO: handle error
@@ -35,7 +36,7 @@ export async function action({ params, request }) {
     if (request.method === "DELETE") {
         await fetch(`/api/conversations/${params.convId}`, {
             method: "DELETE",
-        })
+        });
         return redirect("/");
     }
 }
@@ -51,16 +52,33 @@ export async function loader({ params }) {
 
 const Conversation = () => {
     const { conversation } = useLoaderData();
+    const [ready, send] = useContext(WebsocketContext);
     const { messages, dispatch } = useContext(MessageContext);
 
     useEffect(() => {
-        if (conversation && conversation.messages) {
+        if (conversation?.messages) {
             dispatch({
                 type: "replaceAll",
                 messages: conversation.messages,
             });
+            const initMsg = sessionStorage.getItem(`init-msg:${conversation.id}`);
+            if (initMsg === undefined || initMsg === null) {
+                return;
+            }
+            const message = JSON.parse(initMsg);
+            console.log("init-msg", message);
+            dispatch({
+                type: "added",
+                message: message,
+            });
+            console.log("msg dispatched")
+            if (ready) {
+                // TODO: should I wait until ready?
+                send(JSON.stringify({ additional_kwargs: { require_summarization: true }, ...message }));
+            }
+            sessionStorage.removeItem(`init-msg:${conversation.id}`);
         }
-    }, [conversation, dispatch]);
+    }, [conversation]);
 
     return (
         <>
