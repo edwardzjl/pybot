@@ -1,7 +1,13 @@
 from datetime import date
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
+from fastapi import (
+    APIRouter,
+    Depends,
+    WebSocket,
+    WebSocketDisconnect,
+    WebSocketException,
+)
 from langchain_community.chat_message_histories import RedisChatMessageHistory
 from langchain_core.language_models import BaseLLM
 from langchain_core.memory import BaseMemory
@@ -16,6 +22,7 @@ from pybot.callbacks import (
 from pybot.config import settings
 from pybot.context import session_id
 from pybot.dependencies import ChatMemory, Llm, MessageHistory, UserIdHeader
+from pybot.models import Conversation
 from pybot.schemas import ChatMessage, InfoMessage
 from pybot.summarization import summarize
 from pybot.tools import CodeSandbox
@@ -40,6 +47,11 @@ async def chat(
         try:
             payload: str = await websocket.receive_text()
             message = ChatMessage.model_validate_json(payload)
+            conv = await Conversation.get(message.conversation)
+            if conv.owner != userid:
+                # TODO: I'm not sure whether this is the correct way to handle this.
+                # See websocket code definitions here: <https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent/code>
+                raise WebSocketException(code=3403, reason="authorization error")
             session_id.set(f"{userid}:{message.conversation}")
             # file messages are only added to history, not passing to llm
             if message.type == "file":
