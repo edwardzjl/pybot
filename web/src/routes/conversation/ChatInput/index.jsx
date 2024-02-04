@@ -86,6 +86,7 @@ const ChatInput = ({ conversation }) => {
   return (
     <form onSubmit={handleSubmit} className="input-container">
       <textarea
+        id="input-text"
         className="input-text"
         ref={inputRef}
         autoFocus
