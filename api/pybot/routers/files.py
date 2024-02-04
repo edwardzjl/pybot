@@ -3,10 +3,11 @@ from pathlib import Path
 from typing import Annotated
 
 import aiofiles
-from fastapi import APIRouter, UploadFile
+from fastapi import APIRouter, HTTPException, UploadFile
 
 from pybot.config import settings
 from pybot.dependencies import UserIdHeader
+from pybot.models import Conversation as ORMConversation
 from pybot.models import File as ORMFile
 from pybot.schemas import File
 
@@ -22,6 +23,9 @@ async def upload_files(
     files: list[UploadFile],
     userid: Annotated[str | None, UserIdHeader()] = None,
 ) -> list[File]:
+    conv = await ORMConversation.get(conversation_id)
+    if conv.owner != userid:
+        raise HTTPException(status_code=403, detail="authorization error")
     base = Path(settings.shared_volume)
     parent_dir = base.joinpath(userid).joinpath(conversation_id)
     parent_dir.mkdir(exist_ok=True, parents=True)
