@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import asynccontextmanager, contextmanager
 from pathlib import Path
 from typing import Any
@@ -11,15 +12,13 @@ from pybot.config import settings
 from pybot.context import CurrentSession
 from pybot.jupyter import GatewayClient
 from pybot.jupyter.schema import CreateKernelRequest, Kernel, KernelNotFoundException
-from pybot.session import RedisSessionStore
 
 
 class ContextAwareKernelManager:
     def __init__(self, gateway_host):
         self.gateway_host = gateway_host
         self.gateway_client = GatewayClient(host=gateway_host)
-        self.session_store = RedisSessionStore()
-        self.current_session = CurrentSession(session_store=self.session_store)
+        self.current_session = CurrentSession()
 
     def start_kernel(self) -> Kernel:
         session = self.current_session.get()
@@ -31,7 +30,7 @@ class ContextAwareKernelManager:
             request = CreateKernelRequest(env=env)
             res = self.gateway_client.create_kernel(request)
             session.kernel_id = str(res.id)
-            self.session_store.save(session)
+            asyncio.run(session.save())
             return res
 
     async def astart_kernel(self) -> Kernel:
@@ -44,7 +43,7 @@ class ContextAwareKernelManager:
             request = CreateKernelRequest(env=env)
             res = self.gateway_client.create_kernel(request)
             session.kernel_id = str(res.id)
-            await self.session_store.asave(session)
+            await session.save()
             return res
 
     @contextmanager
