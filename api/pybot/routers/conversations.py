@@ -8,7 +8,7 @@ from langchain_core.messages import HumanMessage
 from loguru import logger
 
 from pybot.config import settings
-from pybot.context import session_id
+from pybot.context import Session, session_id
 from pybot.dependencies import ChatMemory, Llm, MessageHistory, UserIdHeader
 from pybot.jupyter import ContextAwareKernelManager, GatewayClient
 from pybot.models import Conversation as ORMConversation
@@ -19,7 +19,6 @@ from pybot.schemas import (
     CreateConversation,
     UpdateConversation,
 )
-from pybot.session import RedisSessionStore, Session
 from pybot.summarization import summarize as summarize_conv
 
 router = APIRouter(
@@ -27,7 +26,6 @@ router = APIRouter(
     tags=["conversation"],
 )
 gateway_client = GatewayClient(host=settings.jupyter_enterprise_gateway_url)
-session_store = RedisSessionStore()
 kernel_manager = ContextAwareKernelManager(
     gateway_host=settings.jupyter_enterprise_gateway_url
 )
@@ -75,7 +73,7 @@ async def create_conversation(
     await conv.save()
     # create session
     session = Session(pk=f"{userid}:{conv.pk}", user_id=userid, conv_id=conv.pk)
-    await session_store.asave(session)
+    await session.save()
     session_id.set(session.pk)
     await kernel_manager.astart_kernel()
     return ConversationDetail(**conv.dict())
@@ -111,11 +109,11 @@ async def delete_conversation(
     if conv.owner != userid:
         raise HTTPException(status_code=403, detail="authorization error")
     try:
-        session = await session_store.aget(f"{userid}:{conversation_id}")
+        session = await Session.get(f"{userid}:{conversation_id}")
         # delete kernel
         gateway_client.delete_kernel(str(session.kernel_id))
         # delete session
-        await session_store.adelete(f"{userid}:{conversation_id}")
+        await Session.delete(f"{userid}:{conversation_id}")
     except Exception as e:
         logger.exception(f"failed to delete session, err: {str(e)}")
     # delete conversation

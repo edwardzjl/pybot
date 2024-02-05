@@ -1,16 +1,31 @@
+import asyncio
 from contextvars import ContextVar
+from typing import Optional
+from uuid import UUID
 
-from pybot.session import Session, SessionStore
+from aredis_om import Field, JsonModel
 
 session_id = ContextVar("session_id", default=None)  # principal:conv_id
 
 
+class Session(JsonModel):
+    """Session stores states of requests."""
+
+    user_id: str = Field(index=True)
+    """The user id of the owner of the session."""
+    conv_id: Optional[str] = None
+    kernel_id: Optional[UUID] = None
+    """Last activate kernel id of the session.
+    When it expires (culled by the gateway), I need to start a new kernel and update this field."""
+
+    class Meta:
+        global_key_prefix = "pybot"
+
+
 class CurrentSession:
-    def __init__(self, session_store: SessionStore):
-        self.session_store = session_store
 
     def get(self) -> Session:
-        return self.session_store.get(session_id.get())
+        return asyncio.run(Session.get(session_id.get()))
 
     async def aget(self) -> Session:
-        return await self.session_store.aget(session_id.get())
+        return await Session.get(session_id.get())
