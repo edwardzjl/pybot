@@ -111,7 +111,7 @@ async def chat(
                         # TODO: send action to frontend and persist to history
                         ...
                     case "on_tool_end":
-                        message = ChatMessage(
+                        msg = ChatMessage(
                             parent_id=parent_run_id,
                             id=event["run_id"],
                             conversation=message.conversation,
@@ -119,7 +119,7 @@ async def chat(
                             content=event["data"].get("output"),
                             type="text",
                         )
-                        await websocket.send_text(message.model_dump_json())
+                        await websocket.send_text(msg.model_dump_json())
                         history.add_message(
                             SystemMessage(
                                 content=event["data"].get("output"),
@@ -130,7 +130,7 @@ async def chat(
                             )
                         )
                     case "on_tool_error":
-                        message = ChatMessage(
+                        msg = ChatMessage(
                             parent_id=parent_run_id,
                             id=event["run_id"],
                             conversation=message.conversation,
@@ -139,7 +139,7 @@ async def chat(
                             content=str(event["data"]),
                             type="error",
                         )
-                        await websocket.send_text(message.model_dump_json())
+                        await websocket.send_text(msg.model_dump_json())
                         # TODO: confirm this error field
                         history.add_message(SystemMessage(content=str(event["data"])))
             conv.updated_at = utcnow()
