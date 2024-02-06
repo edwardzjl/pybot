@@ -32,3 +32,8 @@ Key | Default Value | Description
 LOG_LEVEL | `INFO` | log level
 REDIS_OM_URL | `redis://localhost:6379` | Redis url to persist messages and metadata
 INFERENCE_SERVER_URL | `http://localhost:8080` | model service url
+jupyter__gateway_url | `http://localhost:8888` | URL of the Jupyter Enterprise Gateway.
+jupyter__kernel_namespace | `None` | Namespace to start the kernel in. If not set, a new namespace will be created in form of `${KERNEL_USERNAME}-${UUID}.`
+jupyter__shared_volume_mount_path | `/mnt/shared` | Path to mount the shared volume in the kernel container.
+jupyter__shared_volume_nfs_server | `localhost` | NFS server to mount the shared volume from.
+jupyter__shared_volume_nfs_path | `/data/pybot/shared` | Path to the shared volume on the NFS server.

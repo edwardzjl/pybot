@@ -74,25 +74,36 @@ class ContextAwareKernelManager:
 
     def _get_kernel_env(self, userid: str, conv_id: str) -> dict[str, Any]:
         # volume was mounted to `settings.shared_volume` in app
-        shared_path = Path(settings.shared_volume).joinpath(userid).joinpath(conv_id)
+        shared_path = (
+            Path(settings.jupyter.shared_volume_mount_path)
+            .joinpath(userid)
+            .joinpath(conv_id)
+        )
         logger.debug(f"creating shared path: {shared_path}")
         shared_path.mkdir(exist_ok=True, parents=True)
-        nfs_path = Path(settings.nfs_path).joinpath(userid).joinpath(conv_id)
+        nfs_path = (
+            Path(settings.jupyter.shared_volume_nfs_path)
+            .joinpath(userid)
+            .joinpath(conv_id)
+        )
         env = {
             "KERNEL_USERNAME": userid,
             "KERNEL_VOLUME_MOUNTS": [
-                {"name": "shared-vol", "mountPath": settings.shared_volume}
+                {
+                    "name": "shared-vol",
+                    "mountPath": settings.jupyter.shared_volume_mount_path,
+                }
             ],
             "KERNEL_VOLUMES": [
                 {
                     "name": "shared-vol",
                     "nfs": {
-                        "server": settings.nfs_server,
+                        "server": settings.jupyter.shared_volume_nfs_server,
                         "path": nfs_path.absolute().as_posix(),
                     },
                 }
             ],
         }
-        if settings.kernel_namespace:
-            env["KERNEL_NAMESPACE"] = settings.kernel_namespace
+        if settings.jupyter.kernel_namespace:
+            env["KERNEL_NAMESPACE"] = settings.jupyter.kernel_namespace
         return env
