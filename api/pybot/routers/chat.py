@@ -13,15 +13,12 @@ from langchain.chains.base import Chain
 from langchain_community.chat_message_histories import RedisChatMessageHistory
 from loguru import logger
 
-from pybot.callbacks import (
-    AgentActionCallbackHandler,
-    StreamingLLMCallbackHandler,
-    UpdateConversationCallbackHandler,
-)
+from pybot.callbacks import AgentActionCallbackHandler, StreamingLLMCallbackHandler
 from pybot.context import session_id
 from pybot.dependencies import MessageHistory, PybotAgent, SmryChain, UserIdHeader
 from pybot.models import Conversation
 from pybot.schemas import ChatMessage, InfoMessage
+from pybot.utils import utcnow
 
 router = APIRouter(
     prefix="/api/chat",
@@ -57,9 +54,6 @@ async def chat(
             streaming_callback = StreamingLLMCallbackHandler(
                 websocket, message.conversation
             )
-            update_conversation_callback = UpdateConversationCallbackHandler(
-                message.conversation
-            )
             action_callback = AgentActionCallbackHandler(
                 websocket, message.conversation, history
             )
@@ -72,11 +66,12 @@ async def chat(
                     "callbacks": [
                         streaming_callback,
                         action_callback,
-                        update_conversation_callback,
                     ],
                 },
                 include_run_info=True,
             )
+            conv.updated_at = utcnow()
+            await conv.save()
             # summarize if required
             if (
                 message.additional_kwargs
