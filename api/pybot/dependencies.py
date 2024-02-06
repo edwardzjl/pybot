@@ -78,7 +78,7 @@ def PybotAgent(
 ) -> AgentExecutor:
     tools = [
         CodeSandbox(
-            gateway_url=str(settings.jupyter_enterprise_gateway_url),
+            gateway_url=str(settings.jupyter.gateway_url),
         )
     ]
     return create_agent(

@@ -26,7 +26,7 @@ async def upload_files(
     conv = await ORMConversation.get(conversation_id)
     if conv.owner != userid:
         raise HTTPException(status_code=403, detail="authorization error")
-    base = Path(settings.shared_volume)
+    base = Path(settings.jupyter.shared_volume_mount_path)
     parent_dir = base.joinpath(userid).joinpath(conversation_id)
     # This should never happen, as the 'userid' and 'conversation_id' are controlled by us.
     # But there's a code QL warning about it.

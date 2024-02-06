@@ -23,10 +23,8 @@ router = APIRouter(
     prefix="/api/conversations",
     tags=["conversation"],
 )
-gateway_client = GatewayClient(host=settings.jupyter_enterprise_gateway_url)
-kernel_manager = ContextAwareKernelManager(
-    gateway_host=settings.jupyter_enterprise_gateway_url
-)
+gateway_client = GatewayClient(host=settings.jupyter.gateway_url)
+kernel_manager = ContextAwareKernelManager(gateway_host=settings.jupyter.gateway_url)
 
 
 @router.get("")
