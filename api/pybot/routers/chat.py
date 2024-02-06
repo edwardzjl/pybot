@@ -11,9 +11,9 @@ from fastapi import (
 from langchain.agents import AgentExecutor
 from langchain.chains.base import Chain
 from langchain_community.chat_message_histories import RedisChatMessageHistory
+from langchain_core.messages import SystemMessage
 from loguru import logger
 
-from pybot.callbacks import AgentActionCallbackHandler, StreamingLLMCallbackHandler
 from pybot.context import session_id
 from pybot.dependencies import MessageHistory, PybotAgent, SmryChain, UserIdHeader
 from pybot.models import Conversation
@@ -51,25 +51,97 @@ async def chat(
                 lc_msg = message.to_lc()
                 history.add_message(lc_msg)
                 continue
-            streaming_callback = StreamingLLMCallbackHandler(
-                websocket, message.conversation
-            )
-            action_callback = AgentActionCallbackHandler(
-                websocket, message.conversation, history
-            )
-            await agent.ainvoke(
+            async for event in agent.astream_events(
                 input={
-                    "date": date.today(),
                     "input": message.content,
-                },
-                config={
-                    "callbacks": [
-                        streaming_callback,
-                        action_callback,
-                    ],
+                    # create a new date on every message to solve message across days.
+                    "date": date.today(),
                 },
                 include_run_info=True,
-            )
+                version="v1",
+            ):
+                logger.trace(f"event: {event}")
+                kind = event["event"]
+                parent_run_id = None
+                match kind:
+                    case "on_chain_start":
+                        # TODO: maybe it's a little hacky
+                        parent_run_id = event["run_id"]
+                    case "on_llm_start":
+                        msg = ChatMessage(
+                            parent_id=parent_run_id,
+                            id=event["run_id"],
+                            conversation=message.conversation,
+                            from_="ai",
+                            content=None,
+                            type="stream/start",
+                        )
+                        await websocket.send_text(msg.model_dump_json())
+                    case "on_llm_stream":
+                        msg = ChatMessage(
+                            parent_id=parent_run_id,
+                            id=event["run_id"],
+                            conversation=message.conversation,
+                            from_="ai",
+                            content=event["data"]["chunk"],
+                            type="stream/text",
+                        )
+                        await websocket.send_text(msg.model_dump_json())
+                    case "on_llm_end":
+                        msg = ChatMessage(
+                            parent_id=parent_run_id,
+                            id=event["run_id"],
+                            conversation=message.conversation,
+                            from_="ai",
+                            content=None,
+                            type="stream/end",
+                        )
+                        await websocket.send_text(msg.model_dump_json())
+                    case "on_llm_error":
+                        msg = ChatMessage(
+                            parent_id=parent_run_id,
+                            id=event["run_id"],
+                            conversation=message.conversation,
+                            from_="ai",
+                            content=f"llm error: {event['data']}",
+                            type="error",
+                        )
+                        await websocket.send_text(msg.model_dump_json())
+                    case "on_tool_start":
+                        # TODO: send action to frontend and persist to history
+                        ...
+                    case "on_tool_end":
+                        message = ChatMessage(
+                            parent_id=parent_run_id,
+                            id=event["run_id"],
+                            conversation=message.conversation,
+                            from_="system",
+                            content=event["data"].get("output"),
+                            type="text",
+                        )
+                        await websocket.send_text(message.model_dump_json())
+                        history.add_message(
+                            SystemMessage(
+                                content=event["data"].get("output"),
+                                additional_kwargs={
+                                    "prefix": f"<|im_start|>observation\n",
+                                    "suffix": "<|im_end|>",
+                                },
+                            )
+                        )
+                    case "on_tool_error":
+                        message = ChatMessage(
+                            parent_id=parent_run_id,
+                            id=event["run_id"],
+                            conversation=message.conversation,
+                            from_="system",
+                            # TODO: confirm this error field
+                            content=str(event["data"]),
+                            type="error",
+                        )
+                        await websocket.send_text(message.model_dump_json())
+                        # TODO: confirm this error field
+                        history.add_message(SystemMessage(content=str(event["data"])))
             conv.updated_at = utcnow()
             await conv.save()
             # summarize if required
