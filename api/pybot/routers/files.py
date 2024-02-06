@@ -28,11 +28,18 @@ async def upload_files(
         raise HTTPException(status_code=403, detail="authorization error")
     base = Path(settings.shared_volume)
     parent_dir = base.joinpath(userid).joinpath(conversation_id)
+    # This should never happen, as the 'userid' and 'conversation_id' are controlled by us.
+    # But there's a code QL warning about it.
+    if not base in parent_dir.absolute().parents:
+        raise HTTPException(status_code=500, detail="invalid file path")
     parent_dir.mkdir(exist_ok=True, parents=True)
     res = []
     for file in files:
         filename = file.filename
         file_path = parent_dir.joinpath(filename)
+        # To prevent user upload malformatted file path
+        if parent_dir != file_path.absolute().parent:
+            raise HTTPException(status_code=403, detail="invalid file path")
         if file_path.is_file():
             suffix = datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
             filename = f"{file_path.stem}_{suffix}{file_path.suffix}"
