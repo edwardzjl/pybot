@@ -3,7 +3,6 @@ from typing import Any, Optional, Sequence
 from langchain.agents import Agent, AgentExecutor, AgentOutputParser
 from langchain.memory.chat_memory import BaseChatMemory
 from langchain_core.agents import AgentAction
-from langchain_core.language_models import BaseLanguageModel
 from langchain_core.messages import AIMessage, BaseMessage, SystemMessage
 from langchain_core.prompts import (
     BasePromptTemplate,
@@ -86,7 +85,7 @@ class PybotAgent(Agent):
         return "<|im_start|>assistant\n"
 
 
-class CustomAgentExecutor(AgentExecutor):
+class PybotAgentExecutor(AgentExecutor):
     """agent executor that persists intermediate steps.
     It also separate the persistance of input and output, so that when error occurs, the input is persisted.
     """
@@ -129,30 +128,3 @@ class CustomAgentExecutor(AgentExecutor):
             return outputs
         else:
             return {**inputs, **outputs}
-
-
-def create_agent(
-    llm: BaseLanguageModel,
-    tools: list[BaseTool],
-    max_iterations: Optional[int] = 15,
-    max_execution_time: Optional[float] = None,
-    early_stopping_method: str = "force",
-    verbose: bool = False,
-    agent_executor_kwargs: Optional[dict[str, Any]] = None,
-    **kwargs: dict[str, Any],
-) -> AgentExecutor:
-    """Construct an SQL agent from an LLM and tools."""
-    agent = PybotAgent.from_llm_and_tools(
-        llm=llm,
-        tools=tools,
-        **kwargs,
-    )
-    return CustomAgentExecutor.from_agent_and_tools(
-        agent=agent,
-        tools=tools,
-        verbose=verbose,
-        max_iterations=max_iterations,
-        max_execution_time=max_execution_time,
-        early_stopping_method=early_stopping_method,
-        **(agent_executor_kwargs or {}),
-    )
