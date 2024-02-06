@@ -1,4 +1,4 @@
-from typing import Annotated, Optional
+from typing import Annotated, Any, Optional
 
 from fastapi import Depends, Header
 from langchain.agents import AgentExecutor
@@ -10,7 +10,8 @@ from langchain_community.llms.huggingface_text_gen_inference import (
 from langchain_core.language_models import BaseLLM
 from langchain_core.memory import BaseMemory
 
-from pybot.agent.base import create_agent
+from pybot.agent.base import PybotAgent, PybotAgentExecutor
+from pybot.agent.output_parser import JsonOutputParser, MarkdownOutputParser
 from pybot.callbacks import TracingLLMCallbackHandler
 from pybot.chains import SummarizationChain
 from pybot.config import settings
@@ -72,22 +73,37 @@ def Llm() -> BaseLLM:
     )
 
 
-def PybotAgent(
+def PbAgent(
     llm: Annotated[BaseLLM, Depends(Llm)],
     memory: Annotated[BaseMemory, Depends(ChatMemory)],
+    max_iterations: Optional[int] = 15,
+    max_execution_time: Optional[float] = None,
+    early_stopping_method: str = "force",
+    verbose: bool = False,
+    **kwargs: dict[str, Any],
 ) -> AgentExecutor:
     tools = [
         CodeSandbox(
             gateway_url=str(settings.jupyter.gateway_url),
         )
     ]
-    return create_agent(
+    fallback_parser = MarkdownOutputParser(language_actions={"python": "python"})
+    output_parser = JsonOutputParser(fallback=fallback_parser)
+    agent = PybotAgent.from_llm_and_tools(
         llm=llm,
         tools=tools,
-        agent_executor_kwargs={
-            "memory": memory,
-            "return_intermediate_steps": True,
-        },
+        output_parser=output_parser,
+        **kwargs,
+    )
+    return PybotAgentExecutor.from_agent_and_tools(
+        agent=agent,
+        tools=tools,
+        verbose=verbose,
+        max_iterations=max_iterations,
+        max_execution_time=max_execution_time,
+        early_stopping_method=early_stopping_method,
+        memory=memory,
+        return_intermediate_steps=True,
     )
 
 

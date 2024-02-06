@@ -15,7 +15,7 @@ from langchain_core.messages import SystemMessage
 from loguru import logger
 
 from pybot.context import session_id
-from pybot.dependencies import MessageHistory, PybotAgent, SmryChain, UserIdHeader
+from pybot.dependencies import MessageHistory, PbAgent, SmryChain, UserIdHeader
 from pybot.models import Conversation
 from pybot.schemas import ChatMessage, InfoMessage
 from pybot.utils import utcnow
@@ -30,7 +30,7 @@ router = APIRouter(
 @router.websocket("/")
 async def chat(
     websocket: WebSocket,
-    agent: Annotated[AgentExecutor, Depends(PybotAgent)],
+    agent: Annotated[AgentExecutor, Depends(PbAgent)],
     history: Annotated[RedisChatMessageHistory, Depends(MessageHistory)],
     smry_chain: Annotated[Chain, Depends(SmryChain)],
     userid: Annotated[str | None, UserIdHeader()] = None,
