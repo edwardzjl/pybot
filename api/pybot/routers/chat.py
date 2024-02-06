@@ -8,24 +8,20 @@ from fastapi import (
     WebSocketDisconnect,
     WebSocketException,
 )
+from langchain.agents import AgentExecutor
+from langchain.chains.base import Chain
 from langchain_community.chat_message_histories import RedisChatMessageHistory
-from langchain_core.language_models import BaseLLM
-from langchain_core.memory import BaseMemory
 from loguru import logger
 
-from pybot.agent.base import create_agent
 from pybot.callbacks import (
     AgentActionCallbackHandler,
     StreamingLLMCallbackHandler,
     UpdateConversationCallbackHandler,
 )
-from pybot.config import settings
 from pybot.context import session_id
-from pybot.dependencies import ChatMemory, Llm, MessageHistory, UserIdHeader
+from pybot.dependencies import MessageHistory, PybotAgent, SmryChain, UserIdHeader
 from pybot.models import Conversation
 from pybot.schemas import ChatMessage, InfoMessage
-from pybot.summarization import summarize
-from pybot.tools import CodeSandbox
 
 router = APIRouter(
     prefix="/api/chat",
@@ -37,9 +33,9 @@ router = APIRouter(
 @router.websocket("/")
 async def chat(
     websocket: WebSocket,
-    llm: Annotated[BaseLLM, Depends(Llm)],
+    agent: Annotated[AgentExecutor, Depends(PybotAgent)],
     history: Annotated[RedisChatMessageHistory, Depends(MessageHistory)],
-    memory: Annotated[BaseMemory, Depends(ChatMemory)],
+    smry_chain: Annotated[Chain, Depends(SmryChain)],
     userid: Annotated[str | None, UserIdHeader()] = None,
 ):
     await websocket.accept()
@@ -58,19 +54,6 @@ async def chat(
                 lc_msg = message.to_lc()
                 history.add_message(lc_msg)
                 continue
-            tools = [
-                CodeSandbox(
-                    gateway_url=str(settings.jupyter_enterprise_gateway_url),
-                )
-            ]
-            agent_executor = create_agent(
-                llm=llm,
-                tools=tools,
-                agent_executor_kwargs={
-                    "memory": memory,
-                    "return_intermediate_steps": True,
-                },
-            )
             streaming_callback = StreamingLLMCallbackHandler(
                 websocket, message.conversation
             )
@@ -80,7 +63,7 @@ async def chat(
             action_callback = AgentActionCallbackHandler(
                 websocket, message.conversation, history
             )
-            await agent_executor.ainvoke(
+            await agent.ainvoke(
                 input={
                     "date": date.today(),
                     "input": message.content,
@@ -100,13 +83,13 @@ async def chat(
                 and "require_summarization" in message.additional_kwargs
                 and message.additional_kwargs["require_summarization"]
             ):
-                title = await summarize(llm, memory)
+                res = await smry_chain.ainvoke(input={})
                 info_message = InfoMessage(
                     conversation=message.conversation,
                     from_="ai",
                     content={
                         "type": "title-generated",
-                        "payload": title,
+                        "payload": res[smry_chain.output_key],
                     },
                 )
                 await websocket.send_text(info_message.model_dump_json())
