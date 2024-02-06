@@ -66,12 +66,10 @@ const Conversation = () => {
                 return;
             }
             const message = JSON.parse(initMsg);
-            console.log("init-msg", message);
             dispatch({
                 type: "added",
                 message: message,
             });
-            console.log("msg dispatched")
             if (ready) {
                 // TODO: should I wait until ready?
                 send(JSON.stringify({ additional_kwargs: { require_summarization: true }, ...message }));
