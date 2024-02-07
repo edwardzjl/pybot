@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from langchain.chains.base import Chain
 from langchain_community.chat_message_histories import RedisChatMessageHistory
 from langchain_core.messages import HumanMessage
@@ -99,21 +99,22 @@ async def update_conversation(
 @router.delete("/{conversation_id}", status_code=204)
 async def delete_conversation(
     conversation_id: str,
+    background_tasks: BackgroundTasks,
     userid: Annotated[str | None, UserIdHeader()] = None,
 ) -> None:
     conv = await ORMConversation.get(conversation_id)
     if conv.owner != userid:
         raise HTTPException(status_code=403, detail="authorization error")
-    try:
-        session = await Session.get(f"{userid}:{conversation_id}")
-        # delete kernel
-        gateway_client.delete_kernel(str(session.kernel_id))
-        # delete session
-        await Session.delete(f"{userid}:{conversation_id}")
-    except Exception as e:
-        logger.exception(f"failed to delete session, err: {str(e)}")
-    # delete conversation
     await ORMConversation.delete(conversation_id)
+    background_tasks.add_task(cleanup_conv, f"{userid}:{conversation_id}")
+
+
+async def cleanup_conv(session_id: str):
+    sess = await Session.get(session_id)
+    gateway_client.delete_kernel(sess.kernel_id)
+    logger.info(f"kernel {sess.kernel_id} deleted")
+    await Session.delete(session_id)
+    logger.info(f"session {session_id} deleted")
 
 
 @router.post("/{conversation_id}/summarization", status_code=201)
