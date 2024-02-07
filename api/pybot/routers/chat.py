@@ -50,6 +50,7 @@ async def chat(
                 lc_msg = message.to_lc()
                 history.add_message(lc_msg)
                 continue
+            chain_run_id = None
             async for event in agent.astream_events(
                 input={
                     "input": message.content,
@@ -61,14 +62,13 @@ async def chat(
             ):
                 logger.trace(f"event: {event}")
                 kind = event["event"]
-                parent_run_id = None
                 match kind:
                     case "on_chain_start":
                         # TODO: maybe it's a little hacky
-                        parent_run_id = event["run_id"]
+                        chain_run_id = event["run_id"]
                     case "on_llm_start":
                         msg = ChatMessage(
-                            parent_id=parent_run_id,
+                            parent_id=chain_run_id,
                             id=event["run_id"],
                             conversation=message.conversation,
                             from_="ai",
@@ -78,7 +78,7 @@ async def chat(
                         await websocket.send_text(msg.model_dump_json())
                     case "on_llm_stream":
                         msg = ChatMessage(
-                            parent_id=parent_run_id,
+                            parent_id=chain_run_id,
                             id=event["run_id"],
                             conversation=message.conversation,
                             from_="ai",
@@ -88,7 +88,7 @@ async def chat(
                         await websocket.send_text(msg.model_dump_json())
                     case "on_llm_end":
                         msg = ChatMessage(
-                            parent_id=parent_run_id,
+                            parent_id=chain_run_id,
                             id=event["run_id"],
                             conversation=message.conversation,
                             from_="ai",
@@ -98,7 +98,7 @@ async def chat(
                         await websocket.send_text(msg.model_dump_json())
                     case "on_llm_error":
                         msg = ChatMessage(
-                            parent_id=parent_run_id,
+                            parent_id=chain_run_id,
                             id=event["run_id"],
                             conversation=message.conversation,
                             from_="ai",
@@ -111,7 +111,7 @@ async def chat(
                         ...
                     case "on_tool_end":
                         msg = ChatMessage(
-                            parent_id=parent_run_id,
+                            parent_id=chain_run_id,
                             id=event["run_id"],
                             conversation=message.conversation,
                             from_="system",
@@ -126,7 +126,7 @@ async def chat(
                         history.add_message(msg.to_lc())
                     case "on_tool_error":
                         msg = ChatMessage(
-                            parent_id=parent_run_id,
+                            parent_id=chain_run_id,
                             id=event["run_id"],
                             conversation=message.conversation,
                             from_="system",
