@@ -11,7 +11,6 @@ from fastapi import (
 from langchain.agents import AgentExecutor
 from langchain.chains.base import Chain
 from langchain_community.chat_message_histories import RedisChatMessageHistory
-from langchain_core.messages import SystemMessage
 from loguru import logger
 
 from pybot.context import session_id
@@ -118,17 +117,13 @@ async def chat(
                             from_="system",
                             content=event["data"].get("output"),
                             type="text",
+                            additional_kwargs={
+                                "prefix": f"<|im_start|>observation\n",
+                                "suffix": "<|im_end|>",
+                            },
                         )
                         await websocket.send_text(msg.model_dump_json())
-                        history.add_message(
-                            SystemMessage(
-                                content=event["data"].get("output"),
-                                additional_kwargs={
-                                    "prefix": f"<|im_start|>observation\n",
-                                    "suffix": "<|im_end|>",
-                                },
-                            )
-                        )
+                        history.add_message(msg.to_lc())
                     case "on_tool_error":
                         msg = ChatMessage(
                             parent_id=parent_run_id,
@@ -141,7 +136,7 @@ async def chat(
                         )
                         await websocket.send_text(msg.model_dump_json())
                         # TODO: confirm this error field
-                        history.add_message(SystemMessage(content=str(event["data"])))
+                        history.add_message(msg.to_lc())
             conv.updated_at = utcnow()
             await conv.save()
             # summarize if required
