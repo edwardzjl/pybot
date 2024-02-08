@@ -1,7 +1,6 @@
 from typing import Any, Optional, Sequence
 
 from langchain.agents import Agent, AgentExecutor, AgentOutputParser
-from langchain.memory.chat_memory import BaseChatMemory
 from langchain_core.agents import AgentAction
 from langchain_core.messages import AIMessage, BaseMessage, SystemMessage
 from langchain_core.prompts import (
@@ -16,7 +15,6 @@ from pydantic.v1 import Field
 
 from pybot.agent.output_parser import JsonOutputParser
 from pybot.agent.prompt import EXAMPLES, SYSTEM, TOOLS
-from pybot.memory import PybotMemory
 from pybot.prompts.chatml import ChatMLPromptTemplate
 from pybot.tools.base import ExtendedTool
 
@@ -86,18 +84,8 @@ class PybotAgent(Agent):
 
 
 class PybotAgentExecutor(AgentExecutor):
-    """agent executor that persists intermediate steps.
-    It also separate the persistance of input and output, so that when error occurs, the input is persisted.
-    """
-
-    def prep_inputs(self, inputs: dict[str, Any] | Any) -> dict[str, str]:
-        """Prepare and persist inputs."""
-        inputs = super().prep_inputs(inputs)
-        if self.memory is not None and isinstance(self.memory, PybotMemory):
-            self.memory.history.add_user_message(inputs[self.memory.input_key])
-        if self.memory is not None and isinstance(self.memory, BaseChatMemory):
-            self.memory.chat_memory.add_user_message(inputs[self.memory.input_key])
-        return inputs
+    """agent executor that disables persists messages to memory.
+    I handle the memory saving myself."""
 
     def prep_outputs(
         self,
@@ -105,25 +93,8 @@ class PybotAgentExecutor(AgentExecutor):
         outputs: dict[str, str],
         return_only_outputs: bool = False,
     ) -> dict[str, str]:
-        """Prepare and persist outputs."""
+        """Override this method to disable saving context to memory."""
         self._validate_outputs(outputs)
-        additional_kwargs = (
-            {"intermediate_steps": outputs["intermediate_steps"]}
-            if "intermediate_steps" in outputs
-            else {}
-        )
-        if self.memory is not None and isinstance(self.memory, PybotMemory):
-            msg = AIMessage(
-                content=outputs[self.memory.output_key],
-                additional_kwargs=additional_kwargs,
-            )
-            self.memory.history.add_message(msg)
-        if self.memory is not None and isinstance(self.memory, BaseChatMemory):
-            msg = AIMessage(
-                content=outputs[self.memory.output_key],
-                additional_kwargs=additional_kwargs,
-            )
-            self.memory.chat_memory.add_message(msg)
         if return_only_outputs:
             return outputs
         else:

@@ -64,8 +64,26 @@ async def chat(
                 kind = event["event"]
                 match kind:
                     case "on_chain_start":
-                        # TODO: maybe it's a little hacky
+                        # There are 2 chains, the outer one is name: PybotAgentExecutor
+                        # and the inner one is name: LLMChain
                         chain_run_id = event["run_id"]
+                        # Only persist input on the outer chain
+                        if event["name"] == "PybotAgentExecutor":
+                            history.add_message(message.to_lc())
+                    case "on_chain_end":
+                        # Only persist output on the inner chain, as there will be a duplication
+                        # between the last inner chain invocation and the outer chain invocation
+                        # I will lost the opportunity to persist the intermediate steps here, but
+                        # I don't think it's important also I did not find a better solution for now.
+                        if event["name"] != "PybotAgentExecutor":
+                            msg = ChatMessage(
+                                parent_id=chain_run_id,
+                                id=event["run_id"],
+                                from_="ai",
+                                content=event["data"]["output"]["text"],
+                                type="text",
+                            )
+                            history.add_message(msg.to_lc())
                     case "on_llm_start":
                         msg = ChatMessage(
                             parent_id=chain_run_id,
@@ -102,13 +120,27 @@ async def chat(
                             id=event["run_id"],
                             conversation=message.conversation,
                             from_="ai",
+                            # TODO: confirm this error field
                             content=f"llm error: {event['data']}",
                             type="error",
                         )
                         await websocket.send_text(msg.model_dump_json())
                     case "on_tool_start":
                         # TODO: send action to frontend and persist to history
-                        ...
+                        msg = ChatMessage(
+                            parent_id=chain_run_id,
+                            id=event["run_id"],
+                            conversation=message.conversation,
+                            from_="system",
+                            content=event["data"].get("input"),
+                            type="text",
+                            additional_kwargs={
+                                "prefix": f"<|im_start|>{event['name']}\n",
+                                "suffix": "<|im_end|>",
+                            },
+                        )
+                        await websocket.send_text(msg.model_dump_json())
+                        # history.add_message(msg.to_lc())
                     case "on_tool_end":
                         msg = ChatMessage(
                             parent_id=chain_run_id,
@@ -135,7 +167,6 @@ async def chat(
                             type="error",
                         )
                         await websocket.send_text(msg.model_dump_json())
-                        # TODO: confirm this error field
                         history.add_message(msg.to_lc())
             conv.updated_at = utcnow()
             await conv.save()
