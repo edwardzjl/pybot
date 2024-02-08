@@ -63,23 +63,22 @@ class ChatMessage(BaseModel):
             ChatMessage: _description_
         """
         msg_parent_id_str = lc_message.additional_kwargs.get("parent_id", None)
-        msg_parent_id = UUID(msg_parent_id_str) if msg_parent_id_str else None
         msg_id_str = lc_message.additional_kwargs.get("id", None)
-        msg_id = UUID(msg_id_str) if msg_id_str else uuid4()
         msg_type = lc_message.additional_kwargs.get("type", "text")
-        if msg_type == "file":
-            msg_content = File.model_validate(
-                {
-                    "id": lc_message.additional_kwargs.get("file_id", None),
-                    "size": lc_message.additional_kwargs.get("size", None),
-                    **json.loads(lc_message.content),
-                }
-            )
-        else:
-            msg_content = lc_message.content
+        match msg_type:
+            case "file":
+                msg_content = File.model_validate(
+                    {
+                        "id": lc_message.additional_kwargs.get("file_id", None),
+                        "size": lc_message.additional_kwargs.get("size", None),
+                        **json.loads(lc_message.content),
+                    }
+                )
+            case _:
+                msg_content = lc_message.content
         return ChatMessage(
-            parent_id=msg_parent_id,
-            id=msg_id,
+            parent_id=UUID(msg_parent_id_str) if msg_parent_id_str else None,
+            id=UUID(msg_id_str) if msg_id_str else uuid4(),
             conversation=conv_id,
             from_=from_ if from_ else lc_message.type,
             content=msg_content,
@@ -97,19 +96,20 @@ class ChatMessage(BaseModel):
         }
         if self.parent_id:
             additional_kwargs["parent_id"] = str(self.parent_id)
-        if self.type == "file":
-            content = json.dumps(
-                {
-                    "filename": self.content.filename,
-                    "path": self.content.path,
+        match self.type:
+            case "file":
+                content = json.dumps(
+                    {
+                        "filename": self.content.filename,
+                        "path": self.content.path,
+                    }
+                )
+                additional_kwargs = additional_kwargs | {
+                    "file_id": str(self.content.id),
+                    "size": self.content.size,
                 }
-            )
-            additional_kwargs = additional_kwargs | {
-                "file_id": str(self.content.id),
-                "size": self.content.size,
-            }
-        else:
-            content = self.content
+            case _:
+                content = self.content
         match self.from_:
             case "system":
                 return SystemMessage(
