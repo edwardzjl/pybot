@@ -12,7 +12,6 @@ from langchain_core.memory import BaseMemory
 
 from pybot.agent.base import PybotAgent, PybotAgentExecutor
 from pybot.agent.output_parser import JsonOutputParser, MarkdownOutputParser
-from pybot.callbacks import TracingLLMCallbackHandler
 from pybot.chains import SummarizationChain
 from pybot.config import settings
 from pybot.history import PybotMessageHistory
@@ -69,7 +68,6 @@ def Llm() -> BaseLLM:
             AI_SUFFIX
         ],  # not all mistral models have a decent tokenizer config.
         streaming=True,
-        callbacks=[TracingLLMCallbackHandler()],
     )
 
 
