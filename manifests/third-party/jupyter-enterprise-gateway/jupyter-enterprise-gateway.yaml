@@ -252,10 +252,8 @@ spec:
         imagePullPolicy: IfNotPresent
         env:
         - name: EG_PORT
-          
           value: !!str 8888
         - name: EG_RESPONSE_PORT
-          
           value: !!str 8877
         - name: EG_NAMESPACE
           value: jupyter
@@ -282,7 +280,5 @@ spec:
           value: |-
             PATH
         ports:
-        
         - containerPort: 8888
-        
         - containerPort: 8877
