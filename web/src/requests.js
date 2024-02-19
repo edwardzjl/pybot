@@ -2,7 +2,7 @@ import { DEFAULT_CONV_TITLE } from "commons";
 
 /**
  * Create a conversation
- * @returns 
+ * @returns
  */
 export const createConversation = async () => {
     return fetch("/api/conversations", {
@@ -17,7 +17,7 @@ export const createConversation = async () => {
 /**
  * Get all conversations of the user. These conversations are conversation overviews that does not contain messages.
  * To get a conversation with messages, use getConversation.
- * @returns 
+ * @returns
  */
 export const getConversations = async () => {
     return fetch("/api/conversations", {
@@ -26,8 +26,8 @@ export const getConversations = async () => {
 
 /**
  * Get a conversation by id. This conversation will contain messages.
- * @param {string} conversationId 
- * @returns 
+ * @param {string} conversationId
+ * @returns
  */
 export const getConversation = async (conversationId) => {
     return fetch(`/api/conversations/${conversationId}`, {
@@ -36,7 +36,7 @@ export const getConversation = async (conversationId) => {
 
 /**
  * Delete a conversation
- * @param {string} conversationId 
+ * @param {string} conversationId
  */
 export const deleteConversation = async (conversationId) => {
     return fetch(`/api/conversations/${conversationId}`, {
@@ -46,7 +46,7 @@ export const deleteConversation = async (conversationId) => {
 
 /**
  * Update a conversation. Only supports update the conversation title.
- * @param {string} conversationId 
+ * @param {string} conversationId
  * @param {string} title
  */
 export const updateConversation = async (conversationId, title) => {
@@ -63,7 +63,7 @@ export const updateConversation = async (conversationId, title) => {
 
 /**
  * Get files of conversation
- * @param {string} conversationId 
+ * @param {string} conversationId
  */
 export const getFiles = async (conversationId) => {
     return fetch(`/api/conversations/${conversationId}/files`, {
@@ -73,7 +73,7 @@ export const getFiles = async (conversationId) => {
 
 /**
  * Upload files to conversation
- * @param {string} conversationId 
+ * @param {string} conversationId
  * @param {string} files
  */
 export const uploadFiles = async (conversationId, files) => {
@@ -89,7 +89,7 @@ export const uploadFiles = async (conversationId, files) => {
 
 /**
  * Generate a summarization of the conversation.
- * @param {string} conversationId 
+ * @param {string} conversationId
  * @returns {object} {summary: string}
  */
 export const summarizeConversation = async (conversationId) => {
