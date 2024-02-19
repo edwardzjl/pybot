@@ -125,14 +125,17 @@ const Root = () => {
             case "stream/end":
               break;
             case "info":
-              if (content.type === "title-generated") {
-                // Using revalidator.revalidate() (<https://reactrouter.com/en/main/hooks/use-revalidator>) does not work here.
-                // Maybe because going from convId to the same convId is skipped in shoudRevalidate.
-                // So I need to perform an action here.
-                submit(
-                  { title: content.payload },
-                  { method: "put", action: `/conversations/${conversation}`, encType: "application/json" }
-                );
+              // Using revalidator.revalidate() (<https://reactrouter.com/en/main/hooks/use-revalidator>) does not work here.
+              // Because going from convId to the same convId is skipped in shoudRevalidate.
+              // So I need to perform an action here.
+              if (content.type === "msg-added") {
+                // TODO: sometimes the groupedConvs here is not the latest, maybe it's fixed when the websocket connects.
+                // Disable the check for now.
+                // if (groupedConvs.Today[0].id !== conversation) {
+                  submit(null, { method: "post", action: `/conversations/${conversation}` });
+                // }
+              } else if (content.type === "title-generated") {
+                submit(null, { method: "post", action: `/conversations/${conversation}` });
               } else {
                 console.log("unhandled info message", content);
               }

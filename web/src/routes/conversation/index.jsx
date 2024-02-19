@@ -14,6 +14,11 @@ import ChatInput from "./ChatInput";
 
 
 export async function action({ params, request }) {
+    if (request.method === "POST") {
+        // TODO: this is hacky, I trigger a 'post' action on message send.
+        // It doesn't return anything, it is just used to revalidate the conversations.
+        return null;
+    }
     if (request.method === "PUT") {
         const conversation = await request.json();
         const resp = await fetch(`/api/conversations/${params.convId}`, {
