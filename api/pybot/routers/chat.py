@@ -45,10 +45,21 @@ async def chat(
                 # See websocket code definitions here: <https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent/code>
                 raise WebSocketException(code=3403, reason="authorization error")
             session_id.set(f"{userid}:{message.conversation}")
+            history.add_message(message.to_lc())
+            conv.last_message_at = utcnow()
+            await conv.save()
+            # Inform the client that the message has been added to conversation history.
+            # This is useful for the client to update the UI.
+            info_message = InfoMessage(
+                conversation=message.conversation,
+                from_="ai",
+                content={
+                    "type": "msg-added",
+                },
+            )
+            await websocket.send_text(info_message.model_dump_json())
             # file messages are only added to history, not passing to llm
             if message.type == "file":
-                lc_msg = message.to_lc()
-                history.add_message(lc_msg)
                 continue
             chain_run_id = None
             async for event in agent.astream_events(
@@ -67,9 +78,6 @@ async def chat(
                         # There are 2 chains, the outer one is name: PybotAgentExecutor
                         # and the inner one is name: LLMChain
                         chain_run_id = event["run_id"]
-                        # Only persist input on the outer chain
-                        if event["name"] == "PybotAgentExecutor":
-                            history.add_message(message.to_lc())
                     case "on_chain_end":
                         # Only persist output on the inner chain, as there will be a duplication
                         # between the last inner chain invocation and the outer chain invocation
@@ -174,18 +182,19 @@ async def chat(
             conv.last_message_at = utcnow()
             await conv.save()
             # summarize if required
-            if (
-                message.additional_kwargs
-                and "require_summarization" in message.additional_kwargs
-                and message.additional_kwargs["require_summarization"]
+            if message.additional_kwargs and message.additional_kwargs.get(
+                "require_summarization", False
             ):
                 res = await smry_chain.ainvoke(input={})
+                title = res[smry_chain.output_key]
+                conv.title = title
+                await conv.save()
                 info_message = InfoMessage(
                     conversation=message.conversation,
                     from_="ai",
                     content={
                         "type": "title-generated",
-                        "payload": res[smry_chain.output_key],
+                        "payload": title,
                     },
                 )
                 await websocket.send_text(info_message.model_dump_json())
