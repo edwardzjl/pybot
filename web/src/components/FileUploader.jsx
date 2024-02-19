@@ -1,10 +1,26 @@
 import { useContext, useState } from "react";
 import { useParams } from 'react-router-dom';
 
-import { uploadFiles } from "requests";
 import { UserContext } from "contexts/user";
 import { MessageContext } from "contexts/message";
 import { WebsocketContext } from "contexts/websocket";
+
+/**
+ * Upload files to conversation
+ * @param {string} conversationId
+ * @param {string} files
+ */
+const uploadFiles = async (conversationId, files) => {
+    const formData = new FormData();
+    files.forEach(file => {
+        formData.append("files", file);
+    });
+    return fetch(`/api/conversations/${conversationId}/files`, {
+        method: "POST",
+        body: formData,
+    });
+};
+
 
 /**
  * <https://claritydev.net/blog/react-typescript-drag-drop-file-upload-guide>

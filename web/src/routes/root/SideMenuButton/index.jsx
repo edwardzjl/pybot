@@ -12,7 +12,6 @@ import MoreVertIcon from '@mui/icons-material/MoreVert';
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
 
 import { DropdownMenu, DropdownHeader, DropdownList } from "components/DropdownMenu";
-import { summarizeConversation } from "requests";
 
 /**
  *
@@ -59,10 +58,11 @@ const ChatTab = ({ chat, isActive, onDeleteClick }) => {
   };
 
   const onSummarizeClick = async () => {
-    summarizeConversation(chat.id)
-      .then(data => {
-        titleRef.current.innerText = data.title;
-      });
+    fetch(`/api/conversations/${chat.id}/summarization`, {
+      method: "POST",
+    })
+      .then(res => res.json())
+      .then(data => titleRef.current.innerText = data.title);
   }
 
   // TODO: IDK why this does not trigger revalidation
