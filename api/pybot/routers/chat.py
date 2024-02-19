@@ -171,7 +171,7 @@ async def chat(
                         )
                         await websocket.send_text(msg.model_dump_json())
                         history.add_message(msg.to_lc())
-            conv.updated_at = utcnow()
+            conv.last_message_at = utcnow()
             await conv.save()
             # summarize if required
             if (
