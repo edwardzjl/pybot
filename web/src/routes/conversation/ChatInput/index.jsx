@@ -11,7 +11,7 @@ import { WebsocketContext } from "contexts/websocket";
 /**
  *
  */
-const ChatInput = ({ conversation }) => {
+const ChatInput = ({ convId }) => {
   const { username } = useContext(UserContext);
   const { dispatch } = useContext(MessageContext);
   const [ready, send] = useContext(WebsocketContext);
@@ -23,10 +23,10 @@ const ChatInput = ({ conversation }) => {
    * Focus on input when chatId changes.
    */
   useEffect(() => {
-    if (conversation.id) {
+    if (convId) {
       inputRef.current.focus();
     }
-  }, [conversation.id]);
+  }, [convId]);
 
   /**
    * Adjusting height of textarea.
@@ -47,7 +47,7 @@ const ChatInput = ({ conversation }) => {
     }
     const message = { id: crypto.randomUUID(), from: username, content: input, type: "text" };
     const payload = {
-      conversation: conversation.id,
+      conversation: convId,
       ...message,
     };
     setInput("");
