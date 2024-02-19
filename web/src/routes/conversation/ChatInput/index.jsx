@@ -2,7 +2,6 @@ import "./index.css";
 
 import { useContext, useState, useRef, useEffect } from "react";
 
-// import { ConversationContext } from "contexts/conversation";
 import { UserContext } from "contexts/user";
 import { MessageContext } from "contexts/message";
 import { WebsocketContext } from "contexts/websocket";
@@ -57,18 +56,6 @@ const ChatInput = ({ convId }) => {
       message: message,
     });
     send(JSON.stringify(payload));
-    // TODO: add this back
-    // Usually it can be done by calling `revalidator.revalidate()` (<https://reactrouter.com/en/main/hooks/use-revalidator>)
-    // either here or on `stream/end` message received.
-    // However, as I skipped the revalidation on `currentParams.convId === nextParams.convId`
-    // The `revalidator.revalidate()` will also be skipped.
-    // if current chat is not the first in the list, move it to the first when send message.
-    // if (conversations[0].id !== currentConv.id) {
-    //   dispatch({
-    //     type: "moveToFirst",
-    //     id: currentConv.id,
-    //   });
-    // }
   };
 
   const handleKeyDown = async (e) => {
