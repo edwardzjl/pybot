@@ -45,9 +45,9 @@ async def chat(
                 # See websocket code definitions here: <https://developer.mozilla.org/en-US/docs/Web/API/CloseEvent/code>
                 raise WebSocketException(code=3403, reason="authorization error")
             session_id.set(f"{userid}:{message.conversation}")
-            history.add_message(message.to_lc())
             # file messages are only added to history, not passing to llm
             if message.type == "file":
+                history.add_message(message.to_lc())
                 continue
             chain_run_id = None
             async for event in agent.astream_events(
@@ -63,9 +63,10 @@ async def chat(
                 kind = event["event"]
                 match kind:
                     case "on_chain_start":
-                        # There are 2 chains, the outer one is name: PybotAgentExecutor
-                        # and the inner one is name: LLMChain
+                        # There could be several chains, the most outer one is: event["name"] == "PybotAgentExecutor"
                         chain_run_id = event["run_id"]
+                        if event["name"] == "PybotAgentExecutor":
+                            history.add_message(message.to_lc())
                     case "on_chain_end":
                         # Only persist output on the inner chain, as there will be a duplication
                         # between the last inner chain invocation and the outer chain invocation
@@ -112,18 +113,6 @@ async def chat(
                             type="stream/end",
                         )
                         await websocket.send_text(msg.model_dump_json())
-                    case "on_llm_error":
-                        logger.error(f"event: {event}")
-                        msg = ChatMessage(
-                            parent_id=chain_run_id,
-                            id=event["run_id"],
-                            conversation=message.conversation,
-                            from_="ai",
-                            # TODO: confirm this error field
-                            content=f"llm error: {event['data']}",
-                            type="error",
-                        )
-                        await websocket.send_text(msg.model_dump_json())
                     case "on_tool_start":
                         # TODO: send action to frontend and persist to history
                         msg = ChatMessage(
@@ -152,18 +141,6 @@ async def chat(
                                 "prefix": f"<|im_start|>observation\n",
                                 "suffix": "<|im_end|>",
                             },
-                        )
-                        await websocket.send_text(msg.model_dump_json())
-                        history.add_message(msg.to_lc())
-                    case "on_tool_error":
-                        msg = ChatMessage(
-                            parent_id=chain_run_id,
-                            id=event["run_id"],
-                            conversation=message.conversation,
-                            from_="system",
-                            # TODO: confirm this error field
-                            content=str(event["data"]),
-                            type="error",
                         )
                         await websocket.send_text(msg.model_dump_json())
                         history.add_message(msg.to_lc())
