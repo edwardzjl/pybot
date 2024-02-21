@@ -46,18 +46,6 @@ async def chat(
                 raise WebSocketException(code=3403, reason="authorization error")
             session_id.set(f"{userid}:{message.conversation}")
             history.add_message(message.to_lc())
-            conv.last_message_at = utcnow()
-            await conv.save()
-            # Inform the client that the message has been added to conversation history.
-            # This is useful for the client to update the UI.
-            info_message = InfoMessage(
-                conversation=message.conversation,
-                from_="ai",
-                content={
-                    "type": "msg-added",
-                },
-            )
-            await websocket.send_text(info_message.model_dump_json())
             # file messages are only added to history, not passing to llm
             if message.type == "file":
                 continue
