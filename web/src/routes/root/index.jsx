@@ -1,7 +1,7 @@
 import "./index.css";
 
 import { forwardRef, useContext, useEffect, useRef, useState } from "react";
-import { Link, NavLink, Outlet, redirect, useNavigate, useNavigation } from "react-router-dom";
+import { Link, NavLink, Outlet, redirect, useNavigate } from "react-router-dom";
 
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
@@ -45,7 +45,6 @@ const Root = () => {
   const [toDelete, setToDelete] = useState({});
 
   const navigate = useNavigate();
-  const navigation = useNavigation();
 
   useEffect(() => {
     const conn = () => {
@@ -203,10 +202,7 @@ const Root = () => {
             <button onClick={() => delDialogRef.current?.close()}>Cancel</button>
           </div>
         </dialog>
-        {/* TODO: this loading state will render the delete dialog */}
-        <div className={`chatbox ${navigation.state === "loading" ? "loading" : ""}`}>
-          <Outlet />
-        </div>
+        <Outlet />
         <Snackbar
           open={snackbar.open}
           autoHideDuration={3000}

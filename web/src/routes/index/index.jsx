@@ -1,7 +1,7 @@
 import "./index.css";
 
 import { useContext } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useNavigation } from "react-router-dom";
 
 import ChatboxHeader from "components/ChatboxHeader";
 import FileUploader from "components/FileUploader";
@@ -40,6 +40,7 @@ const uploadFiles = async (conversationId, files) => {
 const Conversation = () => {
     const { dispatch } = useContext(ConversationContext);
     const navigate = useNavigate();
+    const navigation = useNavigation();
 
     const handleDrop = async (files) => {
         // TODO: add file size limit
@@ -56,15 +57,15 @@ const Conversation = () => {
     };
 
     return (
-        <>
+        // TODO: this loading state will render the delete dialog
+        <FileUploader className={`chatbox ${navigation.state === "loading" ? "loading" : ""}`} onFilesDrop={handleDrop}>
             <ChatboxHeader />
-            <FileUploader className="uploader" onFilesDrop={handleDrop}/>
             {/* TODO: add some examples here */}
             <div className="input-bottom">
                 <ChatInput />
                 <div className="footer">Pybot can make mistakes. Consider checking important information.</div>
             </div>
-        </>
+        </FileUploader>
     );
 }
 
