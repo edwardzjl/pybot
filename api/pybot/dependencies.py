@@ -10,7 +10,8 @@ from langchain_community.llms.huggingface_text_gen_inference import (
 from langchain_core.language_models import BaseLLM
 from langchain_core.memory import BaseMemory
 
-from pybot.agent.base import PybotAgent, PybotAgentExecutor
+from pybot.agent import PybotAgent
+from pybot.agent.executor import PybotAgentExecutor
 from pybot.agent.output_parser import JsonOutputParser, MarkdownOutputParser
 from pybot.chains import SummarizationChain
 from pybot.config import settings
