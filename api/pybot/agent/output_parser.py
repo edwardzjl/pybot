@@ -3,7 +3,8 @@ import re
 from typing import Generator, Optional
 
 from langchain.agents import AgentOutputParser
-from langchain_core.agents import AgentAction, AgentFinish
+from langchain_core.agents import AgentAction, AgentActionMessageLog, AgentFinish
+from langchain_core.messages import AIMessage
 from loguru import logger
 
 
@@ -41,15 +42,20 @@ def find_dicts(s: str) -> Generator[tuple[dict, int], None, None]:
 class MarkdownOutputParser(AgentOutputParser):
     """Output parser that extracts markdown code blocks and try to parse them into actions."""
 
-    pattern = re.compile(r"`{3}([\w]*)\n([\S\s]+?)\n`{3}", re.DOTALL)
+    pattern = re.compile(r"([\S\s]*)`{3}([\w]*)\n([\S\s]+?)\n`{3}", re.DOTALL)
     language_actions: dict[str, str] = {}
     """A mapping from language to action key."""
 
     def parse(self, text: str) -> AgentAction | AgentFinish:
         if (match := re.search(self.pattern, text)) is not None:
-            if (action := self.language_actions.get(match.group(1))) is not None:
-                return AgentAction(tool=action, tool_input=match.group(2), log=text)
-            logger.warning(f"Unknown language {match.group(1)}")
+            if (action := self.language_actions.get(match.group(2))) is not None:
+                return AgentActionMessageLog(
+                    tool=action,
+                    tool_input=match.group(3),
+                    log=text,
+                    message_log=[AIMessage(content=text)],
+                )
+            logger.warning(f"Unknown language {match.group(2)}")
         return AgentFinish({"output": text}, text)
 
     @property
@@ -72,7 +78,12 @@ class JsonOutputParser(AgentOutputParser):
             if self.tool_name_key in _dict:
                 tool_name = _dict.get(self.tool_name_key)
                 tool_input = _dict.get(self.tool_input_key, "")
-                return AgentAction(tool_name, tool_input, text[: i + 1])
+                return AgentActionMessageLog(
+                    tool=tool_name,
+                    tool_input=tool_input,
+                    log=text[: i + 1],
+                    message_log=[AIMessage(content=text)],
+                )
         if self.fallback:
             return self.fallback.parse(text)
         return AgentFinish({"output": text}, text)
