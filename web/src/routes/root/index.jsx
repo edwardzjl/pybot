@@ -11,7 +11,6 @@ import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import GitHubIcon from '@mui/icons-material/GitHub';
 import MailOutlineIcon from '@mui/icons-material/MailOutline';
 
-import FileUploader from "components/FileUploader";
 import { SnackbarContext } from "contexts/snackbar";
 import { ThemeContext } from "contexts/theme";
 import { ConversationContext } from "contexts/conversation";
@@ -205,9 +204,9 @@ const Root = () => {
           </div>
         </dialog>
         {/* TODO: this loading state will render the delete dialog */}
-        <FileUploader className={`chatbox ${navigation.state === "loading" ? "loading" : ""}`}>
+        <div className={`chatbox ${navigation.state === "loading" ? "loading" : ""}`}>
           <Outlet />
-        </FileUploader>
+        </div>
         <Snackbar
           open={snackbar.open}
           autoHideDuration={3000}

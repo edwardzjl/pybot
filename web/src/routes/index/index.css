@@ -1,3 +1,7 @@
+.uploader {
+    height: 100%;
+}
+
 .chat-log {
     text-align: left;
     scroll-behavior: smooth;
