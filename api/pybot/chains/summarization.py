@@ -1,22 +1,21 @@
 from langchain.chains import LLMChain
 from langchain_core.prompts import (
     BasePromptTemplate,
+    ChatPromptTemplate,
     MessagesPlaceholder,
     SystemMessagePromptTemplate,
 )
 
-from pybot.prompts.chatml import ChatMLPromptTemplate
-
-system_prompt = """You are Rei, the ideal assistant dedicated to assisting users effectively.
+instruction = """You are Rei, the ideal assistant dedicated to assisting users effectively.
 Always assist with care, respect, and truth. Respond with utmost utility yet securely. Avoid harmful, unethical, prejudiced, or negative content. Ensure replies promote fairness and positivity."""
 messages = [
-    SystemMessagePromptTemplate.from_template(system_prompt),
+    SystemMessagePromptTemplate.from_template(instruction),
     MessagesPlaceholder(variable_name="history"),
     SystemMessagePromptTemplate.from_template(
-        "Now Provide a short title of the conversation in less than 10 words."
+        "Now Provide a short summarization of the conversation in less than 10 words."
     ),
 ]
-tmpl = ChatMLPromptTemplate(input_variables=[], messages=messages)
+tmpl = ChatPromptTemplate(messages=messages)
 
 
 class SummarizationChain(LLMChain):
@@ -33,7 +32,10 @@ class SummarizationChain(LLMChain):
         """Remove the mermory persistence part."""
         self._validate_outputs(outputs)
         # sometimes LLM wrap summarization in quotes
-        outputs[self.output_key] = outputs[self.output_key].strip('"')
+        # TODO: I think trhe 'removesuffix' part can be improved on langchain side.
+        outputs[self.output_key] = (
+            outputs[self.output_key].removesuffix("<|im_end|>").strip('"')
+        )
         if return_only_outputs:
             return outputs
         else:

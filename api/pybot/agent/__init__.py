@@ -5,6 +5,7 @@ from langchain_core.agents import AgentAction
 from langchain_core.messages import AIMessage, BaseMessage, SystemMessage
 from langchain_core.prompts import (
     BasePromptTemplate,
+    ChatPromptTemplate,
     HumanMessagePromptTemplate,
     MessagesPlaceholder,
     PromptTemplate,
@@ -15,7 +16,6 @@ from pydantic.v1 import Field
 
 from pybot.agent.output_parser import JsonOutputParser
 from pybot.agent.prompt import EXAMPLES, SYSTEM, TOOLS
-from pybot.prompts.chatml import ChatMLPromptTemplate
 from pybot.tools.base import ExtendedTool
 
 
@@ -46,7 +46,7 @@ class PybotAgent(Agent):
             HumanMessagePromptTemplate.from_template("{input}"),
             MessagesPlaceholder(variable_name="agent_scratchpad"),
         ]
-        return ChatMLPromptTemplate(
+        return ChatPromptTemplate(
             input_variables=["date", "input", "agent_scratchpad"], messages=messages
         )
 
