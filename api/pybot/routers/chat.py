@@ -60,8 +60,7 @@ async def chat(
                 version="v1",
             ):
                 logger.trace(f"event: {event}")
-                kind = event["event"]
-                match kind:
+                match event["event"]:
                     case "on_chain_start":
                         # There could be several chains, the most outer one is: event["name"] == "PybotAgentExecutor"
                         chain_run_id = event["run_id"]
