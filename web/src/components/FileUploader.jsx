@@ -28,7 +28,7 @@ const FileUploader = ({ children, className, onFilesDrop }) => {
     };
 
     return (
-        <div
+        <div id="file-uploader"
             className={className}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}

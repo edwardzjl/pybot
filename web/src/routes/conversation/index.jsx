@@ -1,7 +1,7 @@
 import "./index.css";
 
 import { useContext, useEffect } from "react";
-import { useLoaderData, redirect } from "react-router-dom";
+import { useLoaderData, redirect, useNavigation } from "react-router-dom";
 
 import ChatboxHeader from "components/ChatboxHeader";
 import FileUploader from "components/FileUploader";
@@ -46,6 +46,7 @@ const Conversation = () => {
     const { username } = useContext(UserContext);
     const [ready, send] = useContext(WebsocketContext);
     const { messages, dispatch } = useContext(MessageContext);
+    const navigation = useNavigation();
 
     useEffect(() => {
         if (conversation?.messages) {
@@ -118,20 +119,19 @@ const Conversation = () => {
     };
 
     return (
-        <>
+        // TODO: this loading state will render the delete dialog
+        <FileUploader className={`chatbox ${navigation.state === "loading" ? "loading" : ""}`} onFilesDrop={handleDrop}>
             <ChatboxHeader />
-            <FileUploader className="uploader" onFilesDrop={handleDrop}>
-                <ChatLog className="chat-log">
-                    {conversation && messages?.map((message, index) => (
-                        <ChatMessage key={index} convId={conversation.id} idx={index} message={message} />
-                    ))}
-                </ChatLog>
-            </FileUploader>
+            <ChatLog className="chat-log">
+                {conversation && messages?.map((message, index) => (
+                    <ChatMessage key={index} convId={conversation.id} idx={index} message={message} />
+                ))}
+            </ChatLog>
             <div className="input-bottom">
                 <ChatInput conv={conversation} />
                 <div className="footer">Pybot can make mistakes. Consider checking important information.</div>
             </div>
-        </>
+        </FileUploader>
     );
 }
 
