@@ -4,11 +4,9 @@ from fastapi import Depends, Header
 from langchain.agents import AgentExecutor
 from langchain.chains.base import Chain
 from langchain_community.chat_message_histories import RedisChatMessageHistory
-from langchain_community.llms.huggingface_text_gen_inference import (
-    HuggingFaceTextGenInference,
-)
 from langchain_core.language_models import BaseLLM
 from langchain_core.memory import BaseMemory
+from langchain_openai import ChatOpenAI
 
 from pybot.agent import PybotAgent
 from pybot.agent.executor import PybotAgentExecutor
@@ -17,7 +15,6 @@ from pybot.chains import SummarizationChain
 from pybot.config import settings
 from pybot.history import PybotMessageHistory
 from pybot.memory import PybotMemory
-from pybot.prompts.chatml import AI_SUFFIX
 from pybot.tools import CodeSandbox
 
 
@@ -60,14 +57,11 @@ def ChatMemory(
 
 
 def Llm() -> BaseLLM:
-    return HuggingFaceTextGenInference(
-        inference_server_url=str(settings.inference_server_url),
-        max_new_tokens=1024,
-        temperature=None,
-        # top_p=0.9,
-        stop_sequences=[
-            AI_SUFFIX
-        ],  # not all mistral models have a decent tokenizer config.
+    return ChatOpenAI(
+        model="cognitivecomputations/dolphin-2.6-mistral-7b-dpo-laser",  # this does not matter
+        openai_api_key="EMPTY",
+        openai_api_base=str(settings.inference_server_url),
+        max_tokens=1024,
         streaming=True,
     )
 

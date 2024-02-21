@@ -67,6 +67,7 @@ async def chat(
                         if event["name"] == "PybotAgentExecutor":
                             history.add_message(message.to_lc())
                     case "on_chain_end":
+                        # TODO: Once migrate to lcel there will be nasty chains, so I need to handle this properly.
                         # Only persist output on the inner chain, as there will be a duplication
                         # between the last inner chain invocation and the outer chain invocation
                         # I will lost the opportunity to persist the intermediate steps here, but
@@ -76,11 +77,14 @@ async def chat(
                                 parent_id=chain_run_id,
                                 id=event["run_id"],
                                 from_="ai",
-                                content=event["data"]["output"]["text"],
+                                # TODO: I think this can be improved on langchain side.
+                                content=event["data"]["output"]["text"].removesuffix(
+                                    "<|im_end|>"
+                                ),
                                 type="text",
                             )
                             history.add_message(msg.to_lc())
-                    case "on_llm_start":
+                    case "on_chat_model_start":
                         logger.debug(f"event: {event}")
                         msg = ChatMessage(
                             parent_id=chain_run_id,
@@ -91,17 +95,20 @@ async def chat(
                             type="stream/start",
                         )
                         await websocket.send_text(msg.model_dump_json())
-                    case "on_llm_stream":
-                        msg = ChatMessage(
-                            parent_id=chain_run_id,
-                            id=event["run_id"],
-                            conversation=message.conversation,
-                            from_="ai",
-                            content=event["data"]["chunk"],
-                            type="stream/text",
-                        )
-                        await websocket.send_text(msg.model_dump_json())
-                    case "on_llm_end":
+                    case "on_chat_model_stream":
+                        # openai streaming provides eos token as last chunk, but langchain does not provide stop reason.
+                        # It will be better if langchain could provide sth like event["data"]["chunk"].finish_reason == "eos_token"
+                        if (content := event["data"]["chunk"].content) != "<|im_end|>":
+                            msg = ChatMessage(
+                                parent_id=chain_run_id,
+                                id=event["run_id"],
+                                conversation=message.conversation,
+                                from_="ai",
+                                content=content,
+                                type="stream/text",
+                            )
+                            await websocket.send_text(msg.model_dump_json())
+                    case "on_chat_model_end":
                         logger.debug(f"event: {event}")
                         msg = ChatMessage(
                             parent_id=chain_run_id,
