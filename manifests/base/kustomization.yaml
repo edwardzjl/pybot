@@ -5,7 +5,7 @@ labels:
   - pairs:
       app: pybot
       app.kubernetes.io/name: pybot
-      app.kubernetes.io/version: 42561c0
+      app.kubernetes.io/version: c8d2fa8
       app.kubernetes.io/managed-by: kubectl
     includeSelectors: false
 
@@ -18,10 +18,15 @@ configMapGenerator:
     envs:
       - params.env
 
+secretGenerator:
+  - name: pybot
+    envs:
+      - secret-params.env
+
 # currently knative does not recognize configmaps with suffix hash
 generatorOptions:
   disableNameSuffixHash: true
 
 images:
   - name: edwardlol/pybot
-    newTag: 42561c0
+    newTag: c8d2fa8

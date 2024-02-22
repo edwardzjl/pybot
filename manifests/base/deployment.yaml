@@ -23,6 +23,8 @@ spec:
           envFrom:
             - configMapRef:
                 name: pybot
+            - secretRef:
+                name: pybot
           ports:
             - containerPort: 8000
           resources:
