@@ -1,3 +1,4 @@
+# As we use containerd as the container runtime, we need to patch the kernel-image-puller DaemonSet to use the correct CRI endpoint.
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
