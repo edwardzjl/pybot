@@ -2,8 +2,17 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
+  - persistence-root.yaml
   - jupyter-enterprise-gateway.yaml
 
 patches:
+  - path: patches/patch-ha.yaml
   - path: patches/patch-service.yaml
   - path: patches/patch-kip-container-runtime.yaml
+
+# 3.2.3 images do not exist yet
+images:
+  - name: elyra/enterprise-gateway
+    newTag: 3.2.2
+  - name: elyra/kernel-image-puller
+    newTag: 3.2.2
