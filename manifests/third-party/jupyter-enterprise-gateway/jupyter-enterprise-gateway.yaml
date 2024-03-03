@@ -8,7 +8,7 @@ metadata:
   labels:
     app: enterprise-gateway
     component: enterprise-gateway
-    chart: enterprise-gateway-3.2.2
+    chart: enterprise-gateway-3.2.3
     release: enterprise-gateway
     heritage: Helm
 ---
@@ -21,7 +21,7 @@ metadata:
   labels:
     app: enterprise-gateway
     component: enterprise-gateway
-    chart: enterprise-gateway-3.2.2
+    chart: enterprise-gateway-3.2.3
     release: enterprise-gateway
     heritage: Helm
 ---
@@ -33,7 +33,7 @@ metadata:
   labels:
     app: enterprise-gateway
     component: enterprise-gateway
-    chart: enterprise-gateway-3.2.2
+    chart: enterprise-gateway-3.2.3
     release: enterprise-gateway
     heritage: Helm
 rules:
@@ -56,7 +56,7 @@ metadata:
   labels:
     app: enterprise-gateway
     component: kernel
-    chart: enterprise-gateway-3.2.2
+    chart: enterprise-gateway-3.2.3
     release: enterprise-gateway
     heritage: Helm
 rules:
@@ -78,7 +78,7 @@ metadata:
   labels:
     app: enterprise-gateway
     component: kernel-image-puller
-    chart: enterprise-gateway-3.2.2
+    chart: enterprise-gateway-3.2.3
     release: enterprise-gateway
     heritage: Helm
 rules:
@@ -94,7 +94,7 @@ metadata:
   labels:
     app: enterprise-gateway
     component: enterprise-gateway
-    chart: enterprise-gateway-3.2.2
+    chart: enterprise-gateway-3.2.3
     release: enterprise-gateway
     heritage: Helm
 subjects:
@@ -114,7 +114,7 @@ metadata:
   labels:
     app: enterprise-gateway
     component: kernel-image-puller
-    chart: enterprise-gateway-3.2.2
+    chart: enterprise-gateway-3.2.3
     release: enterprise-gateway
     heritage: Helm
 
@@ -134,7 +134,7 @@ metadata:
   labels:
     app: enterprise-gateway
     component: enterprise-gateway
-    chart: enterprise-gateway-3.2.2
+    chart: enterprise-gateway-3.2.3
     release: enterprise-gateway
     heritage: Helm
 
@@ -165,7 +165,7 @@ metadata:
     gateway-selector: enterprise-gateway
     app: enterprise-gateway
     component: kernel-image-puller
-    chart: enterprise-gateway-3.2.2
+    chart: enterprise-gateway-3.2.3
     release: enterprise-gateway
     heritage: Helm
 spec:
@@ -178,14 +178,14 @@ spec:
         name: kernel-image-puller
         app: enterprise-gateway
         component: kernel-image-puller
-        chart: enterprise-gateway-3.2.2
+        chart: enterprise-gateway-3.2.3
         release: enterprise-gateway
         heritage: Helm
     spec:
       serviceAccountName: kernel-image-puller-sa
       containers:
       - name: kernel-image-puller
-        image: elyra/kernel-image-puller:3.2.2
+        image: elyra/kernel-image-puller:3.2.3
         imagePullPolicy: IfNotPresent
         env:
         - name: KIP_LOG_LEVEL
@@ -228,7 +228,7 @@ metadata:
     gateway-selector: enterprise-gateway
     app: enterprise-gateway
     component: enterprise-gateway
-    chart: enterprise-gateway-3.2.2
+    chart: enterprise-gateway-3.2.3
     release: enterprise-gateway
     heritage: Helm
 spec:
@@ -248,12 +248,14 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
       - name: enterprise-gateway
-        image: elyra/enterprise-gateway:3.2.2
+        image: elyra/enterprise-gateway:3.2.3
         imagePullPolicy: IfNotPresent
         env:
         - name: EG_PORT
+
           value: !!str 8888
         - name: EG_RESPONSE_PORT
+
           value: !!str 8877
         - name: EG_NAMESPACE
           value: jupyter
@@ -271,6 +273,8 @@ spec:
           value: DEBUG
         - name: EG_KERNEL_LAUNCH_TIMEOUT
           value: !!str 60
+        - name: EG_KERNEL_INFO_TIMEOUT
+          value: !!str
         - name: EG_ALLOWED_KERNELS
           value: '["r_kubernetes","python_kubernetes","python_tf_kubernetes","python_tf_gpu_kubernetes","scala_kubernetes","spark_r_kubernetes","spark_python_kubernetes","spark_scala_kubernetes","spark_python_operator"]'
         - name: EG_DEFAULT_KERNEL_NAME
@@ -280,5 +284,7 @@ spec:
           value: |-
             PATH
         ports:
+
         - containerPort: 8888
+
         - containerPort: 8877

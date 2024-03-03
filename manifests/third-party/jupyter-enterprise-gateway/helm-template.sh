@@ -1,6 +1,6 @@
 #!/bin/sh
 
-VERSION="3.2.2"
+VERSION="3.2.3"
 OUTPUT="jupyter-enterprise-gateway.yaml"
 NAMESPACE="jupyter"
 
