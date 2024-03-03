@@ -1,0 +1,14 @@
+# Because ReadWriteMany is not secure, we need to migrate to webhook kernel session persistence.
+# See <https://jupyter-enterprise-gateway.readthedocs.io/en/latest/operators/config-availability.html#webhook-kernel-session-persistence>
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: persistence-root
+  namespace: jupyter
+spec:
+  storageClassName: nfs-client
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
