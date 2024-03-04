@@ -55,41 +55,19 @@ const Conversation = () => {
                 messages: conversation.messages,
             });
             const initMsg = sessionStorage.getItem(`init-msg:${conversation.id}`);
-            if (initMsg) {
-                const message = JSON.parse(initMsg);
-                dispatch({
-                    type: "added",
-                    message: message,
-                });
-                if (ready) {
-                    // TODO: should I wait until ready?
-                    send(JSON.stringify({ additional_kwargs: { require_summarization: true }, ...message }));
-                }
-                sessionStorage.removeItem(`init-msg:${conversation.id}`);
+            if (initMsg === undefined || initMsg === null) {
+                return;
             }
-            const initFiles = sessionStorage.getItem(`init-files:${conversation.id}`);
-            if (initFiles) {
-                const files = JSON.parse(initFiles);
-                files.forEach((file) => {
-                    const msg = {
-                        id: crypto.randomUUID(),
-                        conversation: conversation.id,
-                        from: username,
-                        content: file,
-                        type: "file"
-                    }
-                    dispatch({
-                        type: "added",
-                        id: conversation.id,
-                        message: msg,
-                    });
-                    if (ready) {
-                        // TODO: should I wait until ready?
-                        send(JSON.stringify({ additional_kwargs: { require_summarization: true }, ...msg }));
-                    }
-                });
-                sessionStorage.removeItem(`init-files:${conversation.id}`);
+            const message = JSON.parse(initMsg);
+            dispatch({
+                type: "added",
+                message: message,
+            });
+            if (ready) {
+                // TODO: should I wait until ready?
+                send(JSON.stringify({ additional_kwargs: { require_summarization: true }, ...message }));
             }
+            sessionStorage.removeItem(`init-msg:${conversation.id}`);
         }
     }, [conversation]);
 
@@ -106,7 +84,6 @@ const Conversation = () => {
                     content: file,
                     type: "file"
                 }
-                send(JSON.stringify(msg));
                 dispatch({
                     type: "added",
                     id: conversation.id,

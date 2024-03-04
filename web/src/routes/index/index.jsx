@@ -47,8 +47,6 @@ const Conversation = () => {
         const conversation = await createConv();
         const response = await uploadFiles(conversation.id, files);
         if (response.ok) {
-            const _files = await response.json();
-            sessionStorage.setItem(`init-files:${conversation.id}`, JSON.stringify(_files));
             dispatch({ type: "added", conv: conversation });
             navigate(`/conversations/${conversation.id}`);
         } else {

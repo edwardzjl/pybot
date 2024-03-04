@@ -3,13 +3,16 @@ from pathlib import Path
 from typing import Annotated
 
 import aiofiles
-from fastapi import APIRouter, HTTPException, UploadFile
+from fastapi import APIRouter, BackgroundTasks, HTTPException, UploadFile
+from fastapi.params import Depends
+from langchain_core.chat_history import BaseChatMessageHistory
 
 from pybot.config import settings
-from pybot.dependencies import UserIdHeader
+from pybot.context import session_id
+from pybot.dependencies import MessageHistory, UserIdHeader
 from pybot.models import Conversation as ORMConversation
 from pybot.models import File as ORMFile
-from pybot.schemas import File
+from pybot.schemas import ChatMessage, File
 
 router = APIRouter(
     prefix="/api/conversations/{conversation_id}/files",
@@ -21,6 +24,8 @@ router = APIRouter(
 async def upload_files(
     conversation_id: str,
     files: list[UploadFile],
+    history: Annotated[BaseChatMessageHistory, Depends(MessageHistory)],
+    background_tasks: BackgroundTasks,
     userid: Annotated[str | None, UserIdHeader()] = None,
 ) -> list[File]:
     conv = await ORMConversation.get(conversation_id)
@@ -33,7 +38,7 @@ async def upload_files(
     if not base in parent_dir.absolute().parents:
         raise HTTPException(status_code=500, detail="invalid file path")
     parent_dir.mkdir(exist_ok=True, parents=True)
-    res = []
+    ofiles: list[ORMFile] = []
     for file in files:
         filename = file.filename
         file_path = parent_dir.joinpath(filename)
@@ -56,9 +61,25 @@ async def upload_files(
             owner=userid,
             conversation_id=conversation_id,
         )
+        ofiles.append(f)
         await f.save()
-        res.append(File.model_validate(f.dict()))
-    return res
+    background_tasks.add_task(
+        add_file_messages, ofiles, history, f"{userid}:{conversation_id}"
+    )
+    return [File.model_validate(f.dict()) for f in ofiles]
+
+
+def add_file_messages(ofiles: ORMFile, history: BaseChatMessageHistory, sid: str):
+    session_id.set(sid)
+    msgs = [
+        ChatMessage(
+            from_="human",
+            type="file",
+            content=File.model_validate(ofile.dict()),
+        )
+        for ofile in ofiles
+    ]
+    history.add_messages([msg.to_lc() for msg in msgs])
 
 
 @router.get("")
