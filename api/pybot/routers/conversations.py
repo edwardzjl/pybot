@@ -10,6 +10,7 @@ from pybot.config import settings
 from pybot.context import Session, session_id
 from pybot.dependencies import MessageHistory, SmryChain, UserIdHeader
 from pybot.jupyter import ContextAwareKernelManager, GatewayClient
+from pybot.jupyter.schema import KernelNotFoundException
 from pybot.models import Conversation as ORMConversation
 from pybot.schemas import (
     ChatMessage,
@@ -111,8 +112,13 @@ async def delete_conversation(
 
 async def cleanup_conv(session_id: str):
     sess = await Session.get(session_id)
-    gateway_client.delete_kernel(sess.kernel_id)
-    logger.info(f"kernel {sess.kernel_id} deleted")
+    try:
+        gateway_client.delete_kernel(sess.kernel_id)
+        logger.info(f"kernel {sess.kernel_id} deleted")
+    except KernelNotFoundException:
+        logger.info(
+            f"kernel {sess.kernel_id} does not exists when deleting, maybe already culled by EG"
+        )
     await Session.delete(session_id)
     logger.info(f"session {session_id} deleted")
 
