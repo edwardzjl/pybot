@@ -40,6 +40,8 @@ spec:
             value: python_kubernetes
           - name: EG_INHERITED_ENVS
             value: PATH
+          - name: EG_AVAILABILITY_MODE
+            value: replication
           # 2 envs related to session persistence
           - name: EG_KERNEL_SESSION_PERSISTENCE
             value: "True"
