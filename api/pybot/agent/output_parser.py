@@ -1,9 +1,10 @@
 import ast
 import re
-from typing import Generator, Optional
+from typing import Generator
 
 from langchain.agents import AgentOutputParser
 from langchain_core.agents import AgentAction, AgentActionMessageLog, AgentFinish
+from langchain_core.exceptions import OutputParserException
 from langchain_core.messages import AIMessage
 from loguru import logger
 
@@ -39,6 +40,26 @@ def find_dicts(s: str) -> Generator[tuple[dict, int], None, None]:
             buffer += ch
 
 
+class ComposedOutputParser(AgentOutputParser):
+    parsers: list[AgentOutputParser] = []
+    just_finish: bool = True
+    """Whether to just return AgentFinish if no parser can parse the output. Default to True."""
+
+    def parse(self, text: str) -> AgentAction | AgentFinish:
+        for parser in self.parsers:
+            try:
+                return parser.parse(text)
+            except OutputParserException:
+                continue
+        if self.just_finish:
+            return AgentFinish({"output": text}, text)
+        raise OutputParserException(f"Could not parse output: {text}")
+
+    @property
+    def _type(self) -> str:
+        return "composed"
+
+
 class MarkdownOutputParser(AgentOutputParser):
     """Output parser that extracts markdown code blocks and try to parse them into actions."""
 
@@ -52,18 +73,20 @@ class MarkdownOutputParser(AgentOutputParser):
                 return AgentActionMessageLog(
                     tool=action,
                     tool_input=match.group(3),
-                    log=text,
-                    message_log=[AIMessage(content=text)],
+                    log=match.group(1),  # log is the 'thought' part
+                    message_log=[
+                        AIMessage(content=text)
+                    ],  # message_log is the content we can add to history
                 )
             logger.warning(f"Unknown language {match.group(2)}")
-        return AgentFinish({"output": text}, text)
+        raise OutputParserException(f"Could not parse output: {text}")
 
     @property
     def _type(self) -> str:
         return "markdown"
 
 
-class JsonOutputParser(AgentOutputParser):
+class DictOutputParser(AgentOutputParser):
     """Output parser that extracts all dicts in the output and try to parse them into actions.
     Only the first valid action will be returned.
     The AgentOutputParser is a langchain.load.serializable.Serializable which is a pydantic v1 model in the time of writing.
@@ -71,7 +94,6 @@ class JsonOutputParser(AgentOutputParser):
 
     tool_name_key: str = "tool_name"
     tool_input_key: str = "tool_input"
-    fallback: Optional[AgentOutputParser] = None
 
     def parse(self, text: str) -> AgentAction | AgentFinish:
         for _dict, i in find_dicts(text):
@@ -81,12 +103,12 @@ class JsonOutputParser(AgentOutputParser):
                 return AgentActionMessageLog(
                     tool=tool_name,
                     tool_input=tool_input,
-                    log=text[: i + 1],
-                    message_log=[AIMessage(content=text)],
+                    log=text[: i + 1],  # log is the 'thought' part
+                    message_log=[
+                        AIMessage(content=text)
+                    ],  # message_log is the content we can add to history
                 )
-        if self.fallback:
-            return self.fallback.parse(text)
-        return AgentFinish({"output": text}, text)
+        raise OutputParserException(f"Could not parse output: {text}")
 
     @property
     def _type(self) -> str:

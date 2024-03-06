@@ -14,7 +14,7 @@ from langchain_core.prompts import (
 from langchain_core.tools import BaseTool
 from pydantic.v1 import Field
 
-from pybot.agent.output_parser import JsonOutputParser
+from pybot.agent.output_parser import DictOutputParser
 from pybot.agent.prompt import EXAMPLES, SYSTEM, TOOLS
 from pybot.tools.base import ExtendedTool
 
@@ -22,7 +22,7 @@ from pybot.tools.base import ExtendedTool
 class PybotAgent(Agent):
     """Agent that referenced langchain.agents.conversational_chat.base.ConversationalChatAgent"""
 
-    output_parser: Optional[AgentOutputParser] = Field(default_factory=JsonOutputParser)
+    output_parser: Optional[AgentOutputParser] = Field(default_factory=DictOutputParser)
 
     @classmethod
     def create_prompt(cls, tools: Sequence[BaseTool]) -> BasePromptTemplate:
@@ -70,7 +70,7 @@ class PybotAgent(Agent):
     @classmethod
     def _get_default_output_parser(cls, **kwargs: Any) -> AgentOutputParser:
         """Get default output parser for this class."""
-        return JsonOutputParser()
+        return DictOutputParser()
 
     @property
     def observation_prefix(self) -> str:
