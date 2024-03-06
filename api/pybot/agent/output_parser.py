@@ -9,7 +9,7 @@ from langchain_core.messages import AIMessage
 from loguru import logger
 
 
-def find_dicts(s: str) -> Generator[tuple[dict, int], None, None]:
+def find_dicts(s: str) -> Generator[tuple[dict, int, int], None, None]:
     """find dicts in a string
     Modified from <https://stackoverflow.com/a/51862122/6564721>
 
@@ -17,12 +17,15 @@ def find_dicts(s: str) -> Generator[tuple[dict, int], None, None]:
         s (str): source string
 
     Yields:
-        Generator[tuple[dict, int], None, None]: generates a tuple of dict and the index of the last char of the dict
+        Generator[tuple[dict, int, int], None, None]: generates a tuple of dict, the start index and the end index of the dict
     """
     stack = []  # a stack to keep track of the brackets
     buffer = ""  # a buffer to store current tracking string
+    start = 0  # the start index of the current dict
     for i, ch in enumerate(s):
         if ch == "{":
+            if start == 0:
+                start = i
             buffer += ch
             stack.append(ch)
         elif ch == "}":
@@ -30,11 +33,13 @@ def find_dicts(s: str) -> Generator[tuple[dict, int], None, None]:
             buffer += ch
             if not stack:
                 try:
-                    yield ast.literal_eval(buffer), i
+                    yield ast.literal_eval(buffer), start, i
                 except ValueError:
                     # LLM could generate non-dict {} pairs, which is also valid
                     # So I only set the log level to debug, and continue searching.
                     logger.debug(f"Failed to parse {buffer} into a dict")
+                # reset start for following search
+                start = 0
                 buffer = ""
         elif stack:
             buffer += ch
@@ -63,7 +68,7 @@ class ComposedOutputParser(AgentOutputParser):
 class MarkdownOutputParser(AgentOutputParser):
     """Output parser that extracts markdown code blocks and try to parse them into actions."""
 
-    pattern = re.compile(r"([\S\s]*)`{3}([\w]*)\n([\S\s]+?)\n`{3}", re.DOTALL)
+    pattern = re.compile(r"([\S\s]*)`{3}([\w]*)\n([\S\s]+?)\n`{3}([\S\s]*)", re.DOTALL)
     language_actions: dict[str, str] = {}
     """A mapping from language to action key."""
 
@@ -72,11 +77,14 @@ class MarkdownOutputParser(AgentOutputParser):
             if (action := self.language_actions.get(match.group(2))) is not None:
                 return AgentActionMessageLog(
                     tool=action,
-                    tool_input=match.group(3),
-                    log=match.group(1),  # log is the 'thought' part
+                    tool_input=match.group(3).strip(),
+                    # log is the 'thought' part
+                    log=match.group(1).strip(),
+                    # message_log is the content we can add to history
+                    # polishing the content will improve the following iterations
                     message_log=[
-                        AIMessage(content=text)
-                    ],  # message_log is the content we can add to history
+                        AIMessage(content=text.removesuffix(match.group(4)).strip())
+                    ],
                 )
             logger.warning(f"Unknown language {match.group(2)}")
         raise OutputParserException(f"Could not parse output: {text}")
@@ -96,17 +104,18 @@ class DictOutputParser(AgentOutputParser):
     tool_input_key: str = "tool_input"
 
     def parse(self, text: str) -> AgentAction | AgentFinish:
-        for _dict, i in find_dicts(text):
+        for _dict, s, e in find_dicts(text):
             if self.tool_name_key in _dict:
                 tool_name = _dict.get(self.tool_name_key)
                 tool_input = _dict.get(self.tool_input_key, "")
                 return AgentActionMessageLog(
                     tool=tool_name,
                     tool_input=tool_input,
-                    log=text[: i + 1],  # log is the 'thought' part
-                    message_log=[
-                        AIMessage(content=text)
-                    ],  # message_log is the content we can add to history
+                    # log is the 'thought' part
+                    log=text[:s].strip(),
+                    # message_log is the content we can add to history
+                    # polishing the content will improve the following iterations
+                    message_log=[AIMessage(content=text[: e + 1].strip())],
                 )
         raise OutputParserException(f"Could not parse output: {text}")
 
