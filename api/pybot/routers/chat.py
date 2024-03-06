@@ -16,7 +16,7 @@ from loguru import logger
 from pybot.context import session_id
 from pybot.dependencies import MessageHistory, PbAgent, SmryChain, UserIdHeader
 from pybot.models import Conversation
-from pybot.schemas import ChatMessage, InfoMessage
+from pybot.schemas import AIChatMessage, ChatMessage, InfoMessage
 from pybot.utils import utcnow
 
 router = APIRouter(
@@ -74,25 +74,22 @@ async def chat(
                         # I will lost the opportunity to persist the intermediate steps here, but
                         # I don't think it's important also I did not find a better solution for now.
                         if event["name"] != "PybotAgentExecutor":
-                            msg = ChatMessage(
+                            msg = AIChatMessage(
                                 parent_id=chain_run_id,
                                 id=event["run_id"],
-                                from_="ai",
+                                conversation=message.conversation,
                                 # TODO: I think this can be improved on langchain side.
                                 content=event["data"]["output"]["text"].removesuffix(
                                     "<|im_end|>"
                                 ),
-                                type="text",
                             )
                             history.add_message(msg.to_lc())
                     case "on_chat_model_start":
                         logger.debug(f"event: {event}")
-                        msg = ChatMessage(
+                        msg = AIChatMessage(
                             parent_id=chain_run_id,
                             id=event["run_id"],
                             conversation=message.conversation,
-                            from_="ai",
-                            content=None,
                             type="stream/start",
                         )
                         await websocket.send_text(msg.model_dump_json())
@@ -100,23 +97,20 @@ async def chat(
                         # openai streaming provides eos token as last chunk, but langchain does not provide stop reason.
                         # It will be better if langchain could provide sth like event["data"]["chunk"].finish_reason == "eos_token"
                         if (content := event["data"]["chunk"].content) != "<|im_end|>":
-                            msg = ChatMessage(
+                            msg = AIChatMessage(
                                 parent_id=chain_run_id,
                                 id=event["run_id"],
                                 conversation=message.conversation,
-                                from_="ai",
                                 content=content,
                                 type="stream/text",
                             )
                             await websocket.send_text(msg.model_dump_json())
                     case "on_chat_model_end":
                         logger.debug(f"event: {event}")
-                        msg = ChatMessage(
+                        msg = AIChatMessage(
                             parent_id=chain_run_id,
                             id=event["run_id"],
                             conversation=message.conversation,
-                            from_="ai",
-                            content=None,
                             type="stream/end",
                         )
                         await websocket.send_text(msg.model_dump_json())
@@ -128,7 +122,6 @@ async def chat(
                             conversation=message.conversation,
                             from_="system",
                             content=event["data"].get("input"),
-                            type="text",
                             additional_kwargs={
                                 "prefix": f"<|im_start|>{event['name']}\n",
                                 "suffix": "<|im_end|>",
@@ -143,7 +136,6 @@ async def chat(
                             conversation=message.conversation,
                             from_="system",
                             content=event["data"].get("output"),
-                            type="text",
                             additional_kwargs={
                                 "prefix": f"<|im_start|>observation\n",
                                 "suffix": "<|im_end|>",
@@ -166,7 +158,7 @@ async def chat(
                 await conv.save()
                 info_message = InfoMessage(
                     conversation=message.conversation,
-                    from_="ai",
+                    from_="system",
                     content={
                         "type": "title-generated",
                         "payload": title,
