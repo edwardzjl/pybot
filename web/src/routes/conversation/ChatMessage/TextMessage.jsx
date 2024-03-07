@@ -17,21 +17,21 @@ const TextMessage = ({ className, text }) => {
 
     useEffect(() => {
         switch (theme) {
-          case "dark":
-            setMarkdownTheme(darcula);
-            break;
-          case "light":
-            setMarkdownTheme(googlecode);
-            break;
-          default: {
-            if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-              setMarkdownTheme(darcula);
-            } else {
-              setMarkdownTheme(googlecode);
+            case "dark":
+                setMarkdownTheme(darcula);
+                break;
+            case "light":
+                setMarkdownTheme(googlecode);
+                break;
+            default: {
+                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                    setMarkdownTheme(darcula);
+                } else {
+                    setMarkdownTheme(googlecode);
+                }
             }
-          }
         }
-      }, [theme]);
+    }, [theme]);
 
     const onCopyClick = (content) => {
         navigator.clipboard.writeText(content);

@@ -1,83 +1,68 @@
-from typing import Any, Optional, Sequence
+from typing import Sequence
 
-from langchain.agents import Agent, AgentOutputParser
-from langchain_core.agents import AgentAction
+from langchain.agents import AgentOutputParser
+from langchain_core.agents import AgentAction, AgentActionMessageLog
+from langchain_core.language_models import BaseLanguageModel
 from langchain_core.messages import AIMessage, BaseMessage, SystemMessage
-from langchain_core.prompts import (
-    BasePromptTemplate,
-    ChatPromptTemplate,
-    HumanMessagePromptTemplate,
-    MessagesPlaceholder,
-    PromptTemplate,
-    SystemMessagePromptTemplate,
-)
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import Runnable, RunnablePassthrough
 from langchain_core.tools import BaseTool
-from pydantic.v1 import Field
 
-from pybot.agent.output_parser import DictOutputParser
-from pybot.agent.prompt import EXAMPLES, SYSTEM, TOOLS
+from pybot.agent.prompt import EXAMPLES
 from pybot.tools.base import ExtendedTool
 
 
-class PybotAgent(Agent):
-    """Agent that referenced langchain.agents.conversational_chat.base.ConversationalChatAgent"""
-
-    output_parser: Optional[AgentOutputParser] = Field(default_factory=DictOutputParser)
-
-    @classmethod
-    def create_prompt(cls, tools: Sequence[BaseTool]) -> BasePromptTemplate:
-        tool_descs = "\n".join([f"{tool.description}" for tool in tools])
-        tool_strings = TOOLS.format(tools=tool_descs)
-
-        ext_tools: list[ExtendedTool] = list(
-            filter(lambda tool: isinstance(tool, ExtendedTool), tools)
-        )
-        examples = "\n".join([f"{tool.examples}" for tool in ext_tools])
-        examples_strings = EXAMPLES.format(examples=examples)
-
-        system_prompt = PromptTemplate(
-            template=SYSTEM,
-            input_variables=["date"],
-            partial_variables={"tools": tool_strings, "examples": examples_strings},
-        )
-        messages = [
-            SystemMessagePromptTemplate(prompt=system_prompt),
-            MessagesPlaceholder(variable_name="history"),
-            HumanMessagePromptTemplate.from_template("{input}"),
-            MessagesPlaceholder(variable_name="agent_scratchpad"),
-        ]
-        return ChatPromptTemplate(
-            input_variables=["date", "input", "agent_scratchpad"], messages=messages
-        )
-
-    def _construct_scratchpad(
-        self, intermediate_steps: list[tuple[AgentAction, str]]
-    ) -> list[BaseMessage]:
-        steps = []
-        for action, observation in intermediate_steps:
+def construct_scratchpad(
+    intermediate_steps: list[tuple[AgentAction, str]]
+) -> list[BaseMessage]:
+    steps = []
+    for action, observation in intermediate_steps:
+        if isinstance(action, AgentActionMessageLog):
+            steps.append(action.message_log[0])
+        else:
             steps.append(AIMessage(content=action.log))
-            steps.append(
-                SystemMessage(
-                    content=observation,
-                    additional_kwargs={
-                        "prefix": f"<|im_start|>{action.tool}\n",
-                        "suffix": "<|im_end|>",
-                    },
-                )
+        steps.append(
+            SystemMessage(
+                content=observation,
+                additional_kwargs={
+                    "prefix": f"<|im_start|>{action.tool}\n",
+                    "suffix": "<|im_end|>",
+                },
             )
-        return steps
+        )
+    return steps
 
-    @classmethod
-    def _get_default_output_parser(cls, **kwargs: Any) -> AgentOutputParser:
-        """Get default output parser for this class."""
-        return DictOutputParser()
 
-    @property
-    def observation_prefix(self) -> str:
-        """Prefix to append the observation with."""
-        return "<|im_start|>system observation\n"
+def create_agent(
+    llm: BaseLanguageModel,
+    tools: Sequence[BaseTool],
+    prompt: ChatPromptTemplate,
+    output_parser: AgentOutputParser,
+) -> Runnable:
 
-    @property
-    def llm_prefix(self) -> str:
-        """Prefix to append the LLM call with."""
-        return "<|im_start|>assistant\n"
+    missing_vars = {"tools", "agent_scratchpad"}.difference(prompt.input_variables)
+    if missing_vars:
+        raise ValueError(f"Prompt missing required variables: {missing_vars}")
+
+    tool_descs = "\n".join([f"{tool.description}" for tool in tools])
+    # TODO: maybe extract examples to some retrieval
+    ext_tools: list[ExtendedTool] = list(
+        filter(lambda tool: isinstance(tool, ExtendedTool), tools)
+    )
+    examples = "\n".join([f"{tool.examples}" for tool in ext_tools])
+    examples_strings = EXAMPLES.format(examples=examples)
+
+    prompt = prompt.partial(
+        tools=tool_descs,
+        examples=examples_strings,
+    )
+
+    agent = (
+        RunnablePassthrough.assign(
+            agent_scratchpad=lambda x: construct_scratchpad(x["intermediate_steps"]),
+        )
+        | prompt
+        | llm
+        | output_parser
+    )
+    return agent
