@@ -42,7 +42,7 @@ class ChatMessage(BaseModel):
         "text", "stream/start", "stream/text", "stream/end", "file", "info", "error"
     ] = "text"
     feedback: Literal["thumbup", "thumbdown", None] = None
-    additional_kwargs: Optional[dict[str, Any]] = None
+    additional_kwargs: Optional[dict[str, Any]] = {}
     # sent_at is not an important information for the user, as far as I can tell.
     # But it introduces some complexity in the code, so I'm removing it for now.
     # sent_at: datetime = Field(default_factory=datetime.now)
