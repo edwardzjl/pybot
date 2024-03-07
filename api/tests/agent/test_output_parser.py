@@ -1,9 +1,9 @@
 import unittest
 
-from pybot.agent.output_parser import DictOutputParser, find_dicts
+from pybot.agent.output_parser import DictOutputParser, MarkdownOutputParser, find_dicts
 
 
-class TestJsonOutputParser(unittest.TestCase):
+class TestDictOutputParser(unittest.TestCase):
     def test_start_end(self):
         output = 'I need to do sth{"foo": "bar"} and then I need to do sth else'
         result, start, end = list(find_dicts(output))[0]
@@ -28,6 +28,16 @@ class TestJsonOutputParser(unittest.TestCase):
         output = """ To create a dataframe in Python, you can use the pandas library. Here\'s an example of creating a dataframe with two columns, one for \'Name\' and another for \'Age\':\n\n```python\nimport pandas as pd\n\ndata = [\n    {\'Name\': \'Alice\', \'Age\': 25},\n    {\'Name\': \'Bob\', \'Age\': 30},\n    {\'Name\': \'Charlie\', \'Age\': 28}\n]\n\ndf = pd.DataFrame(data)\n```\n\nNow, the dataframe \'df\' contains the data in a structured format, which can be easily manipulated and analyzed.\n\nTo use this example in python, you can send the following message:\n\n```\n{\n  "tool_name": "python",\n  "tool_input": "import pandas as pd\\n\\ndata = [{\\n    \'Name\': \'Alice\', \'Age\': 25},\\n    {\\n    \'Name\': \'Bob\', \'Age\': 30},\\n    {\\n    \'Name\': \'Charlie\', \'Age\': 28}\\n]\\n\\ndf = pd.DataFrame(data)"\n}\n```\n\npython will execute the Python code and return the output."""
         parsed = parser.parse(output)
         self.assertEqual(parsed.tool, "python")
+
+
+class TestMarkdownOutputParser(unittest.TestCase):
+    def test_parse(self):
+        parser = MarkdownOutputParser(language_actions={"python": "python"})
+        output = "I need to do sth\n```python\nprint('foo')\n``` and then I need to do sth else"
+        parsed = parser.parse(output)
+        self.assertEqual(parsed.tool, "python")
+        self.assertEqual(parsed.tool_input, "print('foo')")
+        self.assertEqual(parsed.log, "I need to do sth")
 
 
 if __name__ == "__main__":
