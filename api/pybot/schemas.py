@@ -39,10 +39,18 @@ class ChatMessage(BaseModel):
     """A transient field to determine conversation id."""
     content: Optional[str | File] = None
     type: Literal[
-        "text", "stream/start", "stream/text", "stream/end", "file", "info", "error"
+        "text",
+        "stream/start",
+        "stream/text",
+        "stream/end",
+        "action",
+        "observation",
+        "file",
+        "info",
+        "error",
     ] = "text"
     feedback: Literal["thumbup", "thumbdown", None] = None
-    additional_kwargs: Optional[dict[str, Any]] = {}
+    additional_kwargs: Optional[dict[str, Any]] = None
     # sent_at is not an important information for the user, as far as I can tell.
     # But it introduces some complexity in the code, so I'm removing it for now.
     # sent_at: datetime = Field(default_factory=datetime.now)
@@ -74,6 +82,8 @@ class ChatMessage(BaseModel):
                         **json.loads(lc_message.content),
                     }
                 )
+            case "action":
+                msg_content = lc_message.additional_kwargs.pop("thought", None)
             case _:
                 msg_content = lc_message.content
         return ChatMessage(
@@ -91,7 +101,7 @@ class ChatMessage(BaseModel):
         """Convert to langchain message.
         Note: for file messages, the content is used for LLM, and other fields are used for displaying to frontend.
         """
-        additional_kwargs = self.additional_kwargs | {
+        additional_kwargs = (self.additional_kwargs or {}) | {
             "id": str(self.id),
             "type": self.type,
         }

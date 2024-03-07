@@ -16,15 +16,21 @@ import { MessageContext } from "contexts/message";
 import { UserContext } from "contexts/user";
 import TextMessage from "./TextMessage";
 import FileMessage from "./FileMessage";
+import ActionMessage from "./ActionMessage";
 
 
-const Message = ({ className, content, type }) => {
-  switch (type) {
+const Message = ({ className, message }) => {
+  switch (message.type) {
     case "file":
-      return <FileMessage className={className} filename={content.filename} size={content.size} />;
+      return <FileMessage className={className} filename={message.content.filename} size={message.content.size} />;
     case "text":
-      return <TextMessage className={className} text={content} />;
+      return <TextMessage className={className} text={message.content} />;
+    case "action":
+      return <ActionMessage className={className} thought={message.content} action={message.additional_kwargs?.action} />;
+    case "observation":
+      return <TextMessage className={className} text={`\`\`\`console\n${message.content}\n\`\`\``} />;
     default:
+      console.debug("Unknown message type: ", message.type);
       return null;
   }
 };
@@ -102,7 +108,7 @@ const ChatMessage = ({ convId, idx, message }) => {
         <div className="message-title-name">{myMessage(message) ? "You" : "AI"}</div>
       </div>
       <div className="message-body">
-        <Message className="message-content" content={message.content} type={message.type} />
+        <Message className="message-content" message={message} />
         {!myMessage(message) && (
           <div className="message-feedbacks">
             <Tooltip title={copyTooltipTitle}>

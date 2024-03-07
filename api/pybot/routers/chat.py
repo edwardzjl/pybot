@@ -11,6 +11,7 @@ from fastapi import (
 from langchain.agents import AgentExecutor
 from langchain.chains.base import Chain
 from langchain_community.chat_message_histories import RedisChatMessageHistory
+from langchain_core.agents import AgentAction, AgentActionMessageLog
 from loguru import logger
 
 from pybot.context import session_id
@@ -72,77 +73,54 @@ async def chat(
                         if event["name"] == "PybotAgentExecutor":
                             history.add_message(message.to_lc())
                     case "on_chain_end":
-                        # TODO: Once migrate to lcel there will be nasty chains, so I need to handle this properly.
-                        # Only persist output on the inner chain, as there will be a duplication
-                        # between the last inner chain invocation and the outer chain invocation
-                        # I will lost the opportunity to persist the intermediate steps here, but
-                        # I don't think it's important also I did not find a better solution for now.
-                        if event["name"] != "PybotAgentExecutor":
+                        # There are several chains, the most outer one is name: TableGPTAgentExecutor
+                        # We parse the final answer here.
+                        if event["name"] == "PybotAgentExecutor":
+                            output: str = event["data"]["output"]["output"]
+                            # TODO: I think this can be improved on langchain side.
+                            output = output.removesuffix("<|im_end|>")
                             msg = AIChatMessage(
                                 parent_id=chain_run_id,
                                 id=event["run_id"],
-                                conversation=message.conversation,
-                                # TODO: I think this can be improved on langchain side.
-                                content=event["data"]["output"]["text"].removesuffix(
-                                    "<|im_end|>"
-                                ),
-                            )
-                            history.add_message(msg.to_lc())
-                    case "on_chat_model_start":
-                        logger.debug(f"event: {event}")
-                        msg = AIChatMessage(
-                            parent_id=chain_run_id,
-                            id=event["run_id"],
-                            conversation=message.conversation,
-                            type="stream/start",
-                        )
-                        await websocket.send_text(msg.model_dump_json())
-                    case "on_chat_model_stream":
-                        # openai streaming provides eos token as last chunk, but langchain does not provide stop reason.
-                        # It will be better if langchain could provide sth like event["data"]["chunk"].finish_reason == "eos_token"
-                        if (content := event["data"]["chunk"].content) != "<|im_end|>":
-                            msg = AIChatMessage(
-                                parent_id=chain_run_id,
-                                id=event["run_id"],
-                                conversation=message.conversation,
-                                content=content,
-                                type="stream/text",
+                                content=output,
                             )
                             await websocket.send_text(msg.model_dump_json())
-                    case "on_chat_model_end":
-                        logger.debug(f"event: {event}")
+                            history.add_message(msg.to_lc())
+                    case "on_parser_end":
+                        if not isinstance(event["data"]["output"], AgentAction):
+                            continue
+                        output = event["data"]["output"]
+                        if not isinstance(output, AgentActionMessageLog):
+                            raise RuntimeError()
                         msg = AIChatMessage(
                             parent_id=chain_run_id,
                             id=event["run_id"],
                             conversation=message.conversation,
-                            type="stream/end",
-                        )
-                        await websocket.send_text(msg.model_dump_json())
-                    case "on_tool_start":
-                        # TODO: send action to frontend and persist to history
-                        msg = ChatMessage(
-                            parent_id=chain_run_id,
-                            id=event["run_id"],
-                            conversation=message.conversation,
-                            from_="system",
-                            content=event["data"].get("input"),
+                            content=output.log or "",
+                            type="action",
                             additional_kwargs={
-                                "prefix": f"<|im_start|>{event['name']}\n",
-                                "suffix": "<|im_end|>",
+                                "action": {
+                                    "tool": output.tool,
+                                    "tool_input": output.tool_input,
+                                },
+                                # "prefix": f"<|im_start|>{event['name']}\n",
+                                # "suffix": "<|im_end|>",
                             },
                         )
                         await websocket.send_text(msg.model_dump_json())
-                        # history.add_message(msg.to_lc())
+                        history.add_messages(output.message_log)
                     case "on_tool_end":
                         msg = ChatMessage(
                             parent_id=chain_run_id,
                             id=event["run_id"],
                             conversation=message.conversation,
                             from_="system",
-                            content=event["data"].get("output"),
+                            content=event["data"]["output"],
+                            type="observation",
                             additional_kwargs={
-                                "prefix": f"<|im_start|>observation\n",
-                                "suffix": "<|im_end|>",
+                                "tool": event["name"],
+                                # "prefix": f"<|im_start|>observation\n",
+                                # "suffix": "<|im_end|>",
                             },
                         )
                         await websocket.send_text(msg.model_dump_json())
@@ -172,5 +150,5 @@ async def chat(
         except WebSocketDisconnect:
             logger.info("websocket disconnected")
             return
-        except Exception:
-            logger.exception("Something goes wrong")
+        except Exception as e:
+            logger.exception(f"Something goes wrong: {str(e)}")

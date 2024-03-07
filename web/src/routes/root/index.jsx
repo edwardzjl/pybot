@@ -74,6 +74,8 @@ const Root = () => {
           const message = JSON.parse(event.data);
           switch (message.type) {
             case "text":
+            case "action":
+            case "observation":
               dispatch({
                 type: "added",
                 message: message,

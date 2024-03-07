@@ -6,15 +6,22 @@ from langchain.chains.base import Chain
 from langchain_community.chat_message_histories import RedisChatMessageHistory
 from langchain_core.language_models import BaseLLM
 from langchain_core.memory import BaseMemory
+from langchain_core.prompts import (
+    ChatPromptTemplate,
+    HumanMessagePromptTemplate,
+    MessagesPlaceholder,
+    SystemMessagePromptTemplate,
+)
 from langchain_openai import ChatOpenAI
 
-from pybot.agent import PybotAgent
+from pybot.agent import create_agent
 from pybot.agent.executor import PybotAgentExecutor
 from pybot.agent.output_parser import (
     ComposedOutputParser,
     DictOutputParser,
     MarkdownOutputParser,
 )
+from pybot.agent.prompt import SYSTEM
 from pybot.chains import SummarizationChain
 from pybot.config import settings
 from pybot.history import PybotMessageHistory
@@ -74,6 +81,13 @@ def PbAgent(
     llm: Annotated[BaseLLM, Depends(Llm)],
     memory: Annotated[BaseMemory, Depends(ChatMemory)],
 ) -> AgentExecutor:
+    messages = [
+        SystemMessagePromptTemplate.from_template(SYSTEM),
+        MessagesPlaceholder(variable_name="history"),
+        HumanMessagePromptTemplate.from_template("{input}"),
+        MessagesPlaceholder(variable_name="agent_scratchpad"),
+    ]
+    prompt = ChatPromptTemplate(messages=messages)
     tools = [
         CodeSandbox(
             gateway_url=str(settings.jupyter.gateway_url),
@@ -85,20 +99,11 @@ def PbAgent(
         parsers=[markdown_parser, dict_parser],
         just_finish=True,
     )
-    agent = PybotAgent.from_llm_and_tools(
-        llm=llm,
-        tools=tools,
-        output_parser=output_parser,
-    )
-    return PybotAgentExecutor.from_agent_and_tools(
-        agent=agent,
-        tools=tools,
-        memory=memory,
-        verbose=False,
-        max_iterations=15,
-        max_execution_time=None,
-        early_stopping_method="force",
-        return_intermediate_steps=True,
+
+    agent = create_agent(llm, tools, prompt, output_parser)
+
+    return PybotAgentExecutor(
+        agent=agent, tools=tools, memory=memory, handle_parsing_errors=True
     )
 
 
