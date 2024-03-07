@@ -68,25 +68,38 @@ class ComposedOutputParser(AgentOutputParser):
 class MarkdownOutputParser(AgentOutputParser):
     """Output parser that extracts markdown code blocks and try to parse them into actions."""
 
-    pattern = re.compile(r"([\S\s]*)`{3}([\w]*)\n([\S\s]+?)\n`{3}([\S\s]*)", re.DOTALL)
+    pattern = re.compile(r"([\S\s]*?)`{3}([\w]*)\n([\S\s]+?)\n`{3}([\S\s]*)", re.DOTALL)
     language_actions: dict[str, str] = {}
     """A mapping from language to action key."""
 
     def parse(self, text: str) -> AgentAction | AgentFinish:
         if (match := re.search(self.pattern, text)) is not None:
-            if (action := self.language_actions.get(match.group(2))) is not None:
+            thought = match.group(1).strip()
+            language = match.group(2)
+            tool_input = match.group(3).strip()
+            if (action := self.language_actions.get(language)) is not None:
                 return AgentActionMessageLog(
                     tool=action,
-                    tool_input=match.group(3).strip(),
+                    tool_input=tool_input,
                     # log is the 'thought' part
-                    log=match.group(1).strip(),
+                    log=thought,
                     # message_log is the content we can add to history
                     # polishing the content will improve the following iterations
                     message_log=[
-                        AIMessage(content=text.removesuffix(match.group(4)).strip())
+                        AIMessage(
+                            content=text.removesuffix(match.group(4)).strip(),
+                            additional_kwargs={
+                                "type": "action",
+                                "thought": thought,
+                                "action": {
+                                    "tool": action,
+                                    "tool_input": tool_input,
+                                },
+                            },
+                        )
                     ],
                 )
-            logger.warning(f"Unknown language {match.group(2)}")
+            logger.warning(f"Unknown language {language}")
         raise OutputParserException(f"Could not parse output: {text}")
 
     @property
@@ -106,16 +119,26 @@ class DictOutputParser(AgentOutputParser):
     def parse(self, text: str) -> AgentAction | AgentFinish:
         for _dict, s, e in find_dicts(text):
             if self.tool_name_key in _dict:
+                thought = text[:s].strip()
                 tool_name = _dict.get(self.tool_name_key)
                 tool_input = _dict.get(self.tool_input_key, "")
                 return AgentActionMessageLog(
                     tool=tool_name,
                     tool_input=tool_input,
                     # log is the 'thought' part
-                    log=text[:s].strip(),
+                    log=thought,
                     # message_log is the content we can add to history
                     # polishing the content will improve the following iterations
-                    message_log=[AIMessage(content=text[: e + 1].strip())],
+                    message_log=[
+                        AIMessage(
+                            content=text[: e + 1].strip(),
+                            additional_kwargs={
+                                "type": "action",
+                                "thought": thought,
+                                "action": {"tool": tool_name, "tool_input": tool_input},
+                            },
+                        )
+                    ],
                 )
         raise OutputParserException(f"Could not parse output: {text}")
 
