@@ -62,15 +62,15 @@ class ChatMessage(BaseModel):
         Returns:
             ChatMessage: _description_
         """
-        msg_parent_id_str = lc_message.additional_kwargs.get("parent_id", None)
-        msg_id_str = lc_message.additional_kwargs.get("id", None)
-        msg_type = lc_message.additional_kwargs.get("type", "text")
+        msg_parent_id_str = lc_message.additional_kwargs.pop("parent_id", None)
+        msg_id_str = lc_message.additional_kwargs.pop("id", None)
+        msg_type = lc_message.additional_kwargs.pop("type", "text")
         match msg_type:
             case "file":
                 msg_content = File.model_validate(
                     {
-                        "id": lc_message.additional_kwargs.get("file_id", None),
-                        "size": lc_message.additional_kwargs.get("size", None),
+                        "id": lc_message.additional_kwargs.pop("file_id", None),
+                        "size": lc_message.additional_kwargs.pop("size", None),
                         **json.loads(lc_message.content),
                     }
                 )
@@ -83,14 +83,15 @@ class ChatMessage(BaseModel):
             from_=from_ if from_ else lc_message.type,
             content=msg_content,
             type=msg_type,
-            feedback=lc_message.additional_kwargs.get("feedback", None),
+            feedback=lc_message.additional_kwargs.pop("feedback", None),
+            additional_kwargs=lc_message.additional_kwargs,
         )
 
     def to_lc(self) -> BaseMessage:
         """Convert to langchain message.
         Note: for file messages, the content is used for LLM, and other fields are used for displaying to frontend.
         """
-        additional_kwargs = {
+        additional_kwargs = self.additional_kwargs | {
             "id": str(self.id),
             "type": self.type,
         }
