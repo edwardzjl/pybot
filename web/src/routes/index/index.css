@@ -19,9 +19,18 @@
  transition-delay: 200ms;
 } */
 
-.chat-log {
+.welcome-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 2rem;
+}
+
+.welcome {
+    width: 20vw;
     text-align: left;
-    scroll-behavior: smooth;
 }
 
 .input-bottom {
