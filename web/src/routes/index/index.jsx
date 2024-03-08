@@ -7,6 +7,7 @@ import ChatboxHeader from "components/ChatboxHeader";
 import FileUploader from "components/FileUploader";
 
 import { ConversationContext } from "contexts/conversation";
+import { UserContext } from "contexts/user";
 import { DEFAULT_CONV_TITLE } from "commons";
 
 import ChatInput from "./ChatInput";
@@ -38,6 +39,7 @@ const uploadFiles = async (conversationId, files) => {
 };
 
 const Conversation = () => {
+    const { username } = useContext(UserContext);
     const { dispatch } = useContext(ConversationContext);
     const navigate = useNavigate();
     const navigation = useNavigation();
@@ -58,7 +60,11 @@ const Conversation = () => {
         // TODO: this loading state will render the delete dialog
         <FileUploader className={`chatbox ${navigation.state === "loading" ? "loading" : ""}`} onFilesDrop={handleDrop}>
             <ChatboxHeader />
-            {/* TODO: add some examples here */}
+            <div className="welcome-container">
+                <div className="welcome">{username}, hello!</div>
+                <div className="welcome">How can I help you today?</div>
+            </div>
+            {/* TODO: add some examples here? */}
             <div className="input-bottom">
                 <ChatInput />
                 <div className="footer">Pybot can make mistakes. Consider checking important information.</div>
