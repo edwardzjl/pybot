@@ -36,7 +36,10 @@ class GatewayClient(BaseModel):
     def delete_kernel(self, kernel_id: str) -> None:
         response = requests.delete(urljoin(str(self.host), f"/api/kernels/{kernel_id}"))
         if not response.ok:
-            raise RuntimeError(
-                f"Error deleting kernel {kernel_id}: {response.status_code}\n{response.content}"
-            )
+            if response.status_code == 404:
+                raise KernelNotFoundException(f"kernel {kernel_id} not found")
+            else:
+                raise RuntimeError(
+                    f"Error deleting kernel {kernel_id}: {response.status_code}\n{response.content}"
+                )
         logger.info(f"Kernel {kernel_id} deleted")
