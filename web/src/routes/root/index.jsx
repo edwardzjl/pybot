@@ -74,17 +74,17 @@ const Root = () => {
           const message = JSON.parse(event.data);
           switch (message.type) {
             case "text":
+            case "file":
             case "action":
+              dispatch({ type: "added", message: message, });
+              break;
             case "observation":
-              dispatch({
-                type: "added",
-                message: message,
-              });
+              dispatch({ type: 'observation-received', message: message });
               break;
             case "stream/start":
               dispatch({
                 type: "added",
-                message: {content: message.content || "", ...message},
+                message: { content: message.content || "", ...message },
               });
               break;
             case "stream/text":

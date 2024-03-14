@@ -1,12 +1,23 @@
-import TextMessage from "./TextMessage";
+import MarkdownContent from "./MarkdownContent";
 
-const ActionMessage = ({ className, thought, action }) => {
+const ActionMessage = ({ className, message }) => {
 
     return (
-        <>
-            <TextMessage className={className} text={thought} />
-            {action && <TextMessage className={className} text={`\`\`\`${action.tool}\n${action.tool_input}\n\`\`\``} />}
-        </>
+        <div className={className}>
+            <MarkdownContent text={message.content} />
+            {message.additional_kwargs?.action &&
+                <MarkdownContent
+                    text={`\`\`\`${message.additional_kwargs.action.tool}\n${message.additional_kwargs.action.tool_input}\n\`\`\``}
+                />
+            }
+            {/* TODO: I simply render observation as a markdown console snippet for now */}
+            {message.additional_kwargs?.observation &&
+                <MarkdownContent
+                    title='result'
+                    text={`\`\`\`console\n${message.additional_kwargs.observation}\n\`\`\``}
+                />
+            }
+        </div>
     )
 }
 export default ActionMessage;
