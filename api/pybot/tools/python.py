@@ -5,52 +5,31 @@ from langchain_core.callbacks import (
     AsyncCallbackManagerForToolRun,
     CallbackManagerForToolRun,
 )
+from langchain_core.tools import BaseTool
 from loguru import logger
 from pydantic.v1 import root_validator
 
 from pybot.jupyter import ContextAwareKernelManager, ExecutionRequest, ExecutionResponse
-from pybot.tools.base import ExtendedTool
 
 
-class CodeSandbox(ExtendedTool):
+class CodeSandbox(BaseTool):
     name = "python"
     timeout: int = 60
     """The timeout for the tool in seconds."""
     volume: str = "/mnt/shared"
-    description = f"""- {name}:
-  - Description: {name} is a stateful Jupyter notebook for executing Python code, facilitating diverse tasks such as like data analysis, data visualization, etc. {name} will respond with the output of the execution or time out after {timeout} seconds. The driver at '{volume}' can be used to persist files.
-  - Reminder: During data analysis with pandas, if you encounter missing columns, make sure to refer to `df.head()` for initial insights into the dataset.
+    description = f"""{name} is a stateful Jupyter notebook for executing Python code, facilitating diverse tasks such as like data analysis, data visualization, etc.
+  - Reminder:
+    - The driver at '{volume}' can be used to persist files.
+    - {name} will respond with the output of the execution or time out after {timeout} seconds.
+    - During data analysis with pandas, if you encounter missing columns, make sure to refer to `df.head()` for initial insights into the dataset.
   - Execution Environment: python3 with the following major dependencies:
     - pandas==1.5.3
     - scikit-learn
     - scikit-image
     - seaborn
+    - matplotlib
     - SQLAlchemy
-  - Usage Schema: When using {name}, make sure to provide a JSON object adhering to the following openapi spec:
-
-    ```yaml
-    ToolRequest:
-      type: object
-      properties:
-        tool_name:
-          type: string
-          enum: ["{name}"]
-        tool_input:
-          type: string
-          description: the code you want {name} to execute
-      required: [tool_name, tool_input]
-    ```"""
-    # TODO: /mnt/shared is hardcoded, but I need to refactor the examples anyway
-    examples: str = f"""<|im_start|>system-example-user
-{{"filename": "test.csv", "path": "/mnt/shared/test.csv"}}<|im_end|>
-<|im_start|>system-example-user
-Help me analyze this data.<|im_end|>
-<|im_start|>system-example-assistant
-Sure, I can help you with that. Let's start by examining the initial rows of the dataset to understand its structure. I'll use the {name} tool for this.
-{{
-    "tool_name": "{name}",
-    "tool_input": "import pandas as pd\\n\\n# read the file\\ndf = pd.read_csv(\'/mnt/shared/test.csv\')\\n\\n# Display the initial rows of the dataframe\\nprint(df.head())"
-}}<|im_end|>"""
+"""
     gateway_url: str
     kernel_manager: Optional[ContextAwareKernelManager] = None
 

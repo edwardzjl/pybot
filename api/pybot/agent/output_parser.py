@@ -71,6 +71,8 @@ class MarkdownOutputParser(AgentOutputParser):
     pattern = re.compile(r"([\S\s]*?)`{3}([\w]*)\n([\S\s]+?)\n`{3}([\S\s]*)", re.DOTALL)
     language_actions: dict[str, str] = {}
     """A mapping from language to action key."""
+    just_finish: bool = True
+    """Whether to just return AgentFinish if no parser can parse the output. Default to True."""
 
     def parse(self, text: str) -> AgentAction | AgentFinish:
         if (match := re.search(self.pattern, text)) is not None:
@@ -100,6 +102,8 @@ class MarkdownOutputParser(AgentOutputParser):
                     ],
                 )
             logger.warning(f"Unknown language {language}")
+        if self.just_finish:
+            return AgentFinish({"output": text}, text)
         raise OutputParserException(f"Could not parse output: {text}")
 
     @property
@@ -115,6 +119,8 @@ class DictOutputParser(AgentOutputParser):
 
     tool_name_key: str = "tool_name"
     tool_input_key: str = "tool_input"
+    just_finish: bool = True
+    """Whether to just return AgentFinish if no parser can parse the output. Default to True."""
 
     def parse(self, text: str) -> AgentAction | AgentFinish:
         for _dict, s, e in find_dicts(text):
@@ -140,6 +146,8 @@ class DictOutputParser(AgentOutputParser):
                         )
                     ],
                 )
+        if self.just_finish:
+            return AgentFinish({"output": text}, text)
         raise OutputParserException(f"Could not parse output: {text}")
 
     @property
