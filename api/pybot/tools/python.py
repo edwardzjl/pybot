@@ -17,7 +17,8 @@ class CodeSandbox(BaseTool):
     timeout: int = 60
     """The timeout for the tool in seconds."""
     volume: str = "/mnt/shared"
-    description = f"""{name} is a stateful Jupyter notebook for executing Python code, facilitating diverse tasks such as like data analysis, data visualization, etc.
+    description = f"""A Python shell. Use this tool to execute python commands.
+  - Action Input: Must be a valid python snippet
   - Reminder:
     - The driver at '{volume}' can be used to persist files.
     - {name} will respond with the output of the execution or time out after {timeout} seconds.
