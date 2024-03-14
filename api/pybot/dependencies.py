@@ -68,8 +68,11 @@ def Llm() -> BaseLLM:
         openai_api_base=str(settings.llm.url),
         openai_api_key=settings.llm.creds,
         model=settings.llm.model,
+        temperature=0.9,
+        model_kwargs={
+            "top_p": 0.3,
+        },
         max_tokens=1024,
-        streaming=True,
     )
 
 
