@@ -4,6 +4,14 @@ from pydantic import BaseModel, HttpUrl, RedisDsn
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+class LLMServiceSettings(BaseModel):
+    url: HttpUrl = "http://localhost:8080"
+    """llm service url"""
+    creds: str = "EMPTY"
+    model: str = "cognitivecomputations/dolphincoder-starcoder2-15b"
+    eos_token: str = "<|im_end|>"
+
+
 class JupyterSettings(BaseModel):
     gateway_url: HttpUrl = "http://localhost:8888"
     """URL of the Jupyter Enterprise Gateway."""
@@ -20,11 +28,11 @@ class JupyterSettings(BaseModel):
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_nested_delimiter="__")
 
-    log_level: str = "INFO"
-    redis_om_url: RedisDsn = "redis://localhost:6379"
-    inference_server_url: HttpUrl = "http://localhost:8080"
+    llm: LLMServiceSettings = LLMServiceSettings()
     jupyter: JupyterSettings = JupyterSettings()
+    redis_om_url: RedisDsn = "redis://localhost:6379"
     user_id_header: str = "X-Forwarded-User"
+    log_level: str = "INFO"
 
 
 settings = Settings()

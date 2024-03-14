@@ -65,9 +65,9 @@ def ChatMemory(
 
 def Llm() -> BaseLLM:
     return ChatOpenAI(
-        model="cognitivecomputations/dolphin-2.6-mistral-7b-dpo-laser",  # this does not matter
-        openai_api_key="EMPTY",
-        openai_api_base=str(settings.inference_server_url),
+        openai_api_base=str(settings.llm.url),
+        openai_api_key=settings.llm.creds,
+        model=settings.llm.model,
         max_tokens=1024,
         streaming=True,
     )

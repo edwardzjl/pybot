@@ -14,6 +14,7 @@ from langchain_community.chat_message_histories import RedisChatMessageHistory
 from langchain_core.agents import AgentAction, AgentActionMessageLog
 from loguru import logger
 
+from pybot.config import settings
 from pybot.context import session_id
 from pybot.dependencies import MessageHistory, PbAgent, SmryChain, UserIdHeader
 from pybot.models import Conversation
@@ -78,7 +79,7 @@ async def chat(
                         if event["name"] == "PybotAgentExecutor":
                             output: str = event["data"]["output"]["output"]
                             # TODO: I think this can be improved on langchain side.
-                            output = output.removesuffix("<|im_end|>")
+                            output = output.removesuffix(settings.llm.eos_token)
                             msg = AIChatMessage(
                                 parent_id=chain_run_id,
                                 id=event["run_id"],
@@ -103,8 +104,6 @@ async def chat(
                                     "tool": output.tool,
                                     "tool_input": output.tool_input,
                                 },
-                                # "prefix": f"<|im_start|>{event['name']}\n",
-                                # "suffix": "<|im_end|>",
                             },
                         )
                         await websocket.send_text(msg.model_dump_json())
@@ -119,8 +118,6 @@ async def chat(
                             type="observation",
                             additional_kwargs={
                                 "tool": event["name"],
-                                # "prefix": f"<|im_start|>observation\n",
-                                # "suffix": "<|im_end|>",
                             },
                         )
                         await websocket.send_text(msg.model_dump_json())
