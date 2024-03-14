@@ -1,8 +1,8 @@
 import "normalize.css";
-import './index.css';
+import "./index.css";
 
-import React from 'react';
-import ReactDOM from 'react-dom/client';
+import React from "react";
+import ReactDOM from "react-dom/client";
 import {
   createBrowserRouter,
   RouterProvider,
@@ -13,7 +13,7 @@ import Index from "routes/index";
 import Conversation, { loader as conversationLoader } from "routes/conversation";
 import ErrorPage from "error-page";
 
-import reportWebVitals from './reportWebVitals';
+import reportWebVitals from "./reportWebVitals";
 
 import { SnackbarProvider } from "./contexts/snackbar";
 import { ThemeProvider } from "contexts/theme";
@@ -51,7 +51,7 @@ const router = createBrowserRouter([
   },
 ]);
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
+const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
     <ThemeProvider>
