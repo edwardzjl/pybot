@@ -51,10 +51,6 @@ async def chat(
                 "conversation_id": message.conversation,
                 "userid": userid,
             }
-            # file messages are only added to history, not passing to llm
-            if message.type == "file":
-                history.add_message(message.to_lc())
-                continue
             chain_run_id = None
             async for event in agent.astream_events(
                 input={
