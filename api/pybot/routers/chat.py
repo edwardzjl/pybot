@@ -62,20 +62,28 @@ async def chat(
                 version="v1",
                 config={"metadata": chain_metadata},
             ):
+                event_name: str = event["name"]
+                if event_name.startswith("_"):
+                    # langchain's internal event, for example '_Exception'
+                    # skip for mainly 2 reasons:
+                    # 1. we don't want to expose internal event to the user (websocket or history)
+                    # 2. we want to keep the conversation history as short as possible
+                    logger.debug(f"skipping internal event: {event_name}")
+                    continue
                 logger.trace(f"event: {event}")
                 match event["event"]:
                     case "on_chain_start":
-                        # There could be several chains, the most outer one is: event["name"] == "PybotAgentExecutor"
+                        # There could be several chains, the most outer one is: event_name == "PybotAgentExecutor"
                         chain_run_id = event["run_id"]
-                        if event["name"] == "PybotAgentExecutor":
+                        if event_name == "PybotAgentExecutor":
                             history.add_message(message.to_lc())
                     case "on_chain_end":
                         # There are several chains, the most outer one is name: TableGPTAgentExecutor
                         # We parse the final answer here.
-                        if event["name"] == "PybotAgentExecutor":
+                        if event_name == "PybotAgentExecutor":
                             output: str = event["data"]["output"]["output"]
                             # TODO: I think this can be improved on langchain side.
-                            output = output.removesuffix(settings.llm.eos_token)
+                            output = output.removesuffix(settings.llm.eos_token).strip()
                             msg = AIChatMessage(
                                 parent_id=chain_run_id,
                                 id=event["run_id"],
@@ -103,7 +111,12 @@ async def chat(
                             },
                         )
                         await websocket.send_text(msg.model_dump_json())
-                        history.add_messages(output.message_log)
+                        # caveats: message_log does not have id or parent_id, so we need to add them manually
+                        hist_messages = output.message_log
+                        for msg in hist_messages:
+                            msg.additional_kwargs["parent_id"] = chain_run_id
+                            msg.additional_kwargs["id"] = event["run_id"]
+                        history.add_messages(hist_messages)
                     case "on_tool_end":
                         msg = ChatMessage(
                             parent_id=chain_run_id,
@@ -113,7 +126,7 @@ async def chat(
                             content=event["data"]["output"],
                             type="observation",
                             additional_kwargs={
-                                "tool": event["name"],
+                                "tool": event_name,
                             },
                         )
                         await websocket.send_text(msg.model_dump_json())
