@@ -1,0 +1,10 @@
+.action-collapse-button {
+    margin: 0.3rem;
+    padding: 0.5rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    color: var(--text-complementary);
+    background-color: var(--bg-complementary);
+    border: none;
+    border-radius: 5px;
+}
