@@ -16,11 +16,7 @@ from langchain_openai import ChatOpenAI
 
 from pybot.agent import create_agent
 from pybot.agent.executor import PybotAgentExecutor
-from pybot.agent.output_parser import (
-    ComposedOutputParser,
-    DictOutputParser,
-    MarkdownOutputParser,
-)
+from pybot.agent.output_parser import MarkdownOutputParser
 from pybot.agent.prompt import SYSTEM
 from pybot.chains import SummarizationChain
 from pybot.config import settings
@@ -93,12 +89,7 @@ def PbAgent(
             gateway_url=str(settings.jupyter.gateway_url),
         )
     ]
-    markdown_parser = MarkdownOutputParser(language_actions={"python": "python"})
-    dict_parser = DictOutputParser()
-    output_parser = ComposedOutputParser(
-        parsers=[markdown_parser, dict_parser],
-        just_finish=True,
-    )
+    output_parser = MarkdownOutputParser(language_actions={"python": "python"})
 
     agent = create_agent(llm, tools, prompt, output_parser)
 
