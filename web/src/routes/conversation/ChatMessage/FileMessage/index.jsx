@@ -5,8 +5,8 @@ import { FileIcon, defaultStyles } from "react-file-icon";
 import { formatBytes, getExtension } from "commons";
 
 
-const FileMessage = ({ className, filename, size }) => {
-    const fileExtension = getExtension(filename);
+const FileMessage = ({ className, message }) => {
+    const fileExtension = getExtension(message.content.filename);
 
     return (
         <div className={`file-message ${className}`}>
@@ -14,8 +14,8 @@ const FileMessage = ({ className, filename, size }) => {
                 <FileIcon extension={fileExtension} {...defaultStyles[fileExtension]} />
             </div>
             <div className="file-message-info">
-                <div className="file-message-name">{filename}</div>
-                <div className="file-message-size">{formatBytes(size)}</div>
+                <div className="file-message-name">{message.content.filename}</div>
+                <div className="file-message-size">{formatBytes(message.content.size)}</div>
             </div>
         </div>
     );

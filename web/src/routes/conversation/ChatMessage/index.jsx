@@ -22,13 +22,11 @@ import ActionMessage from "./ActionMessage";
 const Message = ({ className, message }) => {
   switch (message.type) {
     case "file":
-      return <FileMessage className={className} filename={message.content.filename} size={message.content.size} />;
+      return <FileMessage className={className} message={message} />;
     case "text":
       return <TextMessage className={className} text={message.content} />;
     case "action":
-      return <ActionMessage className={className} thought={message.content} action={message.additional_kwargs?.action} />;
-    case "observation":
-      return <TextMessage className={className} text={`\`\`\`console\n${message.content}\n\`\`\``} />;
+      return <ActionMessage className={className} message={message} />;
     default:
       console.debug("Unknown message type: ", message.type);
       return null;
