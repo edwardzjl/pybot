@@ -27,6 +27,10 @@ spec:
                 name: pybot
           ports:
             - containerPort: 8000
+          livenessProbe:
+            httpGet:
+              path: /api/healthz
+              port: 8000
           resources:
             requests:
               cpu: "1"
