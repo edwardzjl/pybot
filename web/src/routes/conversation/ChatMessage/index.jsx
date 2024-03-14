@@ -6,9 +6,9 @@ import Avatar from "@mui/material/Avatar";
 import Tooltip from "@mui/material/Tooltip";
 
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import ThumbUpIcon from '@mui/icons-material/ThumbUp';
+import ThumbUpIcon from "@mui/icons-material/ThumbUp";
 import ThumbUpOutlined from "@mui/icons-material/ThumbUpOutlined";
-import ThumbDownIcon from '@mui/icons-material/ThumbDown';
+import ThumbDownIcon from "@mui/icons-material/ThumbDown";
 import ThumbDownOutlined from "@mui/icons-material/ThumbDownOutlined";
 
 import { getFirstLetters, stringToColor } from "commons";

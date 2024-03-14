@@ -23,7 +23,7 @@ const MarkdownContent = ({ title, text }) => {
                 setMarkdownTheme(googlecode);
                 break;
             default: {
-                if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                if (window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches) {
                     setMarkdownTheme(darcula);
                 } else {
                     setMarkdownTheme(googlecode);

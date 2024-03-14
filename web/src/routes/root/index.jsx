@@ -7,9 +7,9 @@ import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
 
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import GitHubIcon from '@mui/icons-material/GitHub';
-import MailOutlineIcon from '@mui/icons-material/MailOutline';
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import GitHubIcon from "@mui/icons-material/GitHub";
+import MailOutlineIcon from "@mui/icons-material/MailOutline";
 
 import { SnackbarContext } from "contexts/snackbar";
 import { ThemeContext } from "contexts/theme";
@@ -79,7 +79,7 @@ const Root = () => {
               dispatch({ type: "added", message: message, });
               break;
             case "observation":
-              dispatch({ type: 'observation-received', message: message });
+              dispatch({ type: "observation-received", message: message });
               break;
             case "stream/start":
               dispatch({
@@ -195,7 +195,7 @@ const Root = () => {
           ref={delDialogRef}
         >
           <h2>Delete conversation?</h2>
-          <p>This will delete '{toDelete.title}'</p>
+          <p>This will delete "{toDelete.title}"</p>
           <div className="del-dialog-actions">
             <button autoFocus onClick={() => deleteConv(toDelete.id)}>Delete</button>
             <button onClick={() => delDialogRef.current?.close()}>Cancel</button>
