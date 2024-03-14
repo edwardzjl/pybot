@@ -131,6 +131,12 @@ async def chat(
                         )
                         await websocket.send_text(msg.model_dump_json())
                         history.add_message(msg.to_lc())
+                    # Following are for local development logging.
+                    # For production we may use something like [lunary](https://github.com/lunary-ai/lunary)
+                    case "on_chat_model_end":
+                        logger.debug(f"on_chat_model_end event: {event}")
+                    case "on_llm_end":
+                        logger.debug(f"on_llm_end event: {event}")
             conv.last_message_at = utcnow()
             await conv.save()
             # summarize if required
