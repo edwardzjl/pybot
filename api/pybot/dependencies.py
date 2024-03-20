@@ -6,12 +6,7 @@ from langchain.chains.base import Chain
 from langchain_community.chat_message_histories import RedisChatMessageHistory
 from langchain_core.language_models import BaseLLM
 from langchain_core.memory import BaseMemory
-from langchain_core.prompts import (
-    ChatPromptTemplate,
-    HumanMessagePromptTemplate,
-    MessagesPlaceholder,
-    SystemMessagePromptTemplate,
-)
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_openai import ChatOpenAI
 
 from pybot.agent import create_agent
@@ -81,9 +76,9 @@ def PbAgent(
     memory: Annotated[BaseMemory, Depends(ChatMemory)],
 ) -> AgentExecutor:
     messages = [
-        SystemMessagePromptTemplate.from_template(SYSTEM),
+        ("system", SYSTEM),
         MessagesPlaceholder(variable_name="history"),
-        HumanMessagePromptTemplate.from_template("{input}"),
+        ("user", "{input}"),
         MessagesPlaceholder(variable_name="agent_scratchpad"),
     ]
     prompt = ChatPromptTemplate(messages=messages)
