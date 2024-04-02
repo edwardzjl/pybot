@@ -4,12 +4,11 @@ from typing import Annotated
 
 import aiofiles
 from fastapi import APIRouter, BackgroundTasks, HTTPException, UploadFile
-from fastapi.params import Depends
 from langchain_core.chat_history import BaseChatMessageHistory
 
 from pybot.config import settings
 from pybot.context import session_id
-from pybot.dependencies import MessageHistory, UserIdHeader
+from pybot.dependencies import UserIdHeader, history
 from pybot.models import Conversation as ORMConversation
 from pybot.models import File as ORMFile
 from pybot.schemas import ChatMessage, File
@@ -24,7 +23,6 @@ router = APIRouter(
 async def upload_files(
     conversation_id: str,
     files: list[UploadFile],
-    history: Annotated[BaseChatMessageHistory, Depends(MessageHistory)],
     background_tasks: BackgroundTasks,
     userid: Annotated[str | None, UserIdHeader()] = None,
 ) -> list[File]:

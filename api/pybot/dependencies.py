@@ -1,19 +1,17 @@
-from typing import Annotated, Optional
+from operator import itemgetter
+from typing import Optional
 
-from fastapi import Depends, Header
-from langchain.agents import AgentExecutor
-from langchain.chains.base import Chain
-from langchain_community.chat_message_histories import RedisChatMessageHistory
-from langchain_core.language_models import BaseLLM
-from langchain_core.memory import BaseMemory
+from fastapi import Header
+from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.runnables import RunnableLambda
 from langchain_openai import ChatOpenAI
 
 from pybot.agent import create_agent
 from pybot.agent.executor import PybotAgentExecutor
 from pybot.agent.output_parser import MarkdownOutputParser
 from pybot.agent.prompt import SYSTEM
-from pybot.chains import SummarizationChain
+from pybot.chains.summarization import tmpl
 from pybot.config import settings
 from pybot.history import PybotMessageHistory
 from pybot.memory import PybotMemory
@@ -38,69 +36,50 @@ def EmailHeader(alias: Optional[str] = None, **kwargs):
     return Header(alias=alias, **kwargs)
 
 
-def MessageHistory() -> RedisChatMessageHistory:
-    return PybotMessageHistory(
-        url=str(settings.redis_om_url),
-        key_prefix="pybot:messages:",
-        session_id="sid",  # a fake session id as it is required
-    )
+llm = ChatOpenAI(
+    openai_api_base=str(settings.llm.url),
+    model=settings.llm.model,
+    openai_api_key=settings.llm.creds,
+    max_tokens=1024,
+    streaming=True,
+)
+
+history = PybotMessageHistory(
+    url=str(settings.redis_om_url),
+    key_prefix="chatbot:messages:",
+    session_id="sid",  # a fake session id as it is required
+)
+
+memory = PybotMemory(
+    memory_key="history",
+    input_key="input",
+    history=history,
+    return_messages=True,
+)
+
+smry_chain = (
+    {"history": RunnableLambda(memory.load_memory_variables) | itemgetter("history")}
+    | tmpl
+    | llm
+    | StrOutputParser()
+)
 
 
-def ChatMemory(
-    history: Annotated[RedisChatMessageHistory, Depends(MessageHistory)]
-) -> BaseMemory:
-    return PybotMemory(
-        memory_key="history",
-        input_key="input",
-        output_key="output",
-        history=history,
-        return_messages=True,
-    )
-
-
-def Llm() -> BaseLLM:
-    return ChatOpenAI(
-        openai_api_base=str(settings.llm.url),
-        openai_api_key=settings.llm.creds,
-        model=settings.llm.model,
-        temperature=0.9,
-        model_kwargs={
-            "top_p": 0.3,
-        },
-        max_tokens=1024,
-    )
-
-
-def PbAgent(
-    llm: Annotated[BaseLLM, Depends(Llm)],
-    memory: Annotated[BaseMemory, Depends(ChatMemory)],
-) -> AgentExecutor:
-    messages = [
+prompt = ChatPromptTemplate.from_messages(
+    [
         ("system", SYSTEM),
         MessagesPlaceholder(variable_name="history"),
         ("user", "{input}"),
         MessagesPlaceholder(variable_name="agent_scratchpad"),
     ]
-    prompt = ChatPromptTemplate(messages=messages)
-    tools = [
-        CodeSandbox(
-            gateway_url=str(settings.jupyter.gateway_url),
-        )
-    ]
-    output_parser = MarkdownOutputParser(language_actions={"python": "python"})
-
-    agent = create_agent(llm, tools, prompt, output_parser)
-
-    return PybotAgentExecutor(
-        agent=agent, tools=tools, memory=memory, handle_parsing_errors=True
+)
+tools = [
+    CodeSandbox(
+        gateway_url=str(settings.jupyter.gateway_url),
     )
-
-
-def SmryChain(
-    llm: Annotated[BaseLLM, Depends(Llm)],
-    memory: Annotated[BaseMemory, Depends(ChatMemory)],
-) -> Chain:
-    return SummarizationChain(
-        llm=llm,
-        memory=memory,
-    )
+]
+output_parser = MarkdownOutputParser(language_actions={"python": "python"})
+agent = create_agent(llm, tools, prompt, output_parser)
+agent_executor = PybotAgentExecutor(
+    agent=agent, tools=tools, memory=memory, handle_parsing_errors=True
+)

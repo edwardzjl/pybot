@@ -1,22 +1,13 @@
 from datetime import date
 from typing import Annotated
 
-from fastapi import (
-    APIRouter,
-    Depends,
-    WebSocket,
-    WebSocketDisconnect,
-    WebSocketException,
-)
-from langchain.agents import AgentExecutor
-from langchain.chains.base import Chain
-from langchain_community.chat_message_histories import RedisChatMessageHistory
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, WebSocketException
 from langchain_core.agents import AgentAction, AgentActionMessageLog
 from loguru import logger
 
 from pybot.config import settings
 from pybot.context import session_id
-from pybot.dependencies import MessageHistory, PbAgent, SmryChain, UserIdHeader
+from pybot.dependencies import UserIdHeader, agent_executor, history, smry_chain
 from pybot.models import Conversation
 from pybot.schemas import AIChatMessage, ChatMessage, InfoMessage
 from pybot.utils import utcnow
@@ -31,9 +22,6 @@ router = APIRouter(
 @router.websocket("/")
 async def chat(
     websocket: WebSocket,
-    agent: Annotated[AgentExecutor, Depends(PbAgent)],
-    history: Annotated[RedisChatMessageHistory, Depends(MessageHistory)],
-    smry_chain: Annotated[Chain, Depends(SmryChain)],
     userid: Annotated[str | None, UserIdHeader()] = None,
 ):
     await websocket.accept()
@@ -52,7 +40,7 @@ async def chat(
                 "userid": userid,
             }
             chain_run_id = None
-            async for event in agent.astream_events(
+            async for event in agent_executor.astream_events(
                 input={
                     "input": message.content,
                     # create a new date on every message to solve message across days.
@@ -143,11 +131,11 @@ async def chat(
             if message.additional_kwargs and message.additional_kwargs.get(
                 "require_summarization", False
             ):
-                res = await smry_chain.ainvoke(
+                title_raw: str = await smry_chain.ainvoke(
                     input={},
                     config={"metadata": chain_metadata},
                 )
-                title = res[smry_chain.output_key]
+                title = title_raw.removesuffix(settings.llm.eos_token).strip('"')
                 conv.title = title
                 await conv.save()
                 info_message = InfoMessage(

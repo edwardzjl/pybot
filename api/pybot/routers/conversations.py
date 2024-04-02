@@ -1,14 +1,12 @@
 from typing import Annotated
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
-from langchain.chains.base import Chain
-from langchain_community.chat_message_histories import RedisChatMessageHistory
+from fastapi import APIRouter, BackgroundTasks, HTTPException
 from langchain_core.messages import HumanMessage
 from loguru import logger
 
 from pybot.config import settings
 from pybot.context import Session, session_id
-from pybot.dependencies import MessageHistory, SmryChain, UserIdHeader
+from pybot.dependencies import UserIdHeader, history, smry_chain
 from pybot.jupyter import ContextAwareKernelManager, GatewayClient
 from pybot.jupyter.schema import KernelNotFoundException
 from pybot.models import Conversation as ORMConversation
@@ -40,7 +38,6 @@ async def get_conversations(
 @router.get("/{conversation_id}")
 async def get_conversation(
     conversation_id: str,
-    history: Annotated[RedisChatMessageHistory, Depends(MessageHistory)],
     userid: Annotated[str | None, UserIdHeader()] = None,
 ) -> ConversationDetail:
     conv = await ORMConversation.get(conversation_id)
@@ -126,15 +123,15 @@ async def cleanup_conv(session_id: str):
 @router.post("/{conversation_id}/summarization", status_code=201)
 async def summarize(
     conversation_id: str,
-    smry_chain: Annotated[Chain, Depends(SmryChain)],
     userid: Annotated[str | None, UserIdHeader()] = None,
 ) -> dict[str, str]:
     conv = await ORMConversation.get(conversation_id)
     if conv.owner != userid:
         raise HTTPException(status_code=403, detail="authorization error")
     session_id.set(f"{userid}:{conversation_id}")
-    res = await smry_chain.ainvoke(input={})
-    title = res[smry_chain.output_key]
+
+    title_raw: str = await smry_chain.ainvoke(input={})
+    title = title_raw.removesuffix(settings.llm.eos_token).strip('"')
     conv.title = title
     await conv.save()
     return {"title": title}
