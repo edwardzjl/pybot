@@ -3,12 +3,12 @@ import "./index.css";
 import { useContext, useState, useRef } from "react";
 
 import Tooltip from "@mui/material/Tooltip";
+import Icon from "@mui/material/Icon";
 
 import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import DriveFileRenameOutlineIcon from "@mui/icons-material/DriveFileRenameOutline";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
-import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
 
 import { DropdownMenu, DropdownHeader, DropdownList } from "components/DropdownMenu";
 import { ConversationContext } from "contexts/conversation";
@@ -118,10 +118,15 @@ const ChatTab = ({ chat, isActive, onDeleteClick }) => {
           <DropdownList className="chat-op-menu-list">
             <li>
               <button className="chat-op-menu-item" onClick={flipPin}>
-                {/* TODO: there's no 'unpin' icon in material icons for now. */}
-                {/* Please see <https://github.com/google/material-design-icons/issues/1595> */}
-                {chat.pinned ? <PushPinOutlinedIcon /> : <PushPinOutlinedIcon />}
-                <span className="chat-op-menu-item-text">{chat.pinned ? "Unpin" : "Pin"}</span>
+                {chat.pinned ?
+                  <>
+                    <Icon baseClassName="material-symbols-outlined">keep_off</Icon>
+                    <span className="chat-op-menu-item-text">Unpin</span>
+                  </> : <>
+                    <Icon baseClassName="material-symbols-outlined">keep</Icon>
+                    <span className="chat-op-menu-item-text">Pin</span>
+                  </>
+                }
               </button>
             </li>
             <li>
