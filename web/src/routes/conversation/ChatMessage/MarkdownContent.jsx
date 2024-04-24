@@ -49,7 +49,7 @@ const MarkdownContent = ({ title, text }) => {
                     return !inline && match ? (
                         <div>
                             <div className="message-code-title">
-                                <div>{title || match[1]}</div>
+                                <span>{title || match[1]}</span>
                                 <Tooltip title={copyTooltipTitle}>
                                     <ContentCopyIcon onClick={() => onCopyClick(children)} />
                                 </Tooltip>
