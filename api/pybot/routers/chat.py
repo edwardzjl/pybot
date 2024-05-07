@@ -85,26 +85,17 @@ async def chat(
                         output = event["data"]["output"]
                         if not isinstance(output, AgentActionMessageLog):
                             raise RuntimeError()
-                        msg = AIChatMessage(
-                            parent_id=chain_run_id,
-                            id=event["run_id"],
-                            conversation=message.conversation,
-                            content=output.log or "",
-                            type="action",
-                            additional_kwargs={
-                                "action": {
-                                    "tool": output.tool,
-                                    "tool_input": output.tool_input,
-                                },
-                            },
-                        )
-                        await websocket.send_text(msg.model_dump_json())
-                        # caveats: message_log does not have id or parent_id, so we need to add them manually
-                        hist_messages = output.message_log
-                        for msg in hist_messages:
-                            msg.additional_kwargs["parent_id"] = chain_run_id
-                            msg.additional_kwargs["id"] = event["run_id"]
-                        history.add_messages(hist_messages)
+                        # caveats: message_log from output parser lack some information, so we need to add them manually
+                        msgs = output.message_log
+                        for msg in msgs:
+                            msg.additional_kwargs = msg.additional_kwargs | {
+                                "parent_id": chain_run_id,
+                                "id": event["run_id"],
+                                "type": "action",
+                            }
+                            _msg = ChatMessage.from_lc(msg)
+                            await websocket.send_text(_msg.model_dump_json())
+                        await history.aadd_messages(msgs)
                     case "on_tool_end":
                         msg = ChatMessage(
                             parent_id=chain_run_id,
