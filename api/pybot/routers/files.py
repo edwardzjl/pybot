@@ -64,7 +64,7 @@ async def upload_files(
     background_tasks.add_task(
         add_file_messages, ofiles, history, f"{userid}:{conversation_id}"
     )
-    return [File.model_validate(f.dict()) for f in ofiles]
+    return [File.model_validate(f.model_dump()) for f in ofiles]
 
 
 def add_file_messages(ofiles: ORMFile, history: BaseChatMessageHistory, sid: str):
@@ -73,7 +73,7 @@ def add_file_messages(ofiles: ORMFile, history: BaseChatMessageHistory, sid: str
         ChatMessage(
             from_="human",
             type="file",
-            content=File.model_validate(ofile.dict()),
+            content=File.model_validate(ofile.model_dump()),
         )
         for ofile in ofiles
     ]
@@ -89,4 +89,4 @@ async def get_files(
         (ORMFile.owner == userid) & (ORMFile.conversation_id == conversation_id)
     ).all()
     files.sort(key=lambda x: x.filename)
-    return [File.model_validate(file.dict()) for file in files]
+    return [File.model_validate(file.model_dump()) for file in files]
