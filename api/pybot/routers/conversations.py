@@ -32,7 +32,7 @@ async def get_conversations(
 ) -> list[Conversation]:
     convs = await ORMConversation.find(ORMConversation.owner == userid).all()
     convs.sort(key=lambda x: (x.pinned, x.last_message_at), reverse=True)
-    return [Conversation(**conv.dict()) for conv in convs]
+    return [Conversation(**conv.model_dump()) for conv in convs]
 
 
 @router.get("/{conversation_id}")
@@ -55,7 +55,7 @@ async def get_conversation(
             )
             for message in history.messages
         ],
-        **conv.dict(),
+        **conv.model_dump(),
     )
 
 
@@ -70,7 +70,7 @@ async def create_conversation(
     await session.save()
     session_id.set(session.pk)
     await kernel_manager.astart_kernel()
-    return ConversationDetail(**conv.dict())
+    return ConversationDetail(**conv.model_dump())
 
 
 @router.put("/{conversation_id}")
@@ -91,7 +91,7 @@ async def update_conversation(
         modified = True
     if modified:
         await conv.save()
-    return ConversationDetail(**conv.dict())
+    return ConversationDetail(**conv.model_dump())
 
 
 @router.delete("/{conversation_id}", status_code=204)
