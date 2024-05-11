@@ -9,7 +9,6 @@ class LLMServiceSettings(BaseModel):
     """llm service url"""
     creds: str = "EMPTY"
     model: str = "cognitivecomputations/dolphincoder-starcoder2-15b"
-    eos_token: str = "<|im_end|>"
 
 
 class JupyterSettings(BaseModel):

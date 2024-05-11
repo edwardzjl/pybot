@@ -69,13 +69,10 @@ async def chat(
                         # There are several chains, the most outer one is name: TableGPTAgentExecutor
                         # We parse the final answer here.
                         if event_name == "PybotAgentExecutor":
-                            output: str = event["data"]["output"]["output"]
-                            # TODO: I think this can be improved on langchain side.
-                            output = output.removesuffix(settings.llm.eos_token).strip()
                             msg = AIChatMessage(
                                 parent_id=chain_run_id,
                                 id=event["run_id"],
-                                content=output,
+                                content=event["data"]["output"]["output"].strip(),
                             )
                             await websocket.send_text(msg.model_dump_json())
                             history.add_message(msg.to_lc())
@@ -126,7 +123,7 @@ async def chat(
                     input={},
                     config={"metadata": chain_metadata},
                 )
-                title = title_raw.removesuffix(settings.llm.eos_token).strip('"')
+                title = title_raw.strip('"')
                 conv.title = title
                 await conv.save()
                 info_message = InfoMessage(
