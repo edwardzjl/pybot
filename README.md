@@ -34,7 +34,6 @@ REDIS_OM_URL | `redis://localhost:6379` | Redis url to persist messages and meta
 LLM__URL | `http://localhost:8080` | LLM service url
 LLM__CREDS | `EMPTY` | LLM service credentials
 LLM__MODEL | `cognitivecomputations/dolphincoder-starcoder2-15b` | LLM model name
-LLM__EOS_TOKEN | `<\|im_end\|>` | End of sentence token
 JUPYTER__GATEWAY_URL | `http://localhost:8888` | URL of the Jupyter Enterprise Gateway.
 JUPYTER__KERNEL_NAMESPACE | `None` | Namespace to start the kernel in. If not set, a new namespace will be created in form of `${KERNEL_USERNAME}-${UUID}.`
 JUPYTER__SHARED_VOLUME_MOUNT_PATH | `/mnt/shared` | Path to mount the shared volume in the kernel container.
