@@ -5,9 +5,11 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect, WebSocketExceptio
 from langchain_core.agents import AgentAction, AgentActionMessageLog
 from loguru import logger
 
-from pybot.config import settings
+from pybot.agent import agent_executor
+from pybot.chains.summarization import smry_chain
 from pybot.context import session_id
-from pybot.dependencies import UserIdHeader, agent_executor, history, smry_chain
+from pybot.dependencies import UserIdHeader
+from pybot.memory import history
 from pybot.models import Conversation
 from pybot.schemas import AIChatMessage, ChatMessage, InfoMessage
 from pybot.utils import utcnow

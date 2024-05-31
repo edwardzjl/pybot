@@ -4,7 +4,8 @@ from typing import Annotated
 from fastapi import APIRouter, HTTPException
 
 from pybot.context import session_id
-from pybot.dependencies import UserIdHeader, history
+from pybot.dependencies import UserIdHeader
+from pybot.memory import history
 from pybot.memory.history import PybotMessageHistory
 from pybot.models import Conversation as ORMConversation
 

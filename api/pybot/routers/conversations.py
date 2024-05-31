@@ -4,11 +4,13 @@ from fastapi import APIRouter, BackgroundTasks, HTTPException
 from langchain_core.messages import HumanMessage
 from loguru import logger
 
+from pybot.chains.summarization import smry_chain
 from pybot.config import settings
 from pybot.context import Session, session_id
-from pybot.dependencies import UserIdHeader, history, smry_chain
+from pybot.dependencies import UserIdHeader
 from pybot.jupyter import ContextAwareKernelManager, GatewayClient
 from pybot.jupyter.schema import KernelNotFoundException
+from pybot.memory import history
 from pybot.models import Conversation as ORMConversation
 from pybot.schemas import (
     ChatMessage,
