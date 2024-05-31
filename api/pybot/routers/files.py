@@ -8,7 +8,8 @@ from langchain_core.chat_history import BaseChatMessageHistory
 
 from pybot.config import settings
 from pybot.context import session_id
-from pybot.dependencies import UserIdHeader, history
+from pybot.dependencies import UserIdHeader
+from pybot.memory import history
 from pybot.models import Conversation as ORMConversation
 from pybot.models import File as ORMFile
 from pybot.schemas import ChatMessage, File
