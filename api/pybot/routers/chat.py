@@ -64,7 +64,7 @@ async def chat(
                         # There could be several chains, the most outer one is: event_name == "PybotAgentExecutor"
                         chain_run_id = event["run_id"]
                         if event_name == "PybotAgentExecutor":
-                            history.add_message(message.to_lc())
+                            await history.aadd_messages([message.to_lc()])
                     case "on_chain_end":
                         # There are several chains, the most outer one is name: TableGPTAgentExecutor
                         # We parse the final answer here.
@@ -74,8 +74,8 @@ async def chat(
                                 id=event["run_id"],
                                 content=event["data"]["output"]["output"].strip(),
                             )
+                            await history.aadd_messages([msg.to_lc()])
                             await websocket.send_text(msg.model_dump_json())
-                            history.add_message(msg.to_lc())
                     case "on_parser_end":
                         if not isinstance(event["data"]["output"], AgentAction):
                             continue
@@ -105,8 +105,8 @@ async def chat(
                                 "tool": event_name,
                             },
                         )
+                        await history.aadd_messages([msg.to_lc()])
                         await websocket.send_text(msg.model_dump_json())
-                        history.add_message(msg.to_lc())
                     # Following are for local development logging.
                     # For production we may use something like [lunary](https://github.com/lunary-ai/lunary)
                     case "on_chat_model_end":
