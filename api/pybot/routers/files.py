@@ -62,12 +62,14 @@ async def upload_files(
         ofiles.append(f)
         await f.save()
     background_tasks.add_task(
-        add_file_messages, ofiles, history, f"{userid}:{conversation_id}"
+        aadd_file_messages, ofiles, history, f"{userid}:{conversation_id}"
     )
     return [File.model_validate(f.model_dump()) for f in ofiles]
 
 
-def add_file_messages(ofiles: ORMFile, history: BaseChatMessageHistory, sid: str):
+async def aadd_file_messages(
+    ofiles: ORMFile, history: BaseChatMessageHistory, sid: str
+):
     session_id.set(sid)
     msgs = [
         ChatMessage(
@@ -77,7 +79,7 @@ def add_file_messages(ofiles: ORMFile, history: BaseChatMessageHistory, sid: str
         )
         for ofile in ofiles
     ]
-    history.add_messages([msg.to_lc() for msg in msgs])
+    await history.aadd_messages([msg.to_lc() for msg in msgs])
 
 
 @router.get("")
