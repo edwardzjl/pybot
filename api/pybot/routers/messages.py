@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException
 
 from pybot.context import session_id
 from pybot.dependencies import UserIdHeader, history
-from pybot.history import PybotMessageHistory
+from pybot.memory.history import PybotMessageHistory
 from pybot.models import Conversation as ORMConversation
 
 router = APIRouter(

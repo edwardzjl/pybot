@@ -13,8 +13,8 @@ from pybot.agent.output_parser import MarkdownOutputParser
 from pybot.agent.prompt import SYSTEM
 from pybot.chains.summarization import tmpl
 from pybot.config import settings
-from pybot.history import PybotMessageHistory
 from pybot.memory import PybotMemory
+from pybot.memory.history import PybotMessageHistory
 from pybot.tools import CodeSandbox
 
 
