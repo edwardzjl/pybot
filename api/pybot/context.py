@@ -23,7 +23,6 @@ class Session(JsonModel):
 
 
 class CurrentSession:
-
     def get(self) -> Session:
         return asyncio.run(Session.get(session_id.get()))
 

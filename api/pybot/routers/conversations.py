@@ -30,7 +30,7 @@ kernel_manager = ContextAwareKernelManager(gateway_host=settings.jupyter.gateway
 
 @router.get("")
 async def get_conversations(
-    userid: Annotated[str | None, UserIdHeader()] = None
+    userid: Annotated[str | None, UserIdHeader()] = None,
 ) -> list[Conversation]:
     convs = await ORMConversation.find(ORMConversation.owner == userid).all()
     convs.sort(key=lambda x: (x.pinned, x.last_message_at), reverse=True)

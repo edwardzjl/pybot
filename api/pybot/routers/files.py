@@ -34,7 +34,7 @@ async def upload_files(
     parent_dir = base.joinpath(userid).joinpath(conversation_id)
     # This should never happen, as the 'userid' and 'conversation_id' are controlled by us.
     # But there's a code QL warning about it.
-    if not base in parent_dir.absolute().parents:
+    if base not in parent_dir.absolute().parents:
         raise HTTPException(status_code=500, detail="invalid file path")
     parent_dir.mkdir(exist_ok=True, parents=True)
     ofiles: list[ORMFile] = []

@@ -21,7 +21,7 @@ class TestFileSchema(unittest.TestCase):
 
 class TestConversationSchema(unittest.TestCase):
     def test_create_conversation(self):
-        conv = Conversation(title=f"foo", owner="bar")
+        conv = Conversation(title="foo", owner="bar")
         self.assertIsNotNone(conv.created_at)
         self.assertIsNotNone(conv.last_message_at)
         # created_at and last_message_at are not equal in unittests in github actions.
@@ -30,7 +30,7 @@ class TestConversationSchema(unittest.TestCase):
 
 class TestMessageSchema(unittest.TestCase):
     def test_create_message(self):
-        msg = ChatMessage(from_="ai", content="foo", type="stream/text")
+        ChatMessage(from_="ai", content="foo", type="stream/text")
 
 
 if __name__ == "__main__":

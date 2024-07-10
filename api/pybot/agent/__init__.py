@@ -18,7 +18,7 @@ from pybot.tools import CodeSandbox
 
 
 def construct_scratchpad(
-    intermediate_steps: list[tuple[AgentAction, str]]
+    intermediate_steps: list[tuple[AgentAction, str]],
 ) -> list[BaseMessage]:
     steps = []
     for action, observation in intermediate_steps:
