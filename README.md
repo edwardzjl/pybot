@@ -1,5 +1,8 @@
 # Pybot
 
+> [!WARNING]  
+> This repository is archived as I am currently focusing on <https://github.com/edwardzjl/chatbot>.
+
 A simple, multi-user, multi-conversation, web-based pybot.
 
 ## Features
